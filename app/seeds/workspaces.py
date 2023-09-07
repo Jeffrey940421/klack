@@ -1,4 +1,4 @@
-from app.models import db, Workspace, WorkspaceUser, Channel, environment, SCHEMA
+from app.models import db, Workspace, WorkspaceUser, Channel, ChannelMessage, environment, SCHEMA
 from sqlalchemy.sql import text
 from faker import Faker
 from random import randint, choice
@@ -32,6 +32,7 @@ def fake_workspaces(workspace_num):
   workspaces = []
   workspace_users = []
   channels = []
+  channel_messages = []
   for i in range(0, workspace_num):
     name = faker.company()
     while name in existing_workspace:
@@ -60,12 +61,18 @@ def fake_workspaces(workspace_num):
     )
     channel.users = [owner]
     channels.append(channel)
-  return {"workspaces": workspaces, "workspace_users": workspace_users, "channels": channels}
+    channel_messages.append(ChannelMessage(
+      sender = owner,
+      channel = channel,
+      content = "Welcome on board"
+    ))
+  return {"workspaces": workspaces, "workspace_users": workspace_users, "channels": channels, "channel_messages": channel_messages}
 
 result = fake_workspaces(3)
 workspaces = result["workspaces"]
 workspace_users = result["workspace_users"]
 channels = result["channels"]
+channel_messages = result["channel_messages"]
 
 
 # Adds a demo user, you can add other users here if you want
@@ -73,6 +80,7 @@ def seed_workspaces():
     _ = [db.session.add(workspace) for workspace in workspaces]
     _ = [db.session.add(workspace_user) for workspace_user in workspace_users]
     _ = [db.session.add(channel) for channel in channels]
+    _ = [db.session.add(channel_message) for channel_message in channel_messages]
     db.session.commit()
 
 
