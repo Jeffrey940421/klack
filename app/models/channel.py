@@ -53,25 +53,21 @@ class Channel(db.Model):
     creator = db.relationship(
       "User",
       foreign_keys="Channel.creator_id",
-      back_populates="owned_channels",
-      lazy="joined"
+      back_populates="owned_channels"
     )
     workspace = db.relationship(
       "Workspace",
       foreign_keys="Channel.workspace_id",
-      back_populates="channels",
-      lazy="joined"
+      back_populates="channels"
     )
     users = db.relationship(
       "User",
       secondary=channel_users,
-      back_populates="channels",
-      lazy="joined"
+      back_populates="channels"
     )
     messages = db.relationship(
       "ChannelMessage",
       foreign_keys="ChannelMessage.channel_id",
       back_populates="channel",
-      lazy="joined",
       cascade="all, delete-orphan"
     )

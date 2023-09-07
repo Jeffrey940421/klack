@@ -1,19 +1,33 @@
 from app.models import db, User, environment, SCHEMA
 from sqlalchemy.sql import text
+from faker import Faker
+from random import randint, choice
 
+faker = Faker()
+
+def fake_users(user_num):
+  existing_name = set()
+  users = []
+  for i in range(0, user_num):
+    name = faker.name()
+    while name in existing_name:
+      name = faker.name()
+    existing_name.add(name)
+    first_name = name.split(" ")[0].lower()
+    last_name = name.split(" ")[1].lower()
+    email = f"{first_name}.{last_name}@klack.com"
+    password = f"password{i + 1}"
+    users.append(User(
+      email = email,
+      password = password
+    ))
+  return users
+
+users = fake_users(10)
 
 # Adds a demo user, you can add other users here if you want
 def seed_users():
-    demo = User(
-        email='demo@aa.io', password='password')
-    marnie = User(
-        email='marnie@aa.io', password='password')
-    bobbie = User(
-        email='bobbie@aa.io', password='password')
-
-    db.session.add(demo)
-    db.session.add(marnie)
-    db.session.add(bobbie)
+    _ = [db.session.add(user) for user in users]
     db.session.commit()
 
 

@@ -35,26 +35,23 @@ class Workspace(db.Model):
     active_users = db.relationship(
       "User",
       foreign_keys="User.active_workspace_id",
-      back_populates="active_workspace",
-      lazy="joined"
+      back_populates="active_workspace"
     )
     owner = db.relationship(
       "User",
       foreign_keys="Workspace.owner_id",
-      back_populates="owned_workspaces", lazy="joined"
+      back_populates="owned_workspaces"
     )
     channels = db.relationship(
       "Channel",
       foreign_keys="Channel.workspace_id",
       back_populates="workspace",
-      lazy="joined",
       cascade="all, delete-orphan"
     )
     user_associations = db.relationship(
       "WorkspaceUser",
       foreign_keys="WorkspaceUser.workspace_id",
       back_populates="workspace",
-      lazy="joined",
       cascade="all, delete-orphan"
     )
     users = association_proxy(
@@ -65,6 +62,5 @@ class Workspace(db.Model):
       "WorkspaceInvitation",
       foreign_keys="WorkspaceInvitation.workspace_id",
       back_populates="workspace",
-      lazy="joined",
       cascade="all, delete-orphan"
     )

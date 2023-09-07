@@ -1,35 +1,47 @@
-from app.models import db, WorkspaceUser, Workspace, environment, SCHEMA
+from app.models import db, WorkspaceUser, Workspace, Channel, ChannelMessage, environment, SCHEMA
 from sqlalchemy.sql import text
+from faker import Faker
+from random import randint, choice
+from .users import users
+from .workspaces import profile_images, emailToName, workspaces, workspace_users, channels
+
+def fake_workspace_users(workspace_user_num):
+    existing_workspace_user = set()
+    workspace_users = []
+    channel_messages = []
+    for i in range(0, workspace_user_num):
+        user = choice(users)
+        workspace = choice(workspaces)
+        while user.id == workspace.owner_id or (user.id, workspace.id) in existing_workspace_user:
+            user = choice(users)
+            workspace = choice(workspaces)
+        existing_workspace_user.add((user.id, workspace.id))
+        nickname = emailToName(user.email) + " - " + workspace.name
+        profile_image_url = choice(profile_images)
+        workspace_users.append(WorkspaceUser(
+            workspace = workspace,
+            user = user,
+            nickname = nickname,
+            profile_image_url = profile_image_url,
+            role = "guest"
+        ))
+        generalChannel = Channel.query.filter(Channel.workspace_id == workspace.id).first()
+        generalChannel.users.append(user)
+        channel_messages.append(ChannelMessage(
+            sender = user,
+            channel = generalChannel,
+            content = "Hello everyone"
+        ))
+    return {"workspace_users": workspace_users, "channel_messages": channel_messages}
 
 
 # Adds a demo user, you can add other users here if you want
 def seed_workspace_users():
-    relationship1 = WorkspaceUser(
-        workspace_id=1,
-        user_id=1,
-        nickname="Demo",
-        profile_image_url="/images/profile_images/profile_image_1.png",
-        role="admin"
-    )
-    relationship2 = WorkspaceUser(
-        workspace_id=2,
-        user_id=2,
-        nickname="Marnie",
-        profile_image_url="/images/profile_images/profile_image_2.png",
-        role="admin"
-    )
-    relationship3 = WorkspaceUser(
-        workspace_id=1,
-        user_id=3,
-        nickname="Bobbie",
-        profile_image_url="/images/profile_images/profile_image_3.png",
-        role="guest"
-    )
-
-    db.session.add(relationship1)
-    db.session.add(relationship2)
-    db.session.add(relationship3)
-
+    result = fake_workspace_users(10)
+    workspace_users = result["workspace_users"]
+    channel_messages = result["channel_messages"]
+    _ = [db.session.add(workspace_user) for workspace_user in workspace_users]
+    _ = [db.session.add(channel_message) for channel_message in channel_messages]
     db.session.commit()
 
 
@@ -42,7 +54,13 @@ def seed_workspace_users():
 def undo_workspace_users():
     if environment == "production":
         db.session.execute(f"TRUNCATE table {SCHEMA}.workspace_users RESTART IDENTITY CASCADE;")
+        db.session.execute(f"TRUNCATE table {SCHEMA}.channels RESTART IDENTITY CASCADE;")
+        db.session.execute(f"TRUNCATE table {SCHEMA}.channel_users RESTART IDENTITY CASCADE;")
+        db.session.execute(f"TRUNCATE table {SCHEMA}.channel_messages RESTART IDENTITY CASCADE;")
     else:
         db.session.execute(text("DELETE FROM workspace_users"))
+        db.session.execute(text("DELETE FROM channels"))
+        db.session.execute(text("DELETE FROM channel_users"))
+        db.session.execute(text("DELETE FROM channel_messages"))
 
     db.session.commit()

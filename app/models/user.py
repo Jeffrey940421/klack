@@ -40,26 +40,22 @@ class User(db.Model, UserMixin):
     active_workspace = db.relationship(
         "Workspace",
         foreign_keys="User.active_workspace_id",
-        back_populates="active_users",
-        lazy="joined"
+        back_populates="active_users"
     )
     owned_workspaces = db.relationship(
         "Workspace",
         foreign_keys="Workspace.owner_id",
-        back_populates="owner",
-        lazy="joined"
+        back_populates="owner"
     )
     owned_channels = db.relationship(
         "Channel",
         foreign_keys="Channel.creator_id",
-        back_populates="creator",
-        lazy="joined"
+        back_populates="creator"
     )
     workspace_associations = db.relationship(
         "WorkspaceUser",
         foreign_keys="WorkspaceUser.user_id",
         back_populates="user",
-        lazy="joined",
         cascade="all, delete-orphan"
     )
     workspaces = association_proxy(
@@ -69,28 +65,24 @@ class User(db.Model, UserMixin):
     channels = db.relationship(
         "Channel",
         secondary=channel_users,
-        back_populates="users",
-        lazy="joined"
+        back_populates="users"
     )
     sent_workspace_invitations = db.relationship(
         "WorkspaceInvitation",
         foreign_keys="WorkspaceInvitation.sender_id",
         back_populates="sender",
-        lazy="joined",
         cascade="all, delete-orphan"
     )
     received_workspace_invitations = db.relationship(
         "WorkspaceInvitation",
         foreign_keys="WorkspaceInvitation.recipient_id",
         back_populates="recipient",
-        lazy="joined",
         cascade="all, delete-orphan"
     )
     sent_channel_messages = db.relationship(
         "ChannelMessage",
         foreign_keys="ChannelMessage.sender_id",
         back_populates="sender",
-        lazy="joined",
         cascade="all, delete-orphan"
     )
 

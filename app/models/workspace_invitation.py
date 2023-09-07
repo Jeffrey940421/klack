@@ -41,20 +41,17 @@ class WorkspaceInvitation(db.Model):
     sender = db.relationship(
       "User",
       foreign_keys="WorkspaceInvitation.sender_id",
-      back_populates="sent_workspace_invitations",
-      lazy="joined"
+      back_populates="sent_workspace_invitations"
     )
     recipient = db.relationship(
       "User",
       foreign_keys="WorkspaceInvitation.recipient_id",
-      back_populates="received_workspace_invitations",
-      lazy="joined"
+      back_populates="received_workspace_invitations"
     )
     workspace = db.relationship(
       "Workspace",
       foreign_keys="WorkspaceInvitation.workspace_id",
-      back_populates="associated_invitations",
-      lazy="joined"
+      back_populates="associated_invitations"
     )
 
     @validates("status")

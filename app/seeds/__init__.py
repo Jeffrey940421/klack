@@ -2,10 +2,7 @@ from flask.cli import AppGroup
 from .users import seed_users, undo_users
 from .workspaces import seed_workspaces, undo_workspaces
 from .workspace_users import seed_workspace_users, undo_workspace_users
-from .channels import seed_channels, undo_channels
 from app.models import db, Workspace, environment, SCHEMA
-
-from app.models.db import db, environment, SCHEMA
 
 # Creates a seed group to hold our commands
 # So we can type `flask seed --help`
@@ -23,11 +20,9 @@ def seed():
         undo_users()
         undo_workspaces()
         undo_workspace_users()
-        undo_channels()
     seed_users()
     seed_workspaces()
     seed_workspace_users()
-    seed_channels()
 
     # Add other seed functions here
 
@@ -38,5 +33,4 @@ def undo():
     undo_users()
     undo_workspaces()
     undo_workspace_users()
-    undo_channels()
     # Add other undo functions here

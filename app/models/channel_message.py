@@ -41,11 +41,9 @@ class ChannelMessage(db.Model):
       "User",
       foreign_keys="ChannelMessage.sender_id",
       back_populates="sent_channel_messages",
-      lazy="joined"
     )
     channel = db.relationship(
       "Channel",
       foreign_keys="ChannelMessage.channel_id",
       back_populates="messages",
-      lazy="joined"
     )
