@@ -1,8 +1,8 @@
 """created tables
 
-Revision ID: b66ae8ec29b8
+Revision ID: 260488065fda
 Revises:
-Create Date: 2023-09-06 20:40:49.641475
+Create Date: 2023-09-06 21:17:55.705557
 
 """
 from alembic import op
@@ -13,7 +13,7 @@ environment = os.getenv("FLASK_ENV")
 SCHEMA = os.environ.get("SCHEMA")
 
 # revision identifiers, used by Alembic.
-revision = 'b66ae8ec29b8'
+revision = '260488065fda'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,6 +31,9 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
+    if environment == "production":
+        op.execute(f"ALTER TABLE users SET SCHEMA {SCHEMA};")
+
     op.create_table('workspaces',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=80), nullable=False),
@@ -40,6 +43,9 @@ def upgrade():
     sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    if environment == "production":
+        op.execute(f"ALTER TABLE workspaces SET SCHEMA {SCHEMA};")
+
     op.create_table('channels',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
@@ -52,6 +58,9 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name', 'workspace_id')
     )
+    if environment == "production":
+        op.execute(f"ALTER TABLE channels SET SCHEMA {SCHEMA};")
+
     op.create_table('workspace_invitations',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('sender_id', sa.Integer(), nullable=False),
@@ -64,6 +73,9 @@ def upgrade():
     sa.ForeignKeyConstraint(['workspace_id'], ['workspaces.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    if environment == "production":
+        op.execute(f"ALTER TABLE workspace_invitations SET SCHEMA {SCHEMA};")
+
     op.create_table('workspace_users',
     sa.Column('workspace_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -74,6 +86,9 @@ def upgrade():
     sa.ForeignKeyConstraint(['workspace_id'], ['workspaces.id'], ),
     sa.PrimaryKeyConstraint('workspace_id', 'user_id')
     )
+    if environment == "production":
+        op.execute(f"ALTER TABLE workspace_users SET SCHEMA {SCHEMA};")
+
     op.create_table('channel_messages',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('sender_id', sa.Integer(), nullable=False),
@@ -85,6 +100,9 @@ def upgrade():
     sa.ForeignKeyConstraint(['sender_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    if environment == "production":
+        op.execute(f"ALTER TABLE channel_messages SET SCHEMA {SCHEMA};")
+
     op.create_table('channel_users',
     sa.Column('channel_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -92,9 +110,9 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('channel_id', 'user_id')
     )
-
     if environment == "production":
-        op.execute(f"ALTER TABLE users SET SCHEMA {SCHEMA};")
+        op.execute(f"ALTER TABLE channel_users SET SCHEMA {SCHEMA};")
+
     # ### end Alembic commands ###
 
 
