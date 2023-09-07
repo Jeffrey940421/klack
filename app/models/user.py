@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from sqlalchemy.sql import func
 from .channel_user import channel_users
+from .workspace_users import WorkspaceUser
 from sqlalchemy.ext.associationproxy import association_proxy
 
 
@@ -97,8 +98,29 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password, password)
 
-    def to_dict(self):
+    def to_dict_summary(self):
         return {
             'id': self.id,
-            'email': self.email
+            'email': self.email,
+        }
+
+    def to_dict_detail(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'active_workspace': self.active_workspace.to_dict_detail() if self.active_workspace else None,
+            'created_at': self.created_at,
+            'workspaces': [workspace.to_dict_summary() for workspace in self.workspaces],
+            'received_workspace_invitations': [invitation.to_dict() for invitation in self.received_workspace_invitations]
+        }
+
+    def to_dict_workplace(self, workspace_id):
+        workspace_association = WorkspaceUser.query.get((workspace_id, self.id))
+        return {
+            'id': self.id,
+            'email': self.email,
+            'workspace_id': workspace_id,
+            'nickname': workspace_association.nickname,
+            'profile_image_url': workspace_association.profile_image_url,
+            'role': workspace_association.role
         }

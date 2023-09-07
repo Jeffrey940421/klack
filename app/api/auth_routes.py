@@ -41,9 +41,17 @@ def login():
         # Add the user to the session, we are logged in!
         user = User.query.filter(User.email == form.data['email']).first()
         login_user(user)
-        return user.to_dict()
+        return user.to_dict_detail()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
+@auth_routes.route('/demo_login', methods=['POST'])
+def demo_login():
+    """
+    Log in as demo user
+    """
+    user = User.query.get(1)
+    login_user(user)
+    return user.to_dict_detail()
 
 @auth_routes.route('/logout')
 def logout():
@@ -52,7 +60,6 @@ def logout():
     """
     logout_user()
     return {'message': 'User logged out'}
-
 
 @auth_routes.route('/signup', methods=['POST'])
 def sign_up():
@@ -63,14 +70,13 @@ def sign_up():
     form['csrf_token'].data = request.cookies['csrf_token']
     if form.validate_on_submit():
         user = User(
-            username=form.data['username'],
             email=form.data['email'],
             password=form.data['password']
         )
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        return user.to_dict()
+        return user.to_dict_detail()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
 

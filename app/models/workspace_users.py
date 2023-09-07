@@ -46,3 +46,12 @@ class WorkspaceUser(db.Model):
       if value != "admin" and value != "guest":
         raise ValueError("Role must be either 'admin' or 'guest'")
       return value
+
+    def to_dict(self):
+       return {
+          'workspace_id': self.workspace_id,
+          'user_id': self.user_id,
+          'nickname': self.nickname,
+          'profile_image_url': self.profile_image_url,
+          'role': self.role
+       }

@@ -59,3 +59,11 @@ class WorkspaceInvitation(db.Model):
       if value != "pending" and value != "accepted" and value != "ignored":
         raise ValueError("Status must be 'pending', 'accepted', or 'ignored'")
       return value
+
+    def to_dict(self):
+      return {
+        'sender': self.sender.to_dict_workplace(self.workspace_id),
+        'recipient': self.recipient_id.to_dict_summary(),
+        'workspace': self.workspace.to_dict_summary(),
+        'status': self.status
+      }
