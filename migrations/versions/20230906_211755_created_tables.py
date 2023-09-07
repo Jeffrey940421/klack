@@ -44,16 +44,20 @@ def upgrade():
     sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+
     if environment == "production":
         op.execute(f"ALTER TABLE workspaces SET SCHEMA {SCHEMA};")
 
-    # op.create_foreign_key(
-    #     constraint_name="fk_users_active_workspace_id",
-    #     source_table='users',
-    #     referent_table='workspaces',
-    #     local_cols=['active_workspace_id'],
-    #     remote_cols=['id']
-    # )
+
+    op.create_foreign_key(
+        constraint_name="fk_users_active_workspace_id",
+        source_table='users',
+        referent_table='workspaces',
+        local_cols=['active_workspace_id'],
+        remote_cols=['id'],
+        source_schema=SCHEMA,
+        referent_schema=SCHEMA
+    )
 
     op.create_table('channels',
     sa.Column('id', sa.Integer(), nullable=False),
