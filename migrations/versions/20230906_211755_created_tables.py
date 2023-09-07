@@ -27,12 +27,13 @@ def upgrade():
     sa.Column('hashed_password', sa.String(length=255), nullable=False),
     sa.Column('active_workspace_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.Date(), nullable=False),
-    sa.ForeignKeyConstraint(['active_workspace_id'], ['workspaces.id'], ),
+    # sa.ForeignKeyConstraint(['active_workspace_id'], ['workspaces.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
     if environment == "production":
         op.execute(f"ALTER TABLE users SET SCHEMA {SCHEMA};")
+
 
     op.create_table('workspaces',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -45,6 +46,14 @@ def upgrade():
     )
     if environment == "production":
         op.execute(f"ALTER TABLE workspaces SET SCHEMA {SCHEMA};")
+
+    # op.create_foreign_key(
+    #     constraint_name="fk_users_active_workspace_id",
+    #     source_table='users',
+    #     referent_table='workspaces',
+    #     local_cols=['active_workspace_id'],
+    #     remote_cols=['id']
+    # )
 
     op.create_table('channels',
     sa.Column('id', sa.Integer(), nullable=False),
