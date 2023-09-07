@@ -2,6 +2,7 @@ from flask.cli import AppGroup
 from .users import seed_users, undo_users
 from .workspaces import seed_workspaces, undo_workspaces
 from .workspace_users import seed_workspace_users, undo_workspace_users
+from .active_workspace import seed_active_workspace, undo_active_workspace
 from app.models import db, Workspace, environment, SCHEMA
 
 # Creates a seed group to hold our commands
@@ -17,12 +18,14 @@ def seed():
         # command, which will  truncate all tables prefixed with
         # the schema name (see comment in users.py undo_users function).
         # Make sure to add all your other model's undo functions below
+        undo_active_workspace()
         undo_workspace_users()
         undo_workspaces()
         undo_users()
     seed_users()
     seed_workspaces()
     seed_workspace_users()
+    seed_active_workspace()
 
     # Add other seed functions here
 
@@ -30,6 +33,7 @@ def seed():
 # Creates the `flask seed undo` command
 @seed_commands.command('undo')
 def undo():
+    undo_active_workspace()
     undo_workspace_users()
     undo_workspaces()
     undo_users()
