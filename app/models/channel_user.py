@@ -16,3 +16,6 @@ channel_users = db.Table(
         primary_key=True
     )
 )
+
+if environment == "production":
+    channel_users.schema = SCHEMA
