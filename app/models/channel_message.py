@@ -47,3 +47,13 @@ class ChannelMessage(db.Model):
       foreign_keys="ChannelMessage.channel_id",
       back_populates="messages",
     )
+
+    def to_dict_summary(self):
+       return {
+          'id': self.id,
+          'sender': self.sender.to_dict_workplace(self.channel.workspace_id),
+          'channelId': self.channel_id,
+          'content': self.content,
+          'createdAt': self.created_at,
+          'updatedAt': self.updated_at
+       }

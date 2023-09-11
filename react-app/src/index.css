@@ -1,1 +1,269 @@
-/* TODO Add site wide styles */
+@font-face {
+  font-family: 'larsseitregular';
+  src: url('font/larsseit-webfont.woff2') format('woff2'),
+       url('font/larsseit-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'larsseitbold';
+  src: url('font/larsseit-bold-webfont.woff2') format('woff2'),
+       url('font/larsseit-bold-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'larsseit_boldbold_italic';
+  src: url('font/larsseit-bolditalic-webfont.woff2') format('woff2'),
+       url('font/larsseit-bolditalic-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'larsseitextrabold';
+  src: url('font/larsseit-extrabold-webfont.woff2') format('woff2'),
+       url('font/larsseit-extrabold-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'larsseitextrabold_italic';
+  src: url('font/larsseit-extrabolditalic-webfont.woff2') format('woff2'),
+       url('font/larsseit-extrabolditalic-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'larsseitregular';
+  src: url('font/larsseit-italic-webfont.woff2') format('woff2'),
+       url('font/larsseit-italic-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'larsseitlight';
+  src: url('font/larsseit-light-webfont.woff2') format('woff2'),
+       url('font/larsseit-light-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'larsseitlight_italic';
+  src: url('font/larsseit-lightitalic-webfont.woff2') format('woff2'),
+       url('font/larsseit-lightitalic-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'larsseitmedium';
+  src: url('font/larsseit-medium-webfont.woff2') format('woff2'),
+       url('font/larsseit-medium-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'larsseitmedium_italic';
+  src: url('font/larsseit-mediumitalic-webfont.woff2') format('woff2'),
+       url('font/larsseit-mediumitalic-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'larsseitthin';
+  src: url('font/larsseit-thin-webfont.woff2') format('woff2'),
+       url('font/larsseit-thin-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'larsseitthin_italic';
+  src: url('font/larsseit-thinitalic-webfont.woff2') format('woff2'),
+       url('font/larsseit-thinitalic-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'circular_stdbook';
+  src: url('font/fontsfree-net-circular-std-book-2-webfont.woff2') format('woff2'),
+       url('font/fontsfree-net-circular-std-book-2-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html,
+body,
+#root {
+  margin: 0px;
+  height: 100%;
+}
+
+h1 {
+  font-family: "larsseitbold", sans-serif;
+  font-size: 36px;
+  line-height: 125%;
+  margin: 0px;
+  padding: 0px;
+}
+
+h2 {
+  font-family: "larsseitbold", sans-serif;
+  font-size: 24px;
+  line-height: 125%;
+  margin: 0px;
+  padding: 0px;
+}
+
+h3 {
+  font-family: "larsseitbold", sans-serif;
+  font-size: 18px;
+  line-height: 125%;
+  margin: 0px;
+  padding: 0px;
+}
+
+h4 {
+  font-family: "larsseitbold", sans-serif;
+  font-size: 12px;
+  line-height: 125%;
+  margin: 0px;
+  padding: 0px;
+}
+
+p {
+  font-family: "circular_stdbook", sans-serif;
+  font-size: 10px;
+  line-height: 140%;
+  margin: 0px;
+  padding: 0px;
+}
+
+span,
+label {
+  font-family: "circular_stdbook", sans-serif;
+  line-height: 140%;
+  margin: 0px;
+  padding: 0px;
+}
+
+a {
+  font-family: "circular_stdbook", sans-serif;
+  line-height: 140%;
+  margin: 0px;
+  padding: 0px;
+  color: #1264a3;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button {
+  font-family: "circular_stdbook", sans-serif;
+  cursor: pointer;
+}
+
+li {
+  font-family: "circular_stdbook", sans-serif;
+  list-style-type: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+ul {
+  font-family: "circular_stdbook", sans-serif;
+  list-style-type: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+ol {
+  font-family: "circular_stdbook", sans-serif;
+  list-style-type: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+input {
+  font-family: "circular_stdbook", sans-serif;
+  font-size: 16px;
+}
+
+input::placeholder {
+  font-family: "circular_stdbook", sans-serif;
+  font-size: 14px;
+}
+
+.input {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+}
+
+.input label {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.input input {
+  position: relative;
+  height: 60px;
+  width: 100%;
+  background-color: transparent;
+  box-sizing: border-box;
+  padding: 20px 10px 7px 10px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(29,28,29,.3);
+}
+
+.input input:focus {
+  outline: 3px solid #bbe1f1;
+  border: 1px solid #377cb1;
+}
+
+.input input:-webkit-autofill {
+  -webkit-background-clip: text;
+}
+
+.input button {
+  position: absolute;
+  width: 50px;
+  height: 30px;
+  top: 15px;
+  right: 15px;
+  background-color: white;
+  border: 1px solid #DDDDDD;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+.input.error input:not(:focus) {
+  border: 1px solid rgb(224, 30, 90)
+}
+
+.validation_errors {
+  font-size: 14px;
+  color: rgb(224, 30, 90);
+  margin-top: 8px;
+  display: flex;
+  column-gap: 3px;
+  align-items: center;
+}
+
+.hidden {
+  display: none !important;
+}

@@ -71,3 +71,25 @@ class Channel(db.Model):
       back_populates="channel",
       cascade="all, delete-orphan"
     )
+
+    def to_dict_summary(self):
+       return {
+          'id': self.id,
+          'name': self.name,
+          'description': self.description,
+          'creator_id': self.creator_id,
+          'message_num': len(self.messages),
+          'created_at': self.created_at
+       }
+
+    def to_dict_detail(self):
+       return {
+          'id': self.id,
+          'name': self.name,
+          'description': self.description,
+          'creator': self.creator.to_dict_workplace(self.workspace_id),
+          'workspaceId': self.workspace_id,
+          'users': [user.to_dict_workplace(self.workspace_id) for user in self.users],
+          'messages': [message.to_dict_summary() for message in self.messages],
+          'createdAt': self.created_at
+       }

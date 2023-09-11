@@ -1,7 +1,219 @@
-.profile-dropdown {
-  position: absolute;
+#navigation_container {
+  background-color: #611f69;
+  display: grid;
+  grid-template-columns: 30% 50% 20%;
+  align-items: center;
+  height: 60px;
+  width: 100%;
 }
 
-.hidden {
-  display: none;
+#navigation_logo {
+  margin-left: 40px;
+  max-height: 25px;
+}
+
+#navigation_search {
+  height: 28px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  background-color: #955f9c;
+  border: none;
+  border-radius: 5px;
+  color: white
+}
+
+#navigation_search i {
+  color: lightgray
+}
+
+#navigation_search:hover {
+  background-color: #9b74a0;
+}
+
+#navigation_dropdowns {
+  justify-self: flex-end;
+  margin-right: 40px;
+  display: flex;
+  align-items: center;
+  column-gap: 20px;
+}
+
+#profile-button_dropdown {
+  position: absolute;
+  right: 45px;
+  top: 50px;
+  border-radius: 5px;
+  border: 1px solid lightgray;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  width: 300px;
+  background-color: #f8f8f8;
+  box-sizing: border-box;
+  padding: 12px 0px;
+}
+
+#profile-button_button {
+  background-color: transparent;
+  border: none;
+  height: fit-content;
+}
+
+#profile-button_button i {
+  color: white;
+  font-size: 16px;
+}
+
+#profile-button_profile-image {
+  height: 25px;
+  width: 25px;
+  aspect-ratio: 1 / 1;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+#profile-button_dropdown-profile-image {
+  height: 36px;
+  width: 36px;
+  aspect-ratio: 1 / 1;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+#profile-button_dropdown span {
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+#profile-button_dropdown li:nth-child(1) {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 24px 12px 24px;
+  box-sizing: border-box;
+  column-gap: 10px;
+}
+
+#profile-button_dropdown li:not(:nth-child(1)) {
+  padding: 10px 24px;
+  font-size: 15px;
+}
+
+#profile-button_dropdown li:not(:nth-child(1)):hover {
+  background-color: #1264a3;
+  cursor: pointer;
+}
+
+#profile-button_dropdown li button {
+  border: none;
+  background-color: transparent;
+  padding: 0px;
+}
+
+#profile-button_dropdown li:not(:nth-child(1)):hover button {
+  color: white;
+}
+
+#profile-button_dropdown hr {
+  border: 0;
+  width: 100%;
+  background-color:lightgray;
+  height: 1px;
+}
+
+#notification-button_button {
+  background-color: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  position: relative;
+}
+
+#notification-button_number {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  z-index: 100;
+  background-color: red;
+  height: 14px;
+  width: 14px;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+}
+
+#notification-button_dropdown {
+  position: absolute;
+  right: 100px;
+  top: 50px;
+  border-radius: 5px;
+  border: 1px solid lightgray;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  width: 300px;
+  background-color: #f8f8f8;
+  box-sizing: border-box;
+  padding: 12px;
+  font-size: 12px;
+  row-gap: 10px;
+}
+
+#notification-button_dropdown.no-workspace {
+  right: 90px;
+}
+
+.notification-button_invitation {
+  background-color: rgb(230, 229, 229);
+  padding: 10px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: row;
+  column-gap: 10px;
+  align-items: center;
+}
+
+.notification-button_invitation-buttons {
+  display: flex;
+  flex-direction: column;
+  row-gap: 5px;
+}
+
+.notification-button_invitation-buttons button:nth-child(1){
+  border: none;
+  background-color: #78C2AD;
+  color: white;
+  font-size: 12px;
+  padding: 5px;
+  border-radius: 3px;
+}
+
+.notification-button_invitation-buttons button:nth-child(2){
+  border: none;
+  background-color: #FF7851;
+  color: white;
+  font-size: 12px;
+  padding: 5px;
+  border-radius: 3px;
+}
+
+#notification-button_dropdown li:nth-child(1) {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#notification-button_no-notification {
+  display: flex;
+  background-color: rgb(230, 229, 229);
+  padding: 10px;
+  border-radius: 5px;
 }

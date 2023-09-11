@@ -1,18 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../store/session";
 import OpenModalButton from "../OpenModalButton";
-import LoginFormModal from "../LoginFormModal";
-import SignupFormModal from "../SignupFormModal";
 
-function ProfileButton({ user }) {
+function ProfileButton({ user, hasWorkspace }) {
   const dispatch = useDispatch();
+  const activeWorkspace = useSelector(state => state.workspaces.activeWorkspace)
+  const userProfile = activeWorkspace ? activeWorkspace.users[user.id] : null
   const [showMenu, setShowMenu] = useState(false);
   const ulRef = useRef();
 
   const openMenu = () => {
-    if (showMenu) return;
-    setShowMenu(true);
+    setShowMenu((prev) => !prev);
   };
 
   useEffect(() => {
@@ -31,41 +30,38 @@ function ProfileButton({ user }) {
 
   const handleLogout = (e) => {
     e.preventDefault();
+    setShowMenu(false)
     dispatch(logout());
   };
 
-  const ulClassName = "profile-dropdown" + (showMenu ? "" : " hidden");
-  const closeMenu = () => setShowMenu(false);
-
   return (
     <>
-      <button onClick={openMenu}>
-        <i className="fas fa-user-circle" />
+      <button id="profile-button_button" onClick={openMenu}>
+        {hasWorkspace ?
+          <img id="profile-button_profile-image" src={userProfile.profileImageUrl} alt="profile image" /> :
+          <i className="fa-solid fa-bars" />
+        }
       </button>
-      <ul className={ulClassName} ref={ulRef}>
-        {user ? (
+      <ul id="profile-button_dropdown" className={showMenu ? "" : "hidden"} ref={ulRef}>
+        {hasWorkspace ?
           <>
-            <li>{user.username}</li>
-            <li>{user.email}</li>
             <li>
-              <button onClick={handleLogout}>Log Out</button>
+              <img id="profile-button_dropdown-profile-image" src={userProfile.profileImageUrl} alt="profile image" />
+              <span>{userProfile.nickname}</span>
+            </li>
+            <li>
+              <button>Edit Profile</button>
             </li>
           </>
-        ) : (
-          <>
-            <OpenModalButton
-              buttonText="Log In"
-              onItemClick={closeMenu}
-              modalComponent={<LoginFormModal />}
-            />
-
-            <OpenModalButton
-              buttonText="Sign Up"
-              onItemClick={closeMenu}
-              modalComponent={<SignupFormModal />}
-            />
-          </>
-        )}
+          :
+          <li>
+            <span>{user.email}</span>
+          </li>
+        }
+        <hr></hr>
+        <li onClick={handleLogout}>
+          <button>Log Out</button>
+        </li>
       </ul>
     </>
   );
