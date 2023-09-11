@@ -49,9 +49,9 @@ class WorkspaceUser(db.Model):
 
     def to_dict(self):
        return {
-          'workspace_id': self.workspace_id,
-          'user_id': self.user_id,
+          'workspaceId': self.workspace_id,
+          'userId': self.user_id,
           'nickname': self.nickname,
-          'profile_image_url': self.profile_image_url,
+          'profileImageUrl': self.profile_image_url,
           'role': self.role
        }

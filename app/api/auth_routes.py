@@ -24,7 +24,7 @@ def authenticate():
     Authenticates a user.
     """
     if current_user.is_authenticated:
-        return current_user.to_dict()
+        return current_user.to_dict_detail()
     return {'errors': ['Unauthorized']}
 
 
@@ -44,12 +44,21 @@ def login():
         return user.to_dict_detail()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
-@auth_routes.route('/demo_login', methods=['POST'])
-def demo_login():
+@auth_routes.route('/demo_login/1', methods=['POST'])
+def demo_login_1():
     """
-    Log in as demo user
+    Log in as demo user 1
     """
     user = User.query.get(1)
+    login_user(user)
+    return user.to_dict_detail()
+
+@auth_routes.route('/demo_login/2', methods=['POST'])
+def demo_login_2():
+    """
+    Log in as demo user 2
+    """
+    user = User.query.get(2)
     login_user(user)
     return user.to_dict_detail()
 

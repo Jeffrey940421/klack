@@ -48,12 +48,12 @@ class ChannelMessage(db.Model):
       back_populates="messages",
     )
 
-    def to_dict_detail(self):
+    def to_dict_summary(self):
        return {
           'id': self.id,
           'sender': self.sender.to_dict_workplace(self.channel.workspace_id),
-          'channel_id': self.channel_id,
+          'channelId': self.channel_id,
           'content': self.content,
-          'created_at': self.created_at,
-          'updated_at': self.updated_at
+          'createdAt': self.created_at,
+          'updatedAt': self.updated_at
        }

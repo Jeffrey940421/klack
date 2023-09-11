@@ -60,10 +60,19 @@ class WorkspaceInvitation(db.Model):
         raise ValueError("Status must be 'pending', 'accepted', or 'ignored'")
       return value
 
+    def to_dict_summary(self):
+       return {
+          'id': self.id,
+          'recipientId': self.recipient_id,
+          'status': self.status
+       }
+
     def to_dict(self):
       return {
-        'sender': self.sender.to_dict_workplace(self.workspace_id),
-        'recipient': self.recipient_id.to_dict_summary(),
-        'workspace': self.workspace.to_dict_summary(),
+        'id': self.id,
+        'sender': self.sender.to_dict_workspace(self.workspace_id),
+        'recipientId': self.recipient_id,
+        'workspaceId': self.workspace_id,
+        'workspaceName': self.workspace.name,
         'status': self.status
       }

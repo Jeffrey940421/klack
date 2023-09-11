@@ -69,17 +69,19 @@ class Workspace(db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'icon_url': self.icon_url,
-            'owner': self.owner.to_dict_summary(),
-            'created_at': self.created_at
+            'iconUrl': self.icon_url,
+            'ownerId': self.owner_id,
+            'createdAt': self.created_at
         }
+
     def to_dict_detail(self):
         return {
             'id': self.id,
             'name': self.name,
-            'icon_url': self.icon_url,
-            'owner': self.owner.to_dict_summary(),
-            'created_at': self.created_at,
-            'users': [user_association.to_dict() for user_association in self.user_associations],
-            'channels': [channel.to_dict_detail() for channel in self.channels]
+            'iconUrl': self.icon_url,
+            'owner': self.owner.to_dict_workspace(self.id),
+            'createdAt': self.created_at,
+            'users': [user.to_dict_workspace(self.id) for user in self.users],
+            'channels': [channel.to_dict_summary() for channel in self.channels],
+            'associatedInvitations': [invitation.to_dict_summary() for invitation in self.associated_invitations]
         }

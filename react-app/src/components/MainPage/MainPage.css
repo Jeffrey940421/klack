@@ -1,0 +1,126 @@
+#chat-room_container {
+  display: grid;
+  grid-template-columns: 80px auto auto;
+  height: calc(100vh - 60px);
+}
+
+#chat-room_workspaces-sidebar {
+  background-color: #611f69;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  row-gap: 12px;
+}
+
+.chat-room_workspace {
+  padding: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent;
+  border: 3px solid transparent;
+  border-radius: 10px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+#chat-room_workspaces-sidebar > div {
+  position: relative;
+}
+
+.chat-room_workspace:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.chat-room_workspace.active {
+  border-color: white;
+}
+
+.chat-room_workspace img {
+  width: 36px;
+  height: 36px;
+  aspect-ratio: 1 / 1;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.chat-room_workspace-name {
+  display: none;
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  top: 13px;
+  left: 58px;
+  width: fit-content;
+  white-space: nowrap;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.chat-room_workspace:hover + .chat-room_workspace-name {
+  display: flex;
+}
+
+.chat-room_workspace-name:after {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 50%;
+	width: 0;
+	height: 0;
+	border: 6px solid transparent;
+	border-right-color: rgba(0, 0, 0, 0.8);
+	border-left: 0;
+	margin-top: -6px;
+	margin-left: -6px;
+}
+
+#chat-room_create-workspace {
+  font-size: 20px;
+  margin-top: 8px;
+  padding: 10px;
+  border: none;
+  aspect-ratio: 1/1;
+  background-color: transparent;
+  color: white;
+  border-radius: 10px;
+}
+
+#chat-room_create-workspace:hover {
+  background-color: #955f9c;
+}
+
+#chat-room_create-workspace-label {
+  display: none;
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  top: 10px;
+  left: 48px;
+  width: fit-content;
+  white-space: nowrap;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+#chat-room_create-workspace:hover + #chat-room_create-workspace-label {
+  display: flex;
+}
+
+#chat-room_create-workspace-label:after {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 50%;
+	width: 0;
+	height: 0;
+	border: 6px solid transparent;
+	border-right-color: rgba(0, 0, 0, 0.8);
+	border-left: 0;
+	margin-top: -6px;
+	margin-left: -6px;
+}
