@@ -2,14 +2,37 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createInvitation } from "../../store/workspaces";
 import { usePopup } from "../../context/Popup";
+import { useModal } from "../../context/Modal";
+import "./Invitation.css"
+
+function SentInvitation({ sentInvitations }) {
+  const { closePopup } = usePopup()
+
+  return (
+    <div id="sent-invitations">
+      <h2>Congradulations!</h2>
+      <span>Invitations haven been successfully sent to
+        <span> {sentInvitations.join(', ')}</span>.
+      </span>
+      <button
+        onClick={() => closePopup()}
+      >
+        <i className="fa-solid fa-x" />
+      </button>
+    </div>
+  )
+}
 
 export function Invitation({ workspace, user }) {
   const dispatch = useDispatch();
   const [emails, setEmails] = useState([])
   const [newEmail, setNewEmail] = useState("")
   const [validationErrors, setValidationErrors] = useState([])
+  const [focused, setFocuesd] = useState(false)
   const [serverErrors, setServerErrors] = useState({ emails: [], other: [] })
   const { setPopupContent } = usePopup()
+  const { closeModal } = useModal()
+
 
   const validateEmail = (email) => {
     return String(email)
@@ -28,39 +51,23 @@ export function Invitation({ workspace, user }) {
       })
     )
 
-    console.log(data)
+      console.log(data)
 
     if (data.filter(res => res).length) {
       const errors = { emails: [], other: [] }
-      const emailErrors = data.flat().filter(error => error.startsWith("recipient"))
-      const otherErrors = data.flat().filter(error => !error.startsWith("recipient"))
+      const emailErrors = data.flat().filter(error => error && error.startsWith("recipient"))
+      const otherErrors = data.flat().filter(error => error && !error.startsWith("recipient"))
       errors.emails = emailErrors.map(error => error.split(" : ")[1])
       errors.other = otherErrors
       setServerErrors(errors)
       const sentInvitations = emails.filter((email, i) => !data[i])
       if (sentInvitations.length) {
-        setPopupContent(
-          <>
-            <h1>Invitations haven been sent to </h1>
-            {sentInvitations.map(email => {
-              return (
-                <h1>{email}</h1>
-              )
-            })}
-          </>
-        )
+        setPopupContent(<SentInvitation sentInvitations={sentInvitations} />)
       }
     } else {
-      setPopupContent(
-        <>
-          <h1>Invitations haven been sent to </h1>
-          {emails.filter((email, i) => !data[i]).map(email => {
-            return (
-              <h1>{email}</h1>
-            )
-          })}
-        </>
-      )
+      const sentInvitations = emails.filter((email, i) => !data[i])
+      setPopupContent(<SentInvitation sentInvitations={sentInvitations} />)
+      closeModal()
     }
   }
 
@@ -92,11 +99,11 @@ export function Invitation({ workspace, user }) {
     <div id="invitation_container">
       <h2>Invite people to {workspace.name}</h2>
       <span>To:</span>
-      <div id="invitation_input">
+      <div id="invitation_input" className={(focused ? "focused " : "") + (validationErrors.filter(error => error !== "No Error").length ? "error" : "")}>
         {emails.map(((email, i) => {
           return (
             <div className={`invitation_email${validationErrors[i] === "No Error" ? "" : " error"}`} key={i}>
-              {email}
+              <span>{email}</span>
               <button
                 onClick={() => setEmails((prev) => {
                   prev.splice(i, 1);
@@ -110,35 +117,54 @@ export function Invitation({ workspace, user }) {
         }))}
         <input
           type="text"
+          placeholder="name@example.com"
           value={newEmail}
-          onChange={(e) => setNewEmail(e.target.value)}
+          onChange={(e) => {
+            setNewEmail(e.target.value)
+            e.target.style.width = "150px"
+            if (e.target.scrollWidth > 150) {
+              e.target.style.width = `${e.target.scrollWidth}px`
+            }
+          }}
+          onFocus={() => setFocuesd(true)}
           onBlur={(e) => {
+            setFocuesd(false)
             if (e.target.value) {
               setEmails((prev) => {
                 prev.push(e.target.value)
                 return [...prev]
               })
               setNewEmail("")
+              e.target.style.width = "150px"
             }
           }}
+          style={{ width: "150px" }}
         />
-        {
-          validationErrors.length > 0 && validationErrors.filter(error => error !== "No Error").map(error => (
-            <span id="signup_form-email_validation_errors" className="validation_errors">
-              <i className="fa-solid fa-circle-exclamation" />
-              {error}
-            </span>
-          ))
-        }
-        {
-          serverErrors.emails.length > 0 && serverErrors.emails.map(error => (
-            <span id="signup_form-email_validation_errors" className="validation_errors">
-              <i className="fa-solid fa-circle-exclamation" />
-              {error}
-            </span>
-          ))
-        }
       </div>
+      {
+        validationErrors.length > 0 && validationErrors.filter(error => error !== "No Error").map(error => (
+          <span id="invitation_email-validation-errors" className="validation_errors">
+            <i className="fa-solid fa-circle-exclamation" />
+            {error}
+          </span>
+        ))
+      }
+      {
+        serverErrors.emails.length > 0 && serverErrors.emails.map(error => (
+          <span id="invitation_email-server-errors" className="validation_errors">
+            <i className="fa-solid fa-circle-exclamation" />
+            {error}
+          </span>
+        ))
+      }
+      {
+        serverErrors.other.length > 0 && serverErrors.other.map(error => (
+          <span id="invitation_email-server-errors" className="validation_errors">
+            <i className="fa-solid fa-circle-exclamation" />
+            {error}
+          </span>
+        ))
+      }
       <button
         id="invitation_button"
         onClick={sendInvitation}

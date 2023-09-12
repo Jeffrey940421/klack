@@ -2,11 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import OpenModalButton from "../OpenModalButton";
 import { processInvitation } from "../../store/session";
+import { useModal } from "../../context/Modal";
+import { JoinWorkspace } from "../JoinWorkspace";
 
 function NotificationButton({ user, hasWorkspace }) {
   const dispatch = useDispatch();
   const [showMenu, setShowMenu] = useState(false);
   const ulRef = useRef();
+  const { setModalContent } = useModal()
 
   const openMenu = () => {
     setShowMenu((prev) => !prev);
@@ -36,7 +39,7 @@ function NotificationButton({ user, hasWorkspace }) {
           {invitations.length}
         </div>
       </button>
-      <ul id="notification-button_dropdown" className={(showMenu ? "" : "hidden") + (hasWorkspace ? "" : " no-workspace")} ref={ulRef}>
+      <ul id="notification-button_dropdown" className={(showMenu ? "" : "hidden ") + (hasWorkspace ? "" : "no-workspace")} ref={ulRef}>
         <li>Invitations</li>
         {
           invitations.length ?
@@ -46,13 +49,7 @@ function NotificationButton({ user, hasWorkspace }) {
                   {invitation.sender.nickname} ({invitation.sender.email}) invited you to join workspace {invitation.workspaceName}.
                   <li className="notification-button_invitation-buttons">
                     <button
-                      onClick={() => {
-                        try {
-                          dispatch(processInvitation(invitation.id, "accept"))
-                        } catch (e) {
-                          console.log(e)
-                        }
-                      }}
+                      onClick={() => setModalContent(<JoinWorkspace invitation={invitation}/>)}
                     >
                       Accept
                     </button>

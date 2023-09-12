@@ -1,7 +1,7 @@
 @font-face {
   font-family: 'larsseitregular';
   src: url('font/larsseit-webfont.woff2') format('woff2'),
-       url('font/larsseit-webfont.woff') format('woff');
+    url('font/larsseit-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -9,7 +9,7 @@
 @font-face {
   font-family: 'larsseitbold';
   src: url('font/larsseit-bold-webfont.woff2') format('woff2'),
-       url('font/larsseit-bold-webfont.woff') format('woff');
+    url('font/larsseit-bold-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -17,7 +17,7 @@
 @font-face {
   font-family: 'larsseit_boldbold_italic';
   src: url('font/larsseit-bolditalic-webfont.woff2') format('woff2'),
-       url('font/larsseit-bolditalic-webfont.woff') format('woff');
+    url('font/larsseit-bolditalic-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -25,7 +25,7 @@
 @font-face {
   font-family: 'larsseitextrabold';
   src: url('font/larsseit-extrabold-webfont.woff2') format('woff2'),
-       url('font/larsseit-extrabold-webfont.woff') format('woff');
+    url('font/larsseit-extrabold-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -33,7 +33,7 @@
 @font-face {
   font-family: 'larsseitextrabold_italic';
   src: url('font/larsseit-extrabolditalic-webfont.woff2') format('woff2'),
-       url('font/larsseit-extrabolditalic-webfont.woff') format('woff');
+    url('font/larsseit-extrabolditalic-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -41,7 +41,7 @@
 @font-face {
   font-family: 'larsseitregular';
   src: url('font/larsseit-italic-webfont.woff2') format('woff2'),
-       url('font/larsseit-italic-webfont.woff') format('woff');
+    url('font/larsseit-italic-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -49,7 +49,7 @@
 @font-face {
   font-family: 'larsseitlight';
   src: url('font/larsseit-light-webfont.woff2') format('woff2'),
-       url('font/larsseit-light-webfont.woff') format('woff');
+    url('font/larsseit-light-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -57,7 +57,7 @@
 @font-face {
   font-family: 'larsseitlight_italic';
   src: url('font/larsseit-lightitalic-webfont.woff2') format('woff2'),
-       url('font/larsseit-lightitalic-webfont.woff') format('woff');
+    url('font/larsseit-lightitalic-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -65,7 +65,7 @@
 @font-face {
   font-family: 'larsseitmedium';
   src: url('font/larsseit-medium-webfont.woff2') format('woff2'),
-       url('font/larsseit-medium-webfont.woff') format('woff');
+    url('font/larsseit-medium-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -73,7 +73,7 @@
 @font-face {
   font-family: 'larsseitmedium_italic';
   src: url('font/larsseit-mediumitalic-webfont.woff2') format('woff2'),
-       url('font/larsseit-mediumitalic-webfont.woff') format('woff');
+    url('font/larsseit-mediumitalic-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -81,7 +81,7 @@
 @font-face {
   font-family: 'larsseitthin';
   src: url('font/larsseit-thin-webfont.woff2') format('woff2'),
-       url('font/larsseit-thin-webfont.woff') format('woff');
+    url('font/larsseit-thin-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -89,7 +89,7 @@
 @font-face {
   font-family: 'larsseitthin_italic';
   src: url('font/larsseit-thinitalic-webfont.woff2') format('woff2'),
-       url('font/larsseit-thinitalic-webfont.woff') format('woff');
+    url('font/larsseit-thinitalic-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -97,7 +97,7 @@
 @font-face {
   font-family: 'circular_stdbook';
   src: url('font/fontsfree-net-circular-std-book-2-webfont.woff2') format('woff2'),
-       url('font/fontsfree-net-circular-std-book-2-webfont.woff') format('woff');
+    url('font/fontsfree-net-circular-std-book-2-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
@@ -227,7 +227,7 @@ input::placeholder {
   padding: 20px 10px 7px 10px;
   font-size: 14px;
   border-radius: 8px;
-  border: 1px solid rgba(29,28,29,.3);
+  border: 1px solid rgba(29, 28, 29, .3);
 }
 
 .input input:focus {
@@ -256,14 +256,24 @@ input::placeholder {
 }
 
 .validation_errors {
-  font-size: 14px;
+  font-size: 14px !important;
   color: rgb(224, 30, 90);
-  margin-top: 8px;
+  margin-top: 8px !important;
   display: flex;
   column-gap: 3px;
   align-items: center;
+  font-weight: 100 !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word;
+  word-break: break-all;
+  line-height: 16px;
 }
 
 .hidden {
   display: none !important;
+}
+
+.focused {
+  outline: 3px solid #bbe1f1;
+  border: 1px solid #377cb1 !important;
 }

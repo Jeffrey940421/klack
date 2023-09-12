@@ -166,7 +166,7 @@ export function CreateWorkspace() {
       errors.icon = iconErrors.map(error => error.split(" : ")[1])
       errors.nickname = nicknameErrors.map(error => error.split(" : ")[1])
       errors.image = imageErrors.map(error => error.split(" : ")[1])
-      errors.other = otherErrors.map(error => error.split(" : ")[1])
+      errors.other = otherErrors
       setServerErrors(errors)
       closePopup()
     } else {
@@ -180,11 +180,11 @@ export function CreateWorkspace() {
     const errors = { name: [], nickname: [] }
 
     if (nameEdited && !name) {
-      errors.name.push("Workplace name is required")
+      errors.name.push("Workspace name is required")
     }
 
     if (name && name.length > 80) {
-      errors.name.push("Workplace name must be at most 80 characters long")
+      errors.name.push("Workspace name must be at most 80 characters long")
     }
 
     if (nicknameEdited && !nickname) {

@@ -7,6 +7,8 @@ import { updateActiveWorkspace } from "../../store/session";
 import { getWorkspaces, getActiveWorkspaces } from "../../store/workspaces";
 import { ChatRoom } from "./ChatRoom";
 import { io } from 'socket.io-client';
+import { authenticate } from "../../store/session";
+
 let socket
 
 export function MainPage() {
@@ -38,13 +40,13 @@ export function MainPage() {
   useEffect(() => {
     socket = io();
     if (sessionUser) {
-      socket.emit("join_room", { room: `user${sessionUser.id}` })
+      socket.emit("join_room", { room: `user${sessionUser.id}`, email: sessionUser.email })
     }
 
     return (() => {
       socket.disconnect()
     })
-  }, [sessionUser])
+  }, [])
 
 
   if (!sessionUser) {

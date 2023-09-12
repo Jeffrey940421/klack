@@ -72,6 +72,12 @@ class Channel(db.Model):
       cascade="all, delete-orphan"
     )
 
+    active_users = db.relationship(
+       "WorkspaceUser",
+       foreign_keys="WorkspaceUser.active_channel_id",
+       back_populates="active_channel"
+    )
+
     def to_dict_summary(self):
        return {
           'id': self.id,
@@ -87,9 +93,9 @@ class Channel(db.Model):
           'id': self.id,
           'name': self.name,
           'description': self.description,
-          'creator': self.creator.to_dict_workplace(self.workspace_id),
+          'creator': self.creator.to_dict_workspace(self.workspace_id),
           'workspaceId': self.workspace_id,
-          'users': [user.to_dict_workplace(self.workspace_id) for user in self.users],
+          'users': [user.to_dict_workspace(self.workspace_id) for user in self.users],
           'messages': [message.to_dict_summary() for message in self.messages],
           'createdAt': self.created_at
        }

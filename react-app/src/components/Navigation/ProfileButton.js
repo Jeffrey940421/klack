@@ -56,7 +56,10 @@ function ProfileButton({ user, hasWorkspace, socket }) {
                 <span>{user.email}</span>
               </div>
             </li>
-            <li onClick={() => setModalContent(<EditProfile profile={userProfile} workspace={activeWorkspace}/>)}>
+            <li onClick={() => {
+              setShowMenu(false)
+              setModalContent(<EditProfile profile={userProfile} workspace={activeWorkspace}/>)
+            }}>
               <button>Edit Profile</button>
             </li>
           </>

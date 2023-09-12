@@ -51,7 +51,7 @@ class ChannelMessage(db.Model):
     def to_dict_summary(self):
        return {
           'id': self.id,
-          'sender': self.sender.to_dict_workplace(self.channel.workspace_id),
+          'sender': self.sender.to_dict_workspace(self.channel.workspace_id),
           'channelId': self.channel_id,
           'content': self.content,
           'createdAt': self.created_at,

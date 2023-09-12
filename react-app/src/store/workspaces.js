@@ -31,6 +31,31 @@ const addInvitation = (invitation) => ({
 
 const initialState = { workspaces: [], activeWorkspace: null };
 
+export const joinWorkspace = (id, profile) => async (dispatch) => {
+  const response = await fetch(`api/workspaces/${id}/join`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      nickname: profile.nickname,
+      profile_image_url: profile.imageUrl
+    })
+  });
+  if (response.ok) {
+    const data = await response.json();
+    dispatch(addWorkspace(data));
+    return null;
+  } else if (response.status < 500) {
+    const data = await response.json();
+    if (data.errors) {
+      return data.errors;
+    }
+  } else {
+    return ["An error occurred. Please try again."];
+  }
+}
+
 export const getWorkspaces = () => async (dispatch) => {
   const response = await fetch("api/workspaces/current", {
     headers: {
@@ -265,7 +290,14 @@ export default function reducer(state = initialState, action) {
         iconUrl: action.payload.iconUrl,
         createdAt: action.payload.createdAt
       }
-      return { ...state, workspaces: { ...state.workspaces, [action.payload.id]: workspace }, activeWorkspace: activeWorkspace }
+      let workspaces = Object.values(state.workspaces)
+      workspaces.push(workspace)
+      workspaces = workspaces.sort((a, b) => a.id - b.id)
+      const sortedWorkspaces = {}
+      for (let workspace of workspaces) {
+        sortedWorkspaces[workspace.id] = workspace
+      }
+      return { ...state, workspaces: sortedWorkspaces, activeWorkspace }
     }
     case DELTE_WORKSPACE: {
       let { id, activeWorkspace } = action.payload

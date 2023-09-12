@@ -104,6 +104,8 @@ def upgrade():
     sa.Column('nickname', sa.String(length=80), nullable=False),
     sa.Column('profile_image_url', sa.String(length=255), nullable=False),
     sa.Column('role', sa.String(length=30), nullable=False),
+    sa.Column('active_channel_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['active_channel_id'], ['channels.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['workspace_id'], ['workspaces.id'], ),
     sa.PrimaryKeyConstraint('workspace_id', 'user_id')

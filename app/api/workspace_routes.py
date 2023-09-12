@@ -3,7 +3,6 @@ from app.models import Workspace, Channel, WorkspaceUser, WorkspaceInvitation, U
 from flask_login import current_user, login_user, logout_user, login_required
 from app.forms import WorkspaceForm, WorkspaceUserForm, NewInvitationForm
 from random import choice
-from flask_socketio import SocketIO, emit
 from app.socket import socketio
 
 workspace_routes = Blueprint('workspace', __name__)
@@ -39,7 +38,7 @@ def validation_errors_to_error_messages(validation_errors):
 @login_required
 def workspace(id):
     """
-    Query for a workplace by id and returns that user in a dictionary
+    Query for a workspace by id and returns that workspace in a dictionary
     """
     workspace = Workspace.query.get(id)
     if not workspace:
@@ -50,9 +49,17 @@ def workspace(id):
 @login_required
 def current_workspace():
     """
-    Query for all the workplaces that the current user is in
+    Query for all the workspaces that the current user is in
     """
     return {"workspaces": [workspace.to_dict_summary() for workspace in current_user.workspaces]}
+
+@workspace_routes.route('/<int:id>/channels/current', methods=['GET'])
+@login_required
+def current_channel(id):
+    """
+    Query for all the channels belonging to the given workspace that the current user is in
+    """
+    return {"channels": [channel.to_dict_summary() for channel in current_user.channels if channel.workspace_id == id]}
 
 @workspace_routes.route('/new', methods=['POST'])
 @login_required
