@@ -43,7 +43,7 @@ function NotificationButton({ user, hasWorkspace }) {
             invitations.map((invitation, i) => {
               return (
                 <li className="notification-button_invitation" key={invitation.id}>
-                  {invitation.sender.nickname} (invitation.sender.email) invited you to join workspace {invitation.workspaceName}.
+                  {invitation.sender.nickname} ({invitation.sender.email}) invited you to join workspace {invitation.workspaceName}.
                   <li className="notification-button_invitation-buttons">
                     <button
                       onClick={() => {

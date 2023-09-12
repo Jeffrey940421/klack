@@ -3,10 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../store/session";
 import { Redirect } from "react-router-dom";
 import './NoWorkspace.css';
+import { useModal } from "../../context/Modal";
+import { CreateWorkspace } from "../CreateWorkspace";
 
 export function NoWorkspace({ isLoaded }) {
   const dispatch = useDispatch();
   const sessionUser = useSelector((state) => state.session.user);
+  const { setModalContent } = useModal()
 
   return (
     <div id="no-workspace_container">
@@ -23,7 +26,11 @@ export function NoWorkspace({ isLoaded }) {
         <div id="no-workspace_create">
           <h2>Create a new Klack workspace</h2>
           <p>Klack gives your team a home — a place where they can talk and work together. To create a new workspace, click the button below.</p>
-          <button>Create a Workspace</button>
+          <button
+            onClick={() => setModalContent(<CreateWorkspace />)}
+          >
+            Create a Workspace
+          </button>
           <span>By continuing, you’re agreeing to our Main Services Agreement, User Terms of Service, Privacy Policy, Cookie Policy and Klack Supplemental Terms.</span>
         </div>
         <div id="no-workspace_image">

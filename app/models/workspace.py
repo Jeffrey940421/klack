@@ -83,5 +83,5 @@ class Workspace(db.Model):
             'createdAt': self.created_at,
             'users': [user.to_dict_workspace(self.id) for user in self.users],
             'channels': [channel.to_dict_summary() for channel in self.channels],
-            'associatedInvitations': [invitation.to_dict_summary() for invitation in self.associated_invitations]
+            'associatedInvitations': [invitation.to_dict() for invitation in self.associated_invitations]
         }

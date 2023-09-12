@@ -149,13 +149,13 @@ export function CreateWorkspace() {
 
     const workspace = {
       name,
-      iconUrl,
+      iconUrl: iconUrl ? iconUrl : workspaceIconUrl,
       nickname,
-      imageUrl
+      imageUrl: imageUrl ? imageUrl : profileImageUrl
     }
 
     let data = await dispatch(createWorkspace(workspace))
-    const errors = { name: [], icon: [], nickname: [], image: [] }
+    const errors = { name: [], icon: [], nickname: [], image: [], other: [] }
     if (data) {
       const nameErrors = data.filter(error => error.startsWith("name"))
       const iconErrors = data.filter(error => error.startsWith("icon"))
@@ -168,6 +168,7 @@ export function CreateWorkspace() {
       errors.image = imageErrors.map(error => error.split(" : ")[1])
       errors.other = otherErrors.map(error => error.split(" : ")[1])
       setServerErrors(errors)
+      closePopup()
     } else {
       await dispatch(authenticate())
       closePopup()
@@ -433,7 +434,7 @@ export function CreateWorkspace() {
             onClick={handleSubmit}
             disabled={Object.values(validationErrors).flat().length || !nicknameEdited}
           >
-            Create Workplace
+            Create Workspace
           </button>
         </div>
       </form>

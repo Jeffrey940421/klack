@@ -1,4 +1,4 @@
-from flask_socketio import SocketIO, emit, join_room
+from flask_socketio import SocketIO, emit, join_room, leave_room
 import os
 
 if os.environ.get("FLASK_ENV") == "production":
@@ -12,4 +12,10 @@ socketio = SocketIO(cors_allowed_origins=origins)
 def on_join(data):
     room = data['room']
     join_room(room)
-    print("joined room")
+    print('----------------------------------------------------->user joined room ' + room)
+
+@socketio.on('leave_room')
+def on_leave(data):
+    room = data['room']
+    leave_room(room)
+    print('----------------------------------------------------->user left room ' + room)

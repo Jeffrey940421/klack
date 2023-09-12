@@ -1,6 +1,8 @@
 const LOAD_WORKSPACES = "workspaces/LOAD_WORKSPACES"
 const LOAD_ACTIVE_WORKSPACE = "workspaces/LOAD_ACTIVE_WORKSPACE"
 const ADD_WORKSPACE = "workspaces/ADD_WORKSPACE"
+const DELTE_WORKSPACE = "workspaces/DELETE_WORKSPACE"
+const ADD_INVITATION = "workspaces/ADD_INVITATION"
 
 const loadWorkspaces = (workspaces) => ({
   type: LOAD_WORKSPACES,
@@ -17,7 +19,17 @@ const addWorkspace = (workspace) => ({
   payload: workspace
 })
 
-const initialState = { workspaces: null, activeWorkspace: null };
+const deleteWorkspace = (id, activeWorkspace) => ({
+  type: DELTE_WORKSPACE,
+  payload: { id, activeWorkspace }
+})
+
+const addInvitation = (invitation) => ({
+  type: ADD_INVITATION,
+  payload: invitation
+})
+
+const initialState = { workspaces: [], activeWorkspace: null };
 
 export const getWorkspaces = () => async (dispatch) => {
   const response = await fetch("api/workspaces/current", {
@@ -69,7 +81,124 @@ export const createWorkspace = (workspace) => async (dispatch) => {
       name: workspace.name,
       icon_url: workspace.iconUrl,
       nickname: workspace.nickname,
-      profile_image_url: workspace.profileImageUrl
+      profile_image_url: workspace.imageUrl
+    })
+  });
+  if (response.ok) {
+    const data = await response.json();
+    dispatch(addWorkspace(data));
+    return null;
+  } else if (response.status < 500) {
+    const data = await response.json();
+    if (data.errors) {
+      return data.errors;
+    }
+  } else {
+    return ["An error occurred. Please try again."];
+  }
+}
+
+export const createInvitation = (id, email) => async (dispatch) => {
+  const response = await fetch(`api/workspaces/${id}/invitations/new`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      recipient_email: email
+    })
+  });
+  if (response.ok) {
+    const data = await response.json();
+    dispatch(addInvitation(data));
+    return null;
+  } else if (response.status < 500) {
+    const data = await response.json();
+    if (data.errors) {
+      console.log(data.errors)
+      return data.errors;
+    }
+  } else {
+    return ["An error occurred. Please try again."];
+  }
+}
+
+export const editWorkspace = (id, workspace) => async (dispatch) => {
+  const response = await fetch(`api/workspaces/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: workspace.name,
+      icon_url: workspace.iconUrl
+    })
+  });
+  if (response.ok) {
+    const data = await response.json();
+    dispatch(addWorkspace(data));
+    return null;
+  } else if (response.status < 500) {
+    const data = await response.json();
+    if (data.errors) {
+      return data.errors;
+    }
+  } else {
+    return ["An error occurred. Please try again."];
+  }
+}
+
+export const removeWorkspace = (id) => async (dispatch) => {
+  const response = await fetch(`api/workspaces/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (response.ok) {
+    const data = await response.json();
+    dispatch(deleteWorkspace(id, data.activeWorkspace));
+    return null;
+  } else if (response.status < 500) {
+    const data = await response.json();
+    if (data.errors) {
+      return data.errors;
+    }
+  } else {
+    return ["An error occurred. Please try again."];
+  }
+}
+
+export const leaveCurrentWorkspace = (id) => async (dispatch) => {
+  const response = await fetch(`api/workspaces/${id}/leave`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (response.ok) {
+    const data = await response.json();
+    dispatch(deleteWorkspace(id, data.activeWorkspace));
+    return null;
+  } else if (response.status < 500) {
+    const data = await response.json();
+    if (data.errors) {
+      return data.errors;
+    }
+  } else {
+    return ["An error occurred. Please try again."];
+  }
+}
+
+export const editProfile = (userId, workspaceId, profile) => async (dispatch) => {
+  const response = await fetch(`api/workspaces/${workspaceId}/users/${userId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      nickname: profile.nickname,
+      profile_image_url: profile.imageUrl
     })
   });
   if (response.ok) {
@@ -137,6 +266,27 @@ export default function reducer(state = initialState, action) {
         createdAt: action.payload.createdAt
       }
       return { ...state, workspaces: { ...state.workspaces, [action.payload.id]: workspace }, activeWorkspace: activeWorkspace }
+    }
+    case DELTE_WORKSPACE: {
+      let { id, activeWorkspace } = action.payload
+      if (activeWorkspace) {
+        const { invitations, channels, users } = normalization(activeWorkspace)
+        activeWorkspace = {
+          ...activeWorkspace,
+          associatedInvitations: invitations,
+          channels: channels,
+          users: users
+        }
+      }
+      const workspaces = state.workspaces
+      delete workspaces[id]
+      return { ...state, workspaces, activeWorkspace }
+    }
+    case ADD_INVITATION: {
+      const activeWorkspace = state.activeWorkspace
+      const invitation = action.payload
+      activeWorkspace.associatedInvitations[invitation.id] = invitation
+      return { ...state, activeWorkspace }
     }
     default:
       return state;

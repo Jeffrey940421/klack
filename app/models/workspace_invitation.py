@@ -72,6 +72,7 @@ class WorkspaceInvitation(db.Model):
         'id': self.id,
         'sender': self.sender.to_dict_workspace(self.workspace_id),
         'recipientId': self.recipient_id,
+        'recipientEmail': self.recipient.email,
         'workspaceId': self.workspace_id,
         'workspaceName': self.workspace.name,
         'status': self.status

@@ -6,14 +6,15 @@ import LoginFormPage from "./components/LoginFormPage";
 import { authenticate } from "./store/session";
 import { Test } from "./components/Test";
 import { MainPage } from "./components/MainPage";
-import { CreateWorkspace } from "./components/CreateWorkspace";
 
 function App() {
   const dispatch = useDispatch();
   const [isLoaded, setIsLoaded] = useState(false);
+
   useEffect(() => {
     dispatch(authenticate()).then(() => setIsLoaded(true));
   }, [dispatch]);
+
 
   return (
     <>
@@ -29,9 +30,6 @@ function App() {
             </Route>
             <Route exact path="/signup">
               <SignupFormPage />
-            </Route>
-            <Route exact path="/test">
-              <CreateWorkspace />
             </Route>
           </Switch>
         </>

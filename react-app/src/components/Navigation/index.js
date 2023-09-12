@@ -5,7 +5,7 @@ import ProfileButton from './ProfileButton';
 import NotificationButton from './NotificationButton';
 import './Navigation.css';
 
-function Navigation({ hasWorkspace }) {
+function Navigation({ hasWorkspace, socket }) {
 	const sessionUser = useSelector(state => state.session.user);
 
 	return (
@@ -17,15 +17,15 @@ function Navigation({ hasWorkspace }) {
 				hasWorkspace ?
 					<button id="navigation_search">
 						<span>
-							Search {sessionUser.active_workspace.name}
+							Search {sessionUser.active_workspace?.name}
 						</span>
 						<i className="fa-solid fa-magnifying-glass" />
 					</button> :
 					<div></div>
 			}
 			<li id="navigation_dropdowns">
-				<NotificationButton user={sessionUser} hasWorkspace={hasWorkspace} />
-				<ProfileButton user={sessionUser} hasWorkspace={hasWorkspace} />
+				<NotificationButton user={sessionUser} hasWorkspace={hasWorkspace} socket={socket} />
+				<ProfileButton user={sessionUser} hasWorkspace={hasWorkspace} socket={socket} />
 			</li>
 		</ul>
 	);

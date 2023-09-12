@@ -1,8 +1,8 @@
 // constants
 const SET_USER = "session/SET_USER";
 const REMOVE_USER = "session/REMOVE_USER";
-const SET_ACTIVE_WORKSPACE = "session/SET_ACTIVE_WORKSPACE"
 const LOAD_INVITATIONS = "session/LOAD_INVITATIONS"
+const DELETE_LAST_WORKSPACE = "session/DELETE_LAST_WORKSPACE"
 
 const setUser = (user) => ({
 	type: SET_USER,
@@ -16,6 +16,10 @@ const removeUser = () => ({
 const loadInvitations = (invitations) => ({
 	type: LOAD_INVITATIONS,
 	payload: invitations
+})
+
+export const deleteLastWorkspace = () => ({
+	type: DELETE_LAST_WORKSPACE
 })
 
 const initialState = { user: null };
@@ -144,14 +148,14 @@ export const processInvitation = (id, action) => async (dispatch) => {
 	}
 }
 
-export const updateActiveWorkspace = (user_id, workspace_id) => async (dispatch) => {
-	const response = await fetch(`/api/users/${user_id}/active_workspace`, {
+export const updateActiveWorkspace = (userId, workspaceId) => async (dispatch) => {
+	const response = await fetch(`/api/users/${userId}/active_workspace`, {
 		method: "PUT",
 		headers: {
 			"Content-Type": "application/json",
 		},
 		body: JSON.stringify({
-			active_workspace_id: workspace_id
+			active_workspace_id: workspaceId
 		}),
 	});
 
@@ -177,6 +181,8 @@ export default function reducer(state = initialState, action) {
 			return { user: null };
 		case LOAD_INVITATIONS:
 			return { ...state, user: { ...state.user, receivedWorkspaceInvitations: action.payload } }
+		case DELETE_LAST_WORKSPACE:
+			return { ...state, user: { ...state.user, activeWorkspace: null, workspaces: [] } }
 		default:
 			return state;
 	}
