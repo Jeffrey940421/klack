@@ -109,8 +109,8 @@ class User(db.Model, UserMixin):
         return {
             'id': self.id,
             'email': self.email,
-            'active_workspace': self.active_workspace.to_dict_summary() if self.active_workspace else None,
-            'created_at': self.created_at,
+            'activeWorkspace': self.active_workspace.to_dict_summary() if self.active_workspace else None,
+            'createdAt': self.created_at,
             'workspaces': [workspace.to_dict_summary() for workspace in self.workspaces],
             'receivedWorkspaceInvitations': [invitation.to_dict() for invitation in self.received_workspace_invitations]
         }

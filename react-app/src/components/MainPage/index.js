@@ -6,11 +6,14 @@ import { NoWorkspace } from "../NoWorkspace"
 import { updateActiveWorkspace } from "../../store/session";
 import { getWorkspaces, getActiveWorkspaces } from "../../store/workspaces";
 import { ChatRoom } from "./ChatRoom";
+import { io } from 'socket.io-client';
+let socket
 
 export function MainPage() {
   const dispatch = useDispatch();
   const sessionUser = useSelector((state) => state.session.user);
   const [workspaceLoaded, setWorkspaceLoaded] = useState(false)
+
 
   // If user has workspaces but no active workspace, set the first workspace
   // in the list as active workspace
@@ -19,18 +22,29 @@ export function MainPage() {
       return <Redirect to="/login" />
     }
     if (sessionUser.workspaces.length) {
-      if (!sessionUser.active_workspace) {
-        dispatch(updateActiveWorkspace(sessionUser.id, sessionUser.workspaces[1].id))
+      if (!sessionUser.activeWorkspace) {
+        dispatch(updateActiveWorkspace(sessionUser.id, sessionUser.workspaces[0].id))
           .then(() => dispatch(getWorkspaces()))
-          .then(() => dispatch(getActiveWorkspaces(sessionUser.active_workspace.id)))
+          .then(() => dispatch(getActiveWorkspaces(sessionUser.workspaces[0].id)))
           .then(() => setWorkspaceLoaded(true))
       } else {
         dispatch(getWorkspaces())
-          .then(() => dispatch(getActiveWorkspaces(sessionUser.active_workspace.id)))
+          .then(() => dispatch(getActiveWorkspaces(sessionUser.activeWorkspace.id)))
           .then(() => setWorkspaceLoaded(true))
       }
     }
   }, [dispatch, sessionUser])
+
+  useEffect(() => {
+    socket = io();
+    if (sessionUser) {
+      socket.emit("join_room", { room: `user${sessionUser.id}` })
+    }
+
+    return (() => {
+      socket.disconnect()
+    })
+  }, [sessionUser])
 
 
   if (!sessionUser) {
@@ -40,15 +54,15 @@ export function MainPage() {
     if (!workspaces.length) {
       return (
         <div className="main-page_container">
-          <Navigation hasWorkspace={false} />
+          <Navigation hasWorkspace={false} socket={socket} />
           <NoWorkspace />
         </div>
       )
     } else {
       return (
         <div className="main-page_container">
-          {workspaceLoaded && <Navigation hasWorkspace={true} />}
-          {workspaceLoaded && <ChatRoom user={sessionUser} />}
+          {workspaceLoaded && <Navigation hasWorkspace={true} socket={socket} />}
+          {workspaceLoaded && <ChatRoom user={sessionUser} socket={socket} />}
         </div>
       )
     }

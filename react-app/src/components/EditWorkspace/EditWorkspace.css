@@ -1,0 +1,82 @@
+#edit-workspace_container {
+  width: 660px;
+  padding: 50px;
+}
+
+#edit-workspace_workspace-form {
+  width: 100%;
+}
+
+#edit-workspace_workspace-form h2 {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+#edit-workspace_workspace-form p {
+  font-size: 15px;
+  margin-bottom: 24px;
+}
+
+#edit-workspace_workspace-form > button {
+  font-size: 18px;
+  font-weight: bold;
+  width: 200px;
+  height: 44px;
+  margin-top: 48px;
+  background-color: #611f69;
+  border: none;
+  color: white;
+  border-radius: 5px;
+}
+
+#edit-workspace_workspace-name-length-limit {
+  position: absolute;
+  top: 20px;
+  right: 10px;
+}
+
+#edit-workspace_workspace-name-input input {
+  padding-right: 40px !important;
+}
+
+#edit-workspace_workspace-name-input {
+  margin-bottom: 40px;
+}
+
+#edit-workspace_workspace-icon-slider {
+  width: 110px;
+}
+
+#edit-workspace_workspace-form h3 {
+  margin-bottom: 8px;
+  font-weight: 100 !important;
+}
+
+#edit-workspace_workspace-form h3 span {
+  color: gray;
+}
+
+#edit-workspace_workspace-icon-upload {
+  display: flex;
+  column-gap: 20px;
+}
+
+#edit-workspace_workspace-icon-upload > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  row-gap: 10px;
+}
+
+#edit-workspace_workspace-icon-upload_button {
+  font-size: 15px;
+  border: 1px solid lightgray;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: transparent;
+}
+
+#edit-workspace_workspace-form > button:disabled {
+  background-color: lightgray;
+  cursor: default;
+}

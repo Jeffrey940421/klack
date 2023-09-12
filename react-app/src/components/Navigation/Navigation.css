@@ -92,6 +92,14 @@
   font-weight: bold;
 }
 
+#profile-button_dropdown span {
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: bold;
+}
+
 #profile-button_dropdown li:nth-child(1) {
   display: flex;
   align-items: center;
@@ -99,6 +107,16 @@
   padding: 8px 24px 12px 24px;
   box-sizing: border-box;
   column-gap: 10px;
+}
+
+#profile-button_dropdown li:nth-child(1) > div {
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - 46px);
+}
+
+#profile-button_dropdown li:nth-child(1) > div > span:nth-child(2) {
+  font-weight: 100;
 }
 
 #profile-button_dropdown li:not(:nth-child(1)) {

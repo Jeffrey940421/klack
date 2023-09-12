@@ -114,6 +114,27 @@ def edit_workspace(id):
         return workspace.to_dict_detail()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
+@workspace_routes.route('/<int:workspace_id>/users/<int:user_id>', methods=['PUT'])
+@login_required
+def edit_profile(workspace_id, user_id):
+    """
+    Edit the user profile in a workspace
+    """
+    form = WorkspaceUserForm()
+    form['csrf_token'].data = request.cookies['csrf_token']
+    workspace_user = WorkspaceUser.query.get((workspace_id, user_id))
+    if not workspace_user:
+        return {"errors": ["Either workspace or user is not found or the user is not in the workspace"]}, 404
+    if user_id != current_user.id:
+        return {"errors": ["Users are only allowed to edit their own profiles"]}, 403
+    if form.validate_on_submit():
+        workspace_user.nickname=form.data["nickname"]
+        if form.data["profile_image_url"]:
+          workspace_user.profile_image_url=form.data["profile_image_url"]
+        db.session.commit()
+        return workspace_user.workspace.to_dict_detail()
+    return {'errors': validation_errors_to_error_messages(form.errors)}, 401
+
 @workspace_routes.route('/<int:id>/join', methods=['PUT'])
 @login_required
 def join_workspace(id):
@@ -162,28 +183,35 @@ def leave_workspace(id):
     workspace_user = WorkspaceUser.query.get((id, current_user.id))
     channels = workspace.channels
     _ = [channel.users.remove(current_user) for channel in channels if current_user in channel.users]
+    db.session.delete(workspace_user)
+    db.session.commit()
     if len(current_user.workspaces):
         current_user.active_workspace = current_user.workspaces[0]
     else:
         current_user.active_workspace = None
-    db.session.delete(workspace_user)
     db.session.commit()
-    return {"message": "Successfully left the workspace"}
+    return {"activeWorkspace": current_user.active_workspace.to_dict_detail() if current_user.active_workspace else None}
 
 @workspace_routes.route('/<int:id>', methods=['DELETE'])
 @login_required
-def disassemble_workspace(id):
+def delete_workspace(id):
     """
-    Disassemble a workspace
+    Delete a workspace
     """
     workspace = Workspace.query.get(id)
     if not workspace:
         return {"errors": ["Workspace is not found"]}, 404
     if current_user != workspace.owner:
-        return {"errors": ["Only workspace owner can disassemble the workspace"]}, 403
+        return {"errors": ["Only workspace owner can delete the workspace"]}, 403
     db.session.delete(workspace)
     db.session.commit()
-    return {"message": "Successfully disassemble the workspace"}
+    if len(current_user.workspaces):
+        current_user.active_workspace = current_user.workspaces[0]
+    else:
+        current_user.active_workspace = None
+    db.session.commit()
+    socketio.emit("delete_workspace", {"id": id}, to=f"workspace{id}")
+    return {"activeWorkspace": current_user.active_workspace.to_dict_detail() if current_user.active_workspace else None}
 
 @workspace_routes.route('/<int:id>/invitations/new', methods=['POST'])
 @login_required
@@ -203,10 +231,10 @@ def send_invitation(id):
       if user == current_user:
           return {"errors": ["Users are not allowed to send invitations to themselves"]}, 403
       if user in workspace.users:
-          return {"errors": ["User is already in the workspace"]}, 403
+          return {"errors": [f"User {user.email} is already in the workspace"]}, 403
       sent_invitation = WorkspaceInvitation.query.filter(WorkspaceInvitation.recipient_id == user.id, WorkspaceInvitation.workspace_id == id, WorkspaceInvitation.status == "pending").first()
       if sent_invitation:
-          return {"errors": ["User has already received a invitation to join the workspace and the invitation is still pending"]}, 403
+          return {"errors": [f"User {user.email} has already received a invitation to join the workspace and the invitation is still pending"]}, 403
       invitation = WorkspaceInvitation(
           sender=current_user,
           recipient=user,
