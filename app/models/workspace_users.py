@@ -30,6 +30,11 @@ class WorkspaceUser(db.Model):
       nullable=False
     )
 
+    active_channel_id = db.Column(
+       db.Integer,
+       db.ForeignKey(add_prefix_for_prod("channels.id"))
+    )
+
     workspace = db.relationship(
       "Workspace",
       foreign_keys="WorkspaceUser.workspace_id",
@@ -39,6 +44,12 @@ class WorkspaceUser(db.Model):
       "User",
       foreign_keys="WorkspaceUser.user_id",
       back_populates="workspace_associations"
+    )
+
+    active_channel = db.relationship(
+       "Channel",
+       foreign_keys="WorkspaceUser.active_channel_id",
+       back_populates="active_users"
     )
 
     @validates("role")

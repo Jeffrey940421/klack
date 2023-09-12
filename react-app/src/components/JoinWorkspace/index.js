@@ -1,19 +1,39 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Redirect } from "react-router-dom";
-import "./EditProfile.css"
+import "./JoinWorkspace.css"
 import AvatarEditor from 'react-avatar-editor'
 import { authenticate } from "../../store/session";
 import { useModal } from '../../context/Modal';
 import { usePopup } from "../../context/Popup";
 import { Loader } from "../Loader";
-import { editProfile } from "../../store/workspaces";
+import { joinWorkspace } from "../../store/workspaces";
+import { processInvitation } from "../../store/session";
 
-export function EditProfile({ profile, workspace }) {
+export function JoinWorkspace({invitation}) {
   const dispatch = useDispatch();
-  const [nickname, setNickname] = useState(profile.nickname)
+  const randomElement = (arr) => {
+    const random = Math.floor(Math.random() * arr.length);
+    return arr[random];
+  }
+  const workspaceIcons = [
+    "/images/workspace_icons/workspace_icon_1.webp",
+    "/images/workspace_icons/workspace_icon_2.webp",
+    "/images/workspace_icons/workspace_icon_3.webp"
+  ]
+  const profileImages = [
+    "/images/profile_images/profile_images_1.png",
+    "/images/profile_images/profile_images_2.png",
+    "/images/profile_images/profile_images_3.png",
+    "/images/profile_images/profile_images_4.png",
+    "/images/profile_images/profile_images_5.png",
+    "/images/profile_images/profile_images_6.png",
+    "/images/profile_images/profile_images_7.png",
+  ]
+  const [nickname, setNickname] = useState("")
+  const [nicknameEdited, setNicknameEdited] = useState(false)
   const [profileImage, setProfileImage] = useState("")
-  const [profileImageUrl, setProfileImageUrl] = useState(profile.profileImageUrl)
+  const [profileImageUrl, setProfileImageUrl] = useState(randomElement(profileImages))
   const [profileImageScale, setProfileImageScale] = useState(0)
   const [validationErrors, setValidationErrors] = useState({ nickname: [] })
   const [serverErrors, setServerErrors] = useState({ nickname: [], image: [], other: [] })
@@ -38,7 +58,7 @@ export function EditProfile({ profile, workspace }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (Object.values(validationErrors).flat().length) return
-    setPopupContent(<Loader text="Updating Profile ..." />)
+    setPopupContent(<Loader text="Joining Workspace ..." />)
 
     let image
 
@@ -81,12 +101,12 @@ export function EditProfile({ profile, workspace }) {
       }
     }
 
-    const updatedProfile = {
+    const profile = {
       nickname,
-      imageUrl
+      imageUrl: imageUrl ? imageUrl : profileImageUrl
     }
 
-    let data = await dispatch(editProfile(profile.id, workspace.id, updatedProfile))
+    let data = await dispatch(joinWorkspace(invitation.workspaceId, profile))
     const errors = { nickname: [], image: [], other: [] }
     if (data) {
       const nicknameErrors = data.filter(error => error.startsWith("nickname"))
@@ -99,19 +119,21 @@ export function EditProfile({ profile, workspace }) {
       closePopup()
     } else {
       await dispatch(authenticate())
+      await dispatch(processInvitation(invitation.id, "accept"))
       closePopup()
       closeModal()
     }
+
   }
 
   useEffect(() => {
     const errors = { nickname: [] }
 
-    if (!nickname) {
+    if (nicknameEdited && !nickname) {
       errors.nickname.push("Name is required")
     }
 
-    if (nickname.length > 80) {
+    if (nicknameEdited && nickname.length > 80) {
       errors.nickname.push("Name must be at most 80 characters long")
     }
 
@@ -119,15 +141,15 @@ export function EditProfile({ profile, workspace }) {
   }, [nickname])
 
   return (
-    <div id="edit-profile_container">
+    <div id="join-workspace_container">
 
-      <form id="edit-profile_workspace-user-form">
+      <form id="join-workspace_workspace-user-form">
         <div>
           <h2>What’s your name?</h2>
           <p>Adding your name and profile photo helps your teammates recognize and connect with you more easily.</p>
           <div
             className={`input ${Object.values(validationErrors.nickname).length || Object.values(serverErrors.nickname).length ? "error" : ""}`}
-            id="edit-profile_nickname-input"
+            id="join-workspace_nickname-input"
           >
             <label htmlFor="nickname">
               Name
@@ -138,14 +160,15 @@ export function EditProfile({ profile, workspace }) {
               value={nickname}
               onChange={(e) => {
                 setNickname(e.target.value)
+                setNicknameEdited(true)
               }}
             />
-            <span id="edit-profile_nickname-length-limit">
+            <span id="join-workspace_nickname-length-limit">
               {80 - nickname.length}
             </span>
             {
               serverErrors.nickname.length > 0 && serverErrors.nickname.map(error => (
-                <span id="edit-profile_nickname-server-errors" className="validation_errors">
+                <span id="join-workspace_nickname-server-errors" className="validation_errors">
                   <i className="fa-solid fa-circle-exclamation" />
                   {error}
                 </span>
@@ -153,7 +176,7 @@ export function EditProfile({ profile, workspace }) {
             }
             {
               validationErrors.nickname.length > 0 && validationErrors.nickname.map(error => (
-                <span id="edit-profile_nickname-validation-errors" className="validation_errors">
+                <span id="join-workspace_nickname-validation-errors" className="validation_errors">
                   <i className="fa-solid fa-circle-exclamation" />
                   {error}
                 </span>
@@ -161,7 +184,7 @@ export function EditProfile({ profile, workspace }) {
             }
           </div>
           <h3>Your profile photo <span> (optional)</span></h3>
-          <div id="edit-profile_profile-image-upload">
+          <div id="join-workspace_profile-image-upload">
             <div>
               <AvatarEditor
                 ref={profileImageRef}
@@ -178,7 +201,7 @@ export function EditProfile({ profile, workspace }) {
                 max="50"
                 step="1"
                 value={profileImageScale}
-                id="edit-profile_profile-image-slider"
+                id="join-workspace_profile-image-slider"
                 onChange={(e) => {
                   setProfileImageScale(e.target.value)
                 }}
@@ -200,7 +223,7 @@ export function EditProfile({ profile, workspace }) {
             <label htmlFor="image">
               <p>Help your teammates know they’re talking to the right person.</p>
               <button
-                id="edit-profile_profile-image-upload_button"
+                id="join-workspace_profile-image-upload_button"
                 onClick={(e) => {
                   e.preventDefault();
                   imageUploadRef.current.click();
@@ -212,7 +235,7 @@ export function EditProfile({ profile, workspace }) {
           </div>
           {
             serverErrors.image.length > 0 && serverErrors.image.map(error => (
-              <span id="edit-profile_image-server-errors" className="validation_errors">
+              <span id="join-workspace_image-server-errors" className="validation_errors">
                 <i className="fa-solid fa-circle-exclamation" />
                 {error}
               </span>
@@ -220,7 +243,7 @@ export function EditProfile({ profile, workspace }) {
           }
           {
             serverErrors.other.length > 0 && serverErrors.other.map(error => (
-              <span id="edit-profile_other-server-errors" className="validation_errors">
+              <span id="join-workspace_other-server-errors" className="validation_errors">
                 <i className="fa-solid fa-circle-exclamation" />
                 {error}
               </span>
@@ -229,9 +252,9 @@ export function EditProfile({ profile, workspace }) {
         </div>
         <button
           onClick={handleSubmit}
-          disabled={Object.values(validationErrors).flat().length}
+          disabled={Object.values(validationErrors).flat().length || !nicknameEdited}
         >
-          Update Profile
+          Join Workspace
         </button>
       </form>
 

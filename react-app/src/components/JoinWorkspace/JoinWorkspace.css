@@ -1,23 +1,23 @@
-#edit-profile_container {
+#join-workspace_container {
   width: 660px;
   padding: 50px;
 }
 
-#edit-profile_workspace-user-form {
+#join-workspace_workspace-user-form {
   width: 100%;
 }
 
-#edit-profile_workspace-user-form h2 {
+#join-workspace_workspace-user-form h2 {
   font-size: 40px;
   margin-bottom: 8px;
 }
 
-#edit-profile_workspace-user-form p {
+#join-workspace_workspace-user-form p {
   font-size: 15px;
   margin-bottom: 24px;
 }
 
-#edit-profile_workspace-user-form > button {
+#join-workspace_workspace-user-form > button {
   font-size: 18px;
   font-weight: bold;
   width: 200px;
@@ -29,46 +29,46 @@
   border-radius: 5px;
 }
 
-#edit-profile_nickname-length-limit {
+#join-workspace_nickname-length-limit {
   position: absolute;
   top: 20px;
   right: 10px;
 }
 
-#edit-profile_nickname-input input {
+#join-workspace_nickname-input input {
   padding-right: 40px !important;
 }
 
-#edit-profile_nickname-input {
+#join-workspace_nickname-input {
   margin-bottom: 40px;
 }
 
-#edit-profile_profile-image-slider {
+#join-workspace_profile-image-slider {
   width: 110px;
 }
 
-#edit-profile_workspace-user-form h3 {
+#join-workspace_workspace-user-form h3 {
   margin-bottom: 8px;
   font-weight: 100 !important;
 }
 
-#edit-profile_workspace-user-form h3 span {
+#join-workspace_workspace-user-form h3 span {
   color: gray;
 }
 
-#edit-profile_profile-image-upload {
+#join-workspace_profile-image-upload {
   display: flex;
   column-gap: 20px;
 }
 
-#edit-profile_profile-image-upload > div {
+#join-workspace_profile-image-upload > div {
   display: flex;
   flex-direction: column;
   align-items: center;
   row-gap: 10px;
 }
 
-#edit-profile_profile-image-upload_button {
+#join-workspace_profile-image-upload_button {
   font-size: 15px;
   border: 1px solid lightgray;
   padding: 10px;
@@ -76,7 +76,7 @@
   background-color: transparent;
 }
 
-#edit-profile_workspace-user-form > button:disabled {
+#join-workspace_workspace-user-form > button:disabled {
   background-color: lightgray;
   cursor: default;
 }

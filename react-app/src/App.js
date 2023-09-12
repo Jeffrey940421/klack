@@ -20,7 +20,6 @@ function App() {
     <>
       {isLoaded && (
         <>
-          <Test />
           <Switch>
             <Route exact path="/">
               <MainPage />

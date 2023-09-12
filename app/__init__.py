@@ -10,6 +10,7 @@ from .api.auth_routes import auth_routes
 from .api.workspace_routes import workspace_routes
 from .api.invitation_routes import invitation_routes
 from .api.image_routes import image_routes
+from .api.channel_routes import channel_routes
 from .seeds import seed_commands
 from .config import Config
 from .socket import socketio
@@ -35,6 +36,7 @@ app.register_blueprint(auth_routes, url_prefix='/api/auth')
 app.register_blueprint(workspace_routes, url_prefix='/api/workspaces')
 app.register_blueprint(invitation_routes, url_prefix='/api/invitations')
 app.register_blueprint(image_routes, url_prefix='/api/images')
+app.register_blueprint(channel_routes, url_prefix='/api/channels')
 db.init_app(app)
 Migrate(app, db)
 socketio.init_app(app)

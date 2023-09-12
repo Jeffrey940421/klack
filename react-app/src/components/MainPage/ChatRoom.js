@@ -68,9 +68,13 @@ export function ChatRoom({ user, socket }) {
 
   useEffect(() => {
     const workspaceArr = Object.values(workspaces)
+    console.log(workspaceArr)
     for (let workspace of workspaceArr) {
-      socket.emit("join_room", { room: `workspace${workspace.id}` })
+      socket.emit("join_room", { room: `workspace${workspace.id}`, email: user.email })
     }
+    socket.on("delete_workspace", async (data) => {
+      await dispatch(authenticate())
+    })
     return (() => {
       const workspaceArr = Object.values(workspaces)
       for (let workspace of workspaceArr) {
@@ -78,12 +82,6 @@ export function ChatRoom({ user, socket }) {
       }
     })
   }, [workspaces])
-
-  useEffect(() => {
-    socket.on("delete_workspace", async (data) => {
-      await dispatch(authenticate())
-    })
-  }, [])
 
   return (
     <div id="chat-room_container">
@@ -132,25 +130,38 @@ export function ChatRoom({ user, socket }) {
             <hr className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}></hr>
             <li
               className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
+              onClick={() => {
+                setShowWorkspaceMenu(false)
+                setModalContent(<Invitation workspace={activeWorkspace} user={user} />)
+              }}
             >
               <span>Invite People to Join Workspace</span>
             </li>
             <li
               className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
-              onClick={() => setModalContent(<EditWorkspace workspace={activeWorkspace} />)}
+              onClick={() => {
+                setShowWorkspaceMenu(false)
+                setModalContent(<EditWorkspace workspace={activeWorkspace} />)
+              }}
             >
               <span>Edit Workspace</span>
             </li>
             <hr></hr>
             <li
               className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
-              onClick={() => deleteWorkspace()}
+              onClick={() => {
+                setShowWorkspaceMenu(false)
+                deleteWorkspace()
+              }}
             >
               <span>{"Delete Workspace"}</span>
             </li>
             <li
               className={user.id !== activeWorkspace?.owner.id ? "" : "hidden"}
-              onClick={() => leaveWorkspace()}
+              onClick={() => {
+                setShowWorkspaceMenu(false)
+                leaveWorkspace()
+              }}
             >
               <span>{"Leave Workspace"}</span>
             </li>
@@ -181,7 +192,7 @@ export function ChatRoom({ user, socket }) {
           </button>
           <button
             className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
-            onClick={() => setModalContent(<Invitation workspace={activeWorkspace} user={user}/>)}
+            onClick={() => setModalContent(<Invitation workspace={activeWorkspace} user={user} />)}
           >
             Add coworkers
           </button>

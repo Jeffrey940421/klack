@@ -1,0 +1,137 @@
+#invitation_container {
+  padding: 30px;
+  width: 650px;
+  display: flex;
+  flex-direction: column;
+}
+
+#invitation_container > h2 {
+  font-size: 22px;
+  padding-bottom: 20px;
+}
+
+#invitation_container > span {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#invitation_input {
+  margin-top: 8px;
+  width: 100%;
+  border: 1px solid rgba(29,28,29,.3);
+  min-height: 80px;
+  border-radius: 5px;
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  column-gap: 5px;
+  row-gap: 5px;
+}
+
+#invitation_input input {
+  border: none;
+  padding: 5px 0px;
+  height: 21px;
+  font-size: 14px;
+}
+
+#invitation_input input:focus {
+  outline: none;
+}
+
+.invitation_email {
+  background-color: #e8f5fa;
+  width: fit-content;
+  max-width: 300px;
+  padding: 5px;
+  border-radius: 5px;
+  font-size: 14px;
+  display: flex;
+  column-gap: 3px;
+  align-items: center;
+  justify-content: center;
+  height: 21px;
+}
+
+.invitation_email > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.invitation_email.error {
+  background-color: #fce8ee;
+}
+
+.invitation_email.error::before {
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  content: "\f071";
+}
+
+.invitation_email button {
+  background-color: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  padding: 3px;
+  font-size: 12px;
+}
+
+.invitation_email button:hover {
+  background-color: rgb(238, 236, 236);
+  border-radius: 5px;
+}
+
+#invitation_input.error {
+  border: 1px solid rgb(224, 30, 90)
+}
+
+#invitation_button {
+  font-size: 18px;
+  font-weight: bold;
+  width: 200px;
+  height: 44px;
+  margin-top: 48px;
+  background-color: #611f69;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  align-self: flex-end;
+}
+
+#invitation_button:disabled {
+  background-color: lightgray;
+  cursor: default;
+}
+
+#sent-invitations {
+  background-color: white;
+  width: 600px;
+  padding: 20px;
+  border-radius: 10px;
+  min-height: 100px;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  position: relative;
+  height: fit-content;
+}
+
+#sent-invitations > span > span {
+  font-weight: bold;
+}
+
+#sent-invitations button {
+  position: absolute;
+  background: transparent;
+  border: none;
+  right: 20px;
+  top: 20px;
+  font-weight: bold;
+}

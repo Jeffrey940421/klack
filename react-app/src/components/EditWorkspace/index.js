@@ -92,10 +92,10 @@ export function EditWorkspace({ workspace }) {
     if (data) {
       const nameErrors = data.filter(error => error.startsWith("name"))
       const iconErrors = data.filter(error => error.startsWith("icon"))
-      const otherErrors = data.filter(error => !error.startsWith("name") && !error.startsWith("icon") && !error.startsWith("nickname") && !error.startsWith("profile"))
+      const otherErrors = data.filter(error => !error.startsWith("name") && !error.startsWith("icon"))
       errors.name = nameErrors.map(error => error.split(" : ")[1])
       errors.icon = iconErrors.map(error => error.split(" : ")[1])
-      errors.other = otherErrors.map(error => error.split(" : ")[1])
+      errors.other = otherErrors
       setServerErrors(errors)
       closePopup()
     } else {
@@ -109,11 +109,11 @@ export function EditWorkspace({ workspace }) {
     const errors = { name: [] }
 
     if (!name) {
-      errors.name.push("Workplace name is required")
+      errors.name.push("Workspace name is required")
     }
 
     if (name.length > 80) {
-      errors.name.push("Workplace name must be at most 80 characters long")
+      errors.name.push("Workspace name must be at most 80 characters long")
     }
 
     setValidationErrors(errors)
