@@ -1,0 +1,43 @@
+#create-channel_form {
+  padding: 20px 28px;
+  width: 520px;
+}
+
+#create-channel_form h2 {
+  padding-bottom: 20px;
+}
+
+#create-channel_hash {
+  position: absolute;
+  top: 28px;
+  left: 10px;
+  font-size: 12px;
+}
+
+#create-channel_name-input input {
+  padding-left: 25px !important;
+}
+
+#create-channel_name-length-limit {
+  position: absolute;
+  right: 10px;
+  top: 20px
+}
+
+#create-channel_form p {
+  font-size: 13px;
+  color: gray;
+  padding: 5px 0px 20px 0px
+}
+
+#create-channel_form button {
+  font-size: 18px;
+  font-weight: bold;
+  width: 200px;
+  height: 44px;
+  margin-top: 48px;
+  background-color: #611f69;
+  border: none;
+  color: white;
+  border-radius: 5px;
+}

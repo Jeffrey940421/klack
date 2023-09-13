@@ -130,7 +130,7 @@
 #chat-room_channel-sidebar {
   background-color: #611f69;
   max-width: 260px;
-  padding: 0px 0px 10px 10px;
+  padding: 0px 0px 10px 0px;
 }
 
 #chat-room_channel-sidebar-background {
@@ -263,7 +263,7 @@
 #chat-room_channel-dropdown button {
   background-color: transparent;
   border: none;
-  font-size: 16px;
+  font-size: 15px;
   color: gray;
   padding: 7px 15px 7px 15px;
   border-radius: 5px;
@@ -296,4 +296,60 @@
 #chat-room_active-channel {
   background-color: #611f69 !important;
   color: white !important
+}
+
+#chat-room_add-channel {
+  background-color: transparent;
+  border: none;
+  font-size: 15px;
+  color: gray;
+  padding: 7px 15px 7px 15px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: flex-start;
+  margin-left: 5px;
+  margin-right: 5px;
+  width: 250px;
+  box-sizing: border-box;
+  column-gap: 10px;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#chat-room_add-channel:hover {
+  background-color: #d0acd3;
+}
+
+#chat-room_add-channel i {
+  font-size: 12px;
+}
+
+#chat-room_add-coworker {
+  background-color: transparent;
+  border: none;
+  font-size: 15px;
+  color: gray;
+  padding: 7px 15px 7px 15px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: flex-start;
+  margin-left: 5px;
+  margin-right: 5px;
+  width: 250px;
+  box-sizing: border-box;
+  column-gap: 10px;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#chat-room_add-coworker:hover {
+  background-color: #d0acd3;
+}
+
+#chat-room_add-coworker i {
+  font-size: 12px;
 }

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, session, request
 from app.models import Workspace, Channel, WorkspaceUser, WorkspaceInvitation, User, db
 from flask_login import current_user, login_user, logout_user, login_required
-from app.forms import WorkspaceForm, WorkspaceUserForm, NewInvitationForm
+from app.forms import WorkspaceForm, WorkspaceUserForm, NewInvitationForm, ChannelForm
 from random import choice
 from app.socket import socketio
 
@@ -53,14 +53,6 @@ def current_workspace():
     """
     return {"workspaces": [workspace.to_dict_summary() for workspace in current_user.workspaces]}
 
-@workspace_routes.route('/<int:id>/channels/current', methods=['GET'])
-@login_required
-def current_channel(id):
-    """
-    Query for all the channels belonging to the given workspace that the current user is in
-    """
-    return {"channels": [channel.to_dict_summary() for channel in current_user.channels if channel.workspace_id == id]}
-
 @workspace_routes.route('/new', methods=['POST'])
 @login_required
 def create_workspace():
@@ -78,7 +70,7 @@ def create_workspace():
             owner=current_user
         )
         workspace_user = WorkspaceUser(
-            workspace = workspace,
+            workspace=workspace,
             user=current_user,
             nickname=workspace_user_form.data['nickname'],
             profile_image_url=workspace_user_form.data['profile_image_url'] if workspace_user_form.data['profile_image_url'] else choice(profile_images),
@@ -91,6 +83,7 @@ def create_workspace():
             workspace=workspace,
             users=[current_user]
         )
+        workspace_user.active_channel = channel
         db.session.add(workspace)
         db.session.add(workspace_user)
         db.session.add(channel)
@@ -99,6 +92,39 @@ def create_workspace():
         db.session.commit()
         return workspace.to_dict_detail()
     return {'errors': validation_errors_to_error_messages(workspace_form.errors) + validation_errors_to_error_messages(workspace_user_form.errors)}, 401
+
+@workspace_routes.route('/<int:id>/channels/new', methods=['POST'])
+@login_required
+def create_channel(id):
+    """
+    Create a channel in the workspace and join it
+    """
+    form = ChannelForm()
+    form['csrf_token'].data = request.cookies['csrf_token']
+    workspace = Workspace.query.get(id)
+    if not workspace:
+        return {"errors": ["Workspace is not found"]}, 404
+    if current_user not in workspace.users:
+        return {"errors": ["Only users in the workspace are allowed to create channel"]}, 403
+    if form.validate_on_submit():
+        duplicate_channel = Channel.query.filter(Channel.workspace_id == id, Channel.name == form.data["name"]).first()
+        if duplicate_channel:
+            return {"errors": ["Cannot create channels with duplicate names in the same workspace"]}, 403
+        channel = Channel(
+            name=form.data["name"],
+            description=form.data["description"],
+            creator=current_user,
+            workspace=workspace,
+            users=[current_user]
+        )
+        db.session.add(channel)
+        db.session.commit()
+        workspace_user = WorkspaceUser.query.get((workspace.id, current_user.id))
+        workspace_user.active_channel_id = channel.id
+        db.session.commit()
+        return channel.to_dict_detail()
+    return {'errors': validation_errors_to_error_messages(form.errors)}, 401
+
 
 @workspace_routes.route('/<int:id>', methods=['PUT'])
 @login_required
@@ -169,6 +195,7 @@ def join_workspace(id):
         channel = Channel.query.filter(Channel.workspace_id == id, Channel.name == "general").first()
         channel.users.append(current_user)
         current_user.active_workspace_id = id
+        workspace_user.active_channel = channel
         db.session.add(workspace_user)
         db.session.commit()
         return workspace.to_dict_detail()

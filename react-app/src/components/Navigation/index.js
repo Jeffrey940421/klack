@@ -17,7 +17,7 @@ function Navigation({ hasWorkspace, socket }) {
 				hasWorkspace ?
 					<button id="navigation_search">
 						<span>
-							Search {sessionUser.active_workspace?.name}
+							Search {sessionUser.activeWorkspace?.name}
 						</span>
 						<i className="fa-solid fa-magnifying-glass" />
 					</button> :
