@@ -57,7 +57,10 @@ export function ChannelWindow({ channel }) {
             <h3>{channel?.name}</h3>
             <i className="fa-solid fa-angle-down" />
           </div>
-          <div id="channel-window_members">
+          <div
+            id="channel-window_members"
+            onClick={() => setModalContent(<ChannelDetails channel={channel} defaultMenu="members" />)}
+          >
             <img src={channel?.creator.profileImageUrl} alt="member" />
             <span>{channel?.users && Object.values(channel.users)?.length}</span>
           </div>

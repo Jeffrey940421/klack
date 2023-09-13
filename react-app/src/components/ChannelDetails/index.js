@@ -1,6 +1,7 @@
 import { useModal } from "../../context/Modal"
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import "./ChannelDetails.css"
 
 export function ChannelDetails({ channel, defaultMenu }) {
   const dispatch = useDispatch()
@@ -10,8 +11,11 @@ export function ChannelDetails({ channel, defaultMenu }) {
   const foundUsers = channelUsers.filter(user => user.nickname.toLowerCase().includes(keyword.toLowerCase()) || user.email.includes(keyword.toLowerCase()))
 
   return (
-    <div id="channel-details_container">
-      <h3>Channel Details</h3>
+    <div id="channel-detail_container">
+      <div id="channel-detail_header">
+        <i className="fa-solid fa-hashtag" />
+        <h3>{channel.name}</h3>
+      </div>
       <div id="channel-detail_selection">
         <span
           className={`${menu === "about" ? "active-selection" : ""}`}
@@ -30,7 +34,7 @@ export function ChannelDetails({ channel, defaultMenu }) {
         menu === "about" &&
         <div id="channel-detail_about">
           <div>
-            <h3>Name</h3>
+            <h3>Channel Name</h3>
             <span><i className="fa-solid fa-hashtag" />{channel.name}</span>
           </div>
           <div>
@@ -46,6 +50,7 @@ export function ChannelDetails({ channel, defaultMenu }) {
       {
         menu === "members" &&
         <div id="channel-detail_members">
+          <i className="fa-solid fa-magnifying-glass" />
           <input
             type="text"
             placeholder="Find members"
@@ -61,7 +66,7 @@ export function ChannelDetails({ channel, defaultMenu }) {
                 </div>
               )
             })}
-            {!foundUsers.length && <span id="join-channel_no-result">No matches found for <b>{keyword}</b></span>}
+            {!foundUsers.length && <span id="channel-detail_no-result">No matches found for <b>{keyword}</b></span>}
           </div>
         </div>
       }
