@@ -12,6 +12,7 @@
   top: 28px;
   left: 10px;
   font-size: 12px;
+  z-index: 5;
 }
 
 #create-channel_name-input input {
