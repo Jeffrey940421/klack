@@ -218,6 +218,7 @@ textarea::placeholder {
   top: 10px;
   font-size: 12px;
   font-weight: bold;
+  z-index: 5;
 }
 
 .input input {
@@ -292,4 +293,8 @@ textarea::placeholder {
 .focused {
   outline: 3px solid #bbe1f1;
   border: 1px solid #377cb1 !important;
+}
+
+.disabled-input {
+  background-color: rgb(238, 236, 236) !important;
 }

@@ -1,0 +1,84 @@
+#join-channel_container {
+  padding: 20px 28px;
+  width: 400px;
+  position: relative;
+}
+
+#join-channel_header {
+  padding-bottom: 20px;
+}
+
+#join-channel_header h3 {
+  font-size: 18px;
+}
+
+#join-channel_header span {
+  font-size: 13px;
+  color: gray;
+}
+
+#join-channel_search-result {
+  position: absolute;
+  top: 130px;
+  background-color: white;
+  border: 1px solid lightgray;
+  width: 420px;
+  border-radius: 10px;
+  left: 20px;
+  padding: 10px 0px;
+  box-sizing: border-box;
+}
+
+.join-channel_user {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  justify-content: space-between;
+  padding: 10px;
+  box-sizing: border-box;
+  width: 418px;
+}
+
+.join-channel_user:hover {
+  background-color: lightgray;
+}
+
+.join-channel_user > div {
+  display: flex;
+  align-items: center;
+  column-gap: 5px;
+  width: 100%;
+}
+
+.join-channel_user > div span {
+  text-wrap: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 320px;
+}
+
+.join-channel_user img {
+  width: 20px;
+  height: 20px;
+  aspect-ratio: 1 / 1;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+.join-channel_user button {
+  background-color: transparent;
+  border: none;
+  color: #377cb1
+}
+
+.join-channel_user button:hover {
+  text-decoration: underline;
+  color: #3170a0
+}
+
+#join-channel_no-result {
+  padding: 10px;
+  box-sizing: border-box;
+  font-size: 14px;
+}

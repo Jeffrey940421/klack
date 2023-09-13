@@ -12,6 +12,7 @@ import { io } from 'socket.io-client';
 import { Invitation } from "../Invitation";
 import { getActiveChannel, getChannels } from "../../store/channels";
 import { CreateChannel } from "../CreateChannel";
+import { ChannelWindow } from "./ChannelWindow";
 
 
 export function ChatRoom({ user, socket }) {
@@ -138,99 +139,104 @@ export function ChatRoom({ user, socket }) {
 
       {
         channelLoaded &&
-        <div id="chat-room_channel-sidebar">
-          <div id="chat-room_channel-sidebar-background">
-            <button
-              id="chat-room_workspace-edit"
-              onClick={openWorkspaceMenu}
-            >
-              <h3>{activeWorkspace?.name}</h3><i className="fa-solid fa-angle-down" />
-            </button>
-            <ul id="chat-room_workspace-dropdown" className={showWorkspaceMenu ? "" : "hidden"} ref={ulRef}>
-              <li>
-                <img id="chat-room_workspace-icon" src={activeWorkspace?.iconUrl} alt="workspace icon" />
-                <span>{activeWorkspace?.name}</span>
-              </li>
-              <hr className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}></hr>
-              <li
-                className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
-                onClick={() => {
-                  setShowWorkspaceMenu(false)
-                  setModalContent(<Invitation workspace={activeWorkspace} user={user} />)
-                }}
-              >
-                <span>Invite People to Join Workspace</span>
-              </li>
-              <li
-                className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
-                onClick={() => {
-                  setShowWorkspaceMenu(false)
-                  setModalContent(<EditWorkspace workspace={activeWorkspace} />)
-                }}
-              >
-                <span>Edit Workspace</span>
-              </li>
-              <hr></hr>
-              <li
-                className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
-                onClick={() => {
-                  setShowWorkspaceMenu(false)
-                  deleteWorkspace()
-                }}
-              >
-                <span>{"Delete Workspace"}</span>
-              </li>
-              <li
-                className={user.id !== activeWorkspace?.owner.id ? "" : "hidden"}
-                onClick={() => {
-                  setShowWorkspaceMenu(false)
-                  leaveWorkspace()
-                }}
-              >
-                <span>{"Leave Workspace"}</span>
-              </li>
-            </ul>
-            <hr></hr>
-            <div button id="chat-room_channel">
+        <>
+          <div id="chat-room_channel-sidebar">
+            <div id="chat-room_channel-sidebar-background">
               <button
-                onClick={() => setChannelExpanded((prev) => !prev)}
+                id="chat-room_workspace-edit"
+                onClick={openWorkspaceMenu}
               >
-                {channelExpanded ? <i className="fa-solid fa-caret-down" /> : <i className="fa-solid fa-caret-right" />}
+                <h3>{activeWorkspace?.name}</h3><i className="fa-solid fa-angle-down" />
               </button>
-              <span>Channels</span>
-            </div>
+              <ul id="chat-room_workspace-dropdown" className={showWorkspaceMenu ? "" : "hidden"} ref={ulRef}>
+                <li>
+                  <img id="chat-room_workspace-icon" src={activeWorkspace?.iconUrl} alt="workspace icon" />
+                  <span>{activeWorkspace?.name}</span>
+                </li>
+                <hr className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}></hr>
+                <li
+                  className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
+                  onClick={() => {
+                    setShowWorkspaceMenu(false)
+                    setModalContent(<Invitation workspace={activeWorkspace} user={user} />)
+                  }}
+                >
+                  <span>Invite People to Join Workspace</span>
+                </li>
+                <li
+                  className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
+                  onClick={() => {
+                    setShowWorkspaceMenu(false)
+                    setModalContent(<EditWorkspace workspace={activeWorkspace} />)
+                  }}
+                >
+                  <span>Edit Workspace</span>
+                </li>
+                <hr></hr>
+                <li
+                  id="chat-room_delete-workspace"
+                  className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
+                  onClick={() => {
+                    setShowWorkspaceMenu(false)
+                    deleteWorkspace()
+                  }}
+                >
+                  <span>Delete Workspace</span>
+                </li>
+                <li
+                  id="chat-room_leave-workspace"
+                  className={user.id !== activeWorkspace?.owner.id ? "" : "hidden"}
+                  onClick={() => {
+                    setShowWorkspaceMenu(false)
+                    leaveWorkspace()
+                  }}
+                >
+                  <span>Leave Workspace</span>
+                </li>
+              </ul>
+              <hr></hr>
+              <div button id="chat-room_channel">
+                <button
+                  onClick={() => setChannelExpanded((prev) => !prev)}
+                >
+                  {channelExpanded ? <i className="fa-solid fa-caret-down" /> : <i className="fa-solid fa-caret-right" />}
+                </button>
+                <span>Channels</span>
+              </div>
 
-            <div id="chat-room_channel-dropdown" className={channelExpanded ? "" : "hidden"}>
-              {channels && Object.values(channels).map(channel => {
-                return (
-                  <div key={channel.id}>
-                    <button
-                      id={activeChannel?.id === channel.id ? "chat-room_active-channel" : ""}
-                      onClick={() => switchChannel(channel.id)}
-                    >
-                      <i className="fa-solid fa-hashtag" /> {channel.name}
-                    </button>
-                  </div>
-                )
-              })}
+              <div id="chat-room_channel-dropdown" className={channelExpanded ? "" : "hidden"}>
+                {channels && Object.values(channels).map(channel => {
+                  return (
+                    <div key={channel.id}>
+                      <button
+                        id={activeChannel?.id === channel.id ? "chat-room_active-channel" : ""}
+                        onClick={() => switchChannel(channel.id)}
+                      >
+                        <i className="fa-solid fa-hashtag" /> {channel.name}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+              <button
+                id="chat-room_add-channel"
+                onClick={() => setModalContent(<CreateChannel type="create" workspace={activeWorkspace} />)}
+              >
+                <i class="fa-solid fa-plus" />
+                Add Channels
+              </button>
+              <button
+                id="chat-room_add-coworker"
+                className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
+                onClick={() => setModalContent(<Invitation workspace={activeWorkspace} user={user} />)}
+              >
+                <i class="fa-solid fa-plus" />
+                Add Cowokers
+              </button>
             </div>
-            <button
-              id="chat-room_add-channel"
-              onClick={() => setModalContent(<CreateChannel type="create" workspace={activeWorkspace}/>)}
-            >
-              <i class="fa-solid fa-plus" />
-              Add Channels
-            </button>
-            <button
-              id="chat-room_add-coworker"
-              className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
-              onClick={() => setModalContent(<Invitation workspace={activeWorkspace} user={user} />)}
-            >
-              <i class="fa-solid fa-plus" />
-              Add Cowokers
-            </button>
           </div>
-        </div>
+          <ChannelWindow channel={activeChannel} />
+        </>
       }
 
     </div>

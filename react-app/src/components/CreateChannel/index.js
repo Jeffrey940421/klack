@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Redirect } from "react-router-dom";
 import "./CreateChannel.css"
-import { createChannel } from "../../store/channels";
+import { createChannel, editChannel } from "../../store/channels";
 import { authenticate } from "../../store/session";
 import { useModal } from '../../context/Modal';
+import { usePopup } from "../../context/Popup";
+import { Loader } from "../Loader";
 
 export function CreateChannel({ type, channel, workspace }) {
   const dispatch = useDispatch();
@@ -15,23 +17,29 @@ export function CreateChannel({ type, channel, workspace }) {
   const [validationErrors, setValidationErrors] = useState({ name: [] })
   const [serverErrors, setServerErrors] = useState({ name: [], other: [] })
   const { closeModal } = useModal();
+  const { setPopupContent, closePopup } = usePopup()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setPopupContent(<Loader text={type === "edit" ? "Updating Channel ..." : "Creating Channel ..."} />)
     const new_channel = {
       name,
       description: description ? description : null
     }
-    let data = await dispatch(createChannel(workspace.id, new_channel))
+    let data = type === "edit" ?
+      await dispatch(editChannel(channel.id, new_channel)) :
+      await dispatch(createChannel(workspace.id, new_channel))
     const errors = { name: [], other: [] }
     if (data) {
       const nameErrors = data.filter(error => error.startsWith("name"))
       const otherErrors = data.filter(error => !error.startsWith("name"))
       errors.name = nameErrors.map(error => error.split(" : ")[1])
       errors.other = otherErrors
+      closePopup()
       setServerErrors(errors)
     } else {
       await dispatch(authenticate())
+      closePopup()
       closeModal()
     }
   }
@@ -52,7 +60,7 @@ export function CreateChannel({ type, channel, workspace }) {
 
   return (
     <form id="create-channel_form">
-      <h2>Create a Channel</h2>
+      <h2>{type === "edit" ? "Edit Channel" : "Create Channel"}</h2>
       <div
         className={`input ${Object.values(validationErrors.name).length || Object.values(serverErrors.name).length ? "error" : ""}`}
         id="create-channel_name-input"
@@ -64,6 +72,8 @@ export function CreateChannel({ type, channel, workspace }) {
           <i className="fa-solid fa-hashtag" />
         </span>
         <input
+          disabled={channel && channel.name === "general"}
+          className={channel && channel.name === "general" ? "disabled-input" : ""}
           name="name"
           placeholder="Ex: plan-budget"
           value={name}
@@ -122,7 +132,7 @@ export function CreateChannel({ type, channel, workspace }) {
       <button
         onClick={handleSubmit}
       >
-        {type==="edit" ? "Update Channel" : "Create Channel"}
+        {type === "edit" ? "Update Channel" : "Create Channel"}
       </button>
     </form>
   )

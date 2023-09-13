@@ -48,14 +48,14 @@ def edit_channel(id):
     channel = Channel.query.get(id)
     if not channel:
         return {"errors": ["Channel is not found"]}, 404
-    if channel.name == "general":
-        return {"errors": ["General channel is not editable"]}, 403
     if channel.creator_id != current_user.id:
         return {"errors": ["Only channel creator is authorized to edit the channel"]}, 403
     if form.validate_on_submit():
         duplicate_channel = Channel.query.filter(Channel.workspace_id == channel.workspace_id, Channel.name == form.data["name"]).first()
         if duplicate_channel:
             return {"errors": ["Workspace already had a channel with the same name"]}, 403
+        if channel.name == "general" and form.data["name"] != "general":
+            return {"errors": ["Cannot edit the name of general channel"]}, 403
         channel.name=form.data["name"]
         if form.data["description"]:
           channel.description=form.data["description"]
@@ -79,8 +79,6 @@ def add_to_channel(channel_id, user_id):
         return {"errors": ["User must be in the workspace to be added to the channel"]}, 403
     if user == current_user:
         return {"errors": ["Users are not allowed to add themselves to the channel"]}, 403
-    if current_user.id != channel.creator_id:
-        return {"errors": ["Only channel creator is allowed to add users to the channel"]}, 403
     if user in channel.users:
         return {"errors": ["Only users that are not in the channel are allowed to be added"]}, 403
     channel.users.append(user)
@@ -122,6 +120,8 @@ def delete_channel(id):
         return {"errors": ["Channel is not found"]}, 404
     if current_user != channel.creator:
         return {"errors": ["Only channel creator can delete the channel"]}, 403
+    if channel.name == "general":
+        return {"errors": ["Cannot delete general channel"]}, 403
     db.session.delete(channel)
     db.session.commit()
     workspace_user = WorkspaceUser.query.get((workspace.id, current_user.id))

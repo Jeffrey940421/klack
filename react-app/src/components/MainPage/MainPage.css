@@ -1,6 +1,6 @@
 #chat-room_container {
   display: grid;
-  grid-template-columns: 80px auto auto;
+  grid-template-columns: 80px auto 1fr;
   height: calc(100vh - 60px);
 }
 
@@ -26,7 +26,7 @@
   margin-bottom: 8px;
 }
 
-#chat-room_workspaces-sidebar > div {
+#chat-room_workspaces-sidebar>div {
   position: relative;
 }
 
@@ -61,22 +61,22 @@
   z-index: 100;
 }
 
-.chat-room_workspace:hover + .chat-room_workspace-name {
+.chat-room_workspace:hover+.chat-room_workspace-name {
   display: flex;
 }
 
 .chat-room_workspace-name:after {
-	content: '';
-	position: absolute;
-	left: 0;
-	top: 50%;
-	width: 0;
-	height: 0;
-	border: 6px solid transparent;
-	border-right-color: rgba(0, 0, 0, 0.8);
-	border-left: 0;
-	margin-top: -6px;
-	margin-left: -6px;
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+  border-right-color: rgba(0, 0, 0, 0.8);
+  border-left: 0;
+  margin-top: -6px;
+  margin-left: -6px;
 }
 
 #chat-room_create-workspace {
@@ -109,22 +109,22 @@
   z-index: 100;
 }
 
-#chat-room_create-workspace:hover + #chat-room_create-workspace-label {
+#chat-room_create-workspace:hover+#chat-room_create-workspace-label {
   display: flex;
 }
 
 #chat-room_create-workspace-label:after {
-	content: '';
-	position: absolute;
-	left: 0;
-	top: 50%;
-	width: 0;
-	height: 0;
-	border: 6px solid transparent;
-	border-right-color: rgba(0, 0, 0, 0.8);
-	border-left: 0;
-	margin-top: -6px;
-	margin-left: -6px;
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+  border-right-color: rgba(0, 0, 0, 0.8);
+  border-left: 0;
+  margin-top: -6px;
+  margin-left: -6px;
 }
 
 #chat-room_channel-sidebar {
@@ -155,7 +155,7 @@
   margin-right: 15px;
   padding: 5px;
   border-radius: 5px;
-  width: 230px;
+  width: fit-content;
 }
 
 #chat-room_workspace-edit i {
@@ -214,7 +214,8 @@
   color: white;
 }
 
-#chat-room_workspace-dropdown li:last-child {
+#chat-room_delete-workspace,
+#chat-room_leave-workspace {
   color: red
 }
 
@@ -352,4 +353,113 @@
 
 #chat-room_add-coworker i {
   font-size: 12px;
+}
+
+#channel-window_container {
+  background-color: #611f69;
+  padding: 0px 10px 10px 0px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#channel-window_background {
+  background-color: white;
+  height: 100%;
+  border-top-right-radius: 15px;
+  border-bottom-right-radius: 15px;
+  padding: 15px 0px;
+  box-sizing: border-box;
+}
+
+#channel-window_title {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  column-gap: 5px;
+  width: fit-content;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#channel-window_title:hover {
+  background-color: rgb(233, 231, 231);
+}
+
+#channel-window_title h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 18px;
+}
+
+#channel-window_container hr {
+  border: 0;
+  width: 100%;
+  background-color: rgb(180, 180, 180);
+  height: 1px;
+}
+
+#channel-window_title > i.fa-solid.fa-angle-down {
+  font-size: 12px;
+}
+
+#channel-window_members {
+  display: flex;
+  align-items: center;
+  column-gap: 5px;
+  padding: 0px 10px;
+  border: 1px solid lightgray;
+  width: fit-content;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#channel-window_members:hover {
+  background-color: rgb(233, 231, 231);
+}
+
+#channel-window_members img {
+  height: 22px;
+  width: 22px;
+  aspect-ratio: 1 / 1;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+#channel-window_header {
+  display: flex;
+  justify-content: space-between;
+  margin: 0px 20px;
+  position: relative;
+}
+
+#channel-window_channel-dropdown {
+  position: absolute;
+  top: 35px;
+  left: 0px;
+  border-radius: 5px;
+  border: 1px solid lightgray;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  width: 300px;
+  background-color: #f8f8f8;
+  box-sizing: border-box;
+  padding: 12px 0px;
+}
+
+#channel-window_channel-dropdown li {
+  padding: 10px 24px;
+  font-size: 15px;
+}
+
+#channel-window_channel-dropdown li:hover {
+  background-color: #1264a3;
+  cursor: pointer;
+  color: white;
+}
+
+#channel-window_delete-channel,
+#channel-window_leave-channel {
+  color: red
 }

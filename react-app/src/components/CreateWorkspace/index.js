@@ -108,12 +108,14 @@ export function CreateWorkspace() {
             return { ...prev }
           })
         }
+        closePopup()
         return
       } else {
         setServerErrors((prev) => {
           prev.icon.push("An error occurred. Please try again.")
           return { ...prev }
         })
+        closePopup()
         return
       }
     }
@@ -137,12 +139,14 @@ export function CreateWorkspace() {
             return { ...prev }
           })
         }
+        closePopup()
         return
       } else {
         setServerErrors((prev) => {
           prev.image.push("An error occurred. Please try again.")
           return { ...prev }
         })
+        closePopup()
         return
       }
     }
