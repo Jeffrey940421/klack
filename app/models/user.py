@@ -106,10 +106,12 @@ class User(db.Model, UserMixin):
         }
 
     def to_dict_detail(self):
+        workspace_association = WorkspaceUser.query.get((self.active_workspace_id, self.id))
         return {
             'id': self.id,
             'email': self.email,
             'activeWorkspace': self.active_workspace.to_dict_summary() if self.active_workspace else None,
+            'activeChannel': workspace_association.active_channel.to_dict_summary() if workspace_association and workspace_association.active_channel else None,
             'createdAt': self.created_at,
             'workspaces': [workspace.to_dict_summary() for workspace in self.workspaces],
             'receivedWorkspaceInvitations': [invitation.to_dict() for invitation in self.received_workspace_invitations]
@@ -122,5 +124,5 @@ class User(db.Model, UserMixin):
             'email': self.email,
             'nickname': workspace_association.nickname if workspace_association else None,
             'profileImageUrl': workspace_association.profile_image_url if workspace_association else None,
-            'role': workspace_association.role if workspace_association else None
+            'role': workspace_association.role if workspace_association else None,
         }

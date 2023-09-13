@@ -193,12 +193,14 @@ ol {
   padding: 0px;
 }
 
-input {
+input,
+textarea {
   font-family: "circular_stdbook", sans-serif;
   font-size: 16px;
 }
 
-input::placeholder {
+input::placeholder,
+textarea::placeholder {
   font-family: "circular_stdbook", sans-serif;
   font-size: 14px;
 }
@@ -230,7 +232,20 @@ input::placeholder {
   border: 1px solid rgba(29, 28, 29, .3);
 }
 
-.input input:focus {
+.input textarea {
+  position: relative;
+  height: 150px;
+  width: 100%;
+  background-color: transparent;
+  box-sizing: border-box;
+  padding: 30px 10px 7px 10px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(29, 28, 29, .3);
+}
+
+.input input:focus,
+.input textarea:focus {
   outline: 3px solid #bbe1f1;
   border: 1px solid #377cb1;
 }
@@ -251,7 +266,8 @@ input::placeholder {
   font-size: 12px;
 }
 
-.input.error input:not(:focus) {
+.input.error input:not(:focus),
+.input.error textarea:not(:focus) {
   border: 1px solid rgb(224, 30, 90)
 }
 

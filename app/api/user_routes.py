@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
-from app.models import User, Workspace, db
-from app.forms import ActiveWorkspaceForm
+from app.models import User, Workspace, Channel, db, WorkspaceUser
+from app.forms import ActiveWorkspaceForm, ActiveChannelForm
 
 user_routes = Blueprint('users', __name__)
 
@@ -39,6 +39,9 @@ def user(id):
 @user_routes.route('/<int:id>/active_workspace', methods=["PUT"])
 @login_required
 def update_active_workspace(id):
+    """
+    Update the active workspace of current user
+    """
     form = ActiveWorkspaceForm()
     form['csrf_token'].data = request.cookies['csrf_token']
     user = User.query.get(id)
@@ -53,5 +56,31 @@ def update_active_workspace(id):
             db.session.commit()
             return user.to_dict_detail()
         else:
-            return {"errors": "Users are only allowed to set the workspace that they have joined as active"}
+            return {"errors": "Users are only allowed to set the workspaces that they have joined as active"}
+    return {'errors': validation_errors_to_error_messages(form.errors)}, 401
+
+@user_routes.route('/<int:id>/active_channel', methods=["PUT"])
+@login_required
+def update_active_channel(id):
+    """
+    Update the active channel of current user in the active workspace
+    """
+    form = ActiveChannelForm()
+    form['csrf_token'].data = request.cookies['csrf_token']
+    user = User.query.get(id)
+    if not user:
+        return {"errors": ["User is not found"]}, 404
+    if user != current_user:
+        return {"errors": ["Users are only allowed to update their own active channels"]}, 403
+    if form.validate_on_submit():
+        channel_id = form.data["active_channel_id"]
+        channel = Channel.query.get(channel_id)
+        if current_user not in channel.users:
+            return {"errors": "Users are only allowed to set the channels that they have joined as active"}, 403
+        if channel not in current_user.active_workspace.channels:
+            return {"errors": "Users are only allowed to set the channels that are in the active workspace as active"}, 403
+        workspace_user = WorkspaceUser.query.get((current_user.active_workspace.id, current_user.id))
+        workspace_user.active_channel = channel
+        db.session.commit()
+        return user.to_dict_detail()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, session, request
 from app.models import Workspace, Channel, WorkspaceUser, WorkspaceInvitation, User, db
 from flask_login import current_user, login_user, logout_user, login_required
-from app.forms import WorkspaceForm, WorkspaceUserForm, NewInvitationForm
+from app.forms import WorkspaceForm, WorkspaceUserForm, NewInvitationForm, ChannelForm
 from random import choice
 from app.socket import socketio
 
@@ -35,3 +35,97 @@ def current_channel():
     Query for all the channels in the active workspace that the current user is in
     """
     return {"channels": [channel.to_dict_summary() for channel in current_user.channels if channel.workspace_id == current_user.active_workspace_id]}
+
+
+@channel_routes.route('/<int:id>', methods=['PUT'])
+@login_required
+def edit_channel(id):
+    """
+    Edit a channel
+    """
+    form = ChannelForm()
+    form['csrf_token'].data = request.cookies['csrf_token']
+    channel = Channel.query.get(id)
+    if not channel:
+        return {"errors": ["Channel is not found"]}, 404
+    if channel.name == "general":
+        return {"errors": ["General channel is not editable"]}, 403
+    if channel.creator_id != current_user.id:
+        return {"errors": ["Only channel creator is authorized to edit the channel"]}, 403
+    if form.validate_on_submit():
+        duplicate_channel = Channel.query.filter(Channel.workspace_id == channel.workspace_id, Channel.name == form.data["name"]).first()
+        if duplicate_channel:
+            return {"errors": ["Workspace already had a channel with the same name"]}, 403
+        channel.name=form.data["name"]
+        if form.data["description"]:
+          channel.description=form.data["description"]
+        db.session.commit()
+        return channel.to_dict_detail()
+    return {'errors': validation_errors_to_error_messages(form.errors)}, 401
+
+@channel_routes.route('/<int:channel_id>/users/<int:user_id>', methods=['PUT'])
+@login_required
+def add_to_channel(channel_id, user_id):
+    """
+    Add someone in the workspace to the channel
+    """
+    channel = Channel.query.get(channel_id)
+    user = User.query.get(user_id)
+    if not channel:
+        return {"errors": ["Channel is not found"]}, 404
+    if not user:
+        return {"errors": ["User is not found"]}, 404
+    if user not in channel.workspace.users:
+        return {"errors": ["User must be in the workspace to be added to the channel"]}, 403
+    if user == current_user:
+        return {"errors": ["Users are not allowed to add themselves to the channel"]}, 403
+    if current_user.id != channel.creator_id:
+        return {"errors": ["Only channel creator is allowed to add users to the channel"]}, 403
+    if user in channel.users:
+        return {"errors": ["Only users that are not in the channel are allowed to be added"]}, 403
+    channel.users.append(user)
+    db.session.commit()
+    return channel.to_dict_detail()
+
+@channel_routes.route('/<int:id>/leave', methods=['PUT'])
+@login_required
+def leave_channel(id):
+    """
+    Leave a channel
+    """
+    channel = Channel.query.get(id)
+    if not channel:
+        return {"errors": ["Channel is not found"]}, 404
+    if current_user not in channel.users:
+        return {"errors": ["Only users that are in the channel can leave the channel"]}, 404
+    if current_user == channel.creator:
+        return {"errors": ["Channel creator cannot leave the channel"]}, 403
+    if channel.name == "general":
+        return {"errors": ["User is not allowed leave general channel"]}, 403
+    channel.users.remove(current_user)
+    workspace = channel.workspace
+    workspace_user = WorkspaceUser.query.get((workspace.id, current_user.id))
+    channels = [channel for channel in current_user.channels if channel.workspace_id == workspace.id]
+    workspace_user.active_channel = channels[0]
+    db.session.commit()
+    return {'activeChannel': workspace_user.active_channel.to_dict_detail()}
+
+@channel_routes.route('/<int:id>', methods=['DELETE'])
+@login_required
+def delete_channel(id):
+    """
+    Delete a channel
+    """
+    channel = Channel.query.get(id)
+    workspace = channel.workspace
+    if not channel:
+        return {"errors": ["Channel is not found"]}, 404
+    if current_user != channel.creator:
+        return {"errors": ["Only channel creator can delete the channel"]}, 403
+    db.session.delete(channel)
+    db.session.commit()
+    workspace_user = WorkspaceUser.query.get((workspace.id, current_user.id))
+    channels = [channel for channel in current_user.channels if channel.workspace_id == workspace.id]
+    workspace_user.active_channel = channels[0]
+    db.session.commit()
+    return {'activeChannel': workspace_user.active_channel.to_dict_detail()}

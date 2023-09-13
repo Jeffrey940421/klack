@@ -83,9 +83,9 @@ class Channel(db.Model):
           'id': self.id,
           'name': self.name,
           'description': self.description,
-          'creator_id': self.creator_id,
-          'message_num': len(self.messages),
-          'created_at': self.created_at
+          'creatorId': self.creator_id,
+          'messageNum': len(self.messages),
+          'createdAt': self.created_at
        }
 
     def to_dict_detail(self):
