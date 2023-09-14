@@ -29,7 +29,7 @@ const addInvitation = (invitation) => ({
   payload: invitation
 })
 
-const initialState = { workspaces: [], activeWorkspace: null };
+const initialState = { workspaces: {}, activeWorkspace: null };
 
 export const joinWorkspace = (id, profile) => async (dispatch) => {
   const response = await fetch(`api/workspaces/${id}/join`, {

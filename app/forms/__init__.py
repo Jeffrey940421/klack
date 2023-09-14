@@ -6,3 +6,4 @@ from .active_workspace_form import ActiveWorkspaceForm
 from .new_invitation_form import NewInvitationForm
 from .channel_form import ChannelForm
 from .active_channel_form import ActiveChannelForm
+from .channel_message_form import ChannelMessageForm
