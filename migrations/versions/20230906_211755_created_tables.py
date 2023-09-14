@@ -28,7 +28,7 @@ def upgrade():
         sa.Column('email', sa.String(length=255), nullable=False),
         sa.Column('hashed_password', sa.String(length=255), nullable=False),
         sa.Column('active_workspace_id', sa.Integer(), nullable=True),
-        sa.Column('created_at', sa.Date(), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('email')
         )
@@ -39,7 +39,7 @@ def upgrade():
         sa.Column('email', sa.String(length=255), nullable=False),
         sa.Column('hashed_password', sa.String(length=255), nullable=False),
         sa.Column('active_workspace_id', sa.Integer(), nullable=True),
-        sa.Column('created_at', sa.Date(), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(['active_workspace_id'], ['workspaces.id'], ),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('email')
@@ -50,7 +50,7 @@ def upgrade():
     sa.Column('name', sa.String(length=80), nullable=False),
     sa.Column('icon_url', sa.String(length=255), nullable=False),
     sa.Column('owner_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.Date(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -74,7 +74,7 @@ def upgrade():
     sa.Column('description', sa.Text(), nullable=False),
     sa.Column('creator_id', sa.Integer(), nullable=False),
     sa.Column('workspace_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.Date(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['creator_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['workspace_id'], ['workspaces.id'], ),
     sa.PrimaryKeyConstraint('id'),
@@ -118,8 +118,8 @@ def upgrade():
     sa.Column('sender_id', sa.Integer(), nullable=False),
     sa.Column('channel_id', sa.Integer(), nullable=False),
     sa.Column('content', sa.Text(), nullable=False),
-    sa.Column('created_at', sa.Date(), nullable=False),
-    sa.Column('updated_at', sa.Date(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['channel_id'], ['channels.id'], ),
     sa.ForeignKeyConstraint(['sender_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')

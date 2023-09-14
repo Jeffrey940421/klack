@@ -53,6 +53,20 @@ def current_workspace():
     """
     return {"workspaces": [workspace.to_dict_summary() for workspace in current_user.workspaces]}
 
+@workspace_routes.route('/<int:id>/messages', methods=['GET'])
+@login_required
+def workspace_messages(id):
+    """
+    Query for all the messages in the given workspace
+    """
+    workspace = Workspace.query.get(id)
+    if not workspace:
+        return {"errors": ["Workspace is not found"]}, 404
+    messages = {"messages": []}
+    for channel in workspace.channels:
+        messages["messages"] += [message.to_dict_summary() for message in channel.messages]
+    return messages
+
 @workspace_routes.route('/new', methods=['POST'])
 @login_required
 def create_workspace():

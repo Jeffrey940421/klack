@@ -1,9 +1,10 @@
 from flask import Blueprint, jsonify, session, request
-from app.models import Workspace, Channel, WorkspaceUser, WorkspaceInvitation, User, db
+from app.models import Workspace, Channel, WorkspaceUser, WorkspaceInvitation, User, ChannelMessage, db
 from flask_login import current_user, login_user, logout_user, login_required
-from app.forms import WorkspaceForm, WorkspaceUserForm, NewInvitationForm, ChannelForm
+from app.forms import WorkspaceForm, WorkspaceUserForm, NewInvitationForm, ChannelForm, ChannelMessageForm
 from random import choice
 from app.socket import socketio
+import json
 
 channel_routes = Blueprint('channel', __name__)
 
@@ -36,6 +37,16 @@ def current_channel():
     """
     return {"channels": [channel.to_dict_summary() for channel in current_user.channels if channel.workspace_id == current_user.active_workspace_id]}
 
+@channel_routes.route('/<int:id>/messages', methods=['GET'])
+@login_required
+def channel_messages(id):
+    """
+    Query for all the messaages in the given channel
+    """
+    channel = Channel.query.get(id)
+    if not channel:
+        return {"errors": ["Channel is not found"]}, 404
+    return {"messages": [message.to_dict_summary() for message in channel.messages]}
 
 @channel_routes.route('/<int:id>', methods=['PUT'])
 @login_required
@@ -129,3 +140,28 @@ def delete_channel(id):
     workspace_user.active_channel = channels[0]
     db.session.commit()
     return {'activeChannel': workspace_user.active_channel.to_dict_detail()}
+
+@channel_routes.route('/<int:id>/messages/new', methods=['POST'])
+@login_required
+def create_channel(id):
+    """
+    Create a message in the channel
+    """
+    form = ChannelMessageForm()
+    form['csrf_token'].data = request.cookies['csrf_token']
+    channel = Channel.query.get(id)
+    if not channel:
+        return {"errors": ["Channel is not found"]}, 404
+    if current_user not in channel.users:
+        return {"errors": ["Only users in the channel are allowed to create message"]}, 403
+    if form.validate_on_submit():
+        message = ChannelMessage(
+            sender=current_user,
+            channel=channel,
+            content=form.data["content"]
+        )
+        db.session.add(message)
+        db.session.commit()
+        socketio.emit("send_message", {"message": json.dumps(message.to_dict_summary(), default=str)}, to=f"channel{id}")
+        return message.to_dict_summary()
+    return {'errors': validation_errors_to_error_messages(form.errors)}, 401

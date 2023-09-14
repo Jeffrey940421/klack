@@ -23,7 +23,7 @@ const deleteChannel = (id, activeChannel) => ({
   payload: {id, activeChannel}
 })
 
-const initialState = { channels: [], activeChannel: null };
+const initialState = { channels: {}, activeChannel: null };
 
 export const getChannels = () => async (dispatch) => {
   const response = await fetch("api/channels/current", {

@@ -26,12 +26,12 @@ class ChannelMessage(db.Model):
       nullable=False
     )
     created_at = db.Column(
-      db.Date,
+      db.DateTime,
       nullable=False,
       default=func.now()
     )
     updated_at = db.Column(
-      db.Date,
+      db.DateTime,
       nullable=False,
       default=func.now(),
       onupdate=func.now()

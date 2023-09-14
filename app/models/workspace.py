@@ -26,7 +26,7 @@ class Workspace(db.Model):
       nullable=False
     )
     created_at = db.Column(
-      db.Date,
+      db.DateTime,
       nullable=False,
       default=func.now()
     )

@@ -78,7 +78,7 @@ export function ChatRoom({ user, socket }) {
   useEffect(() => {
     const workspaceArr = Object.values(workspaces)
     for (let workspace of workspaceArr) {
-      socket.emit("join_room", { room: `workspace${workspace.id}`, email: user.email })
+      socket.emit("join_room", { room: `workspace${workspace.id}`})
     }
     socket.on("delete_workspace", async (data) => {
       await dispatch(authenticate())
@@ -235,7 +235,7 @@ export function ChatRoom({ user, socket }) {
               </button>
             </div>
           </div>
-          <ChannelWindow channel={activeChannel} />
+          {activeChannel && <ChannelWindow channel={activeChannel} socket={socket} key={activeChannel.id}/>}
         </>
       }
 

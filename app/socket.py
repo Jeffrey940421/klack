@@ -11,9 +11,8 @@ socketio = SocketIO(cors_allowed_origins=origins)
 @socketio.on('join_room')
 def on_join(data):
     room = data['room']
-    email = data['email']
     join_room(room)
-    print(f'----------------------------------------------------->user {email} joined room ' + room)
+    print(f'----------------------------------------------------->user joined room ' + room)
 
 @socketio.on('leave_room')
 def on_leave(data):

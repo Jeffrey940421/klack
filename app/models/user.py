@@ -32,7 +32,7 @@ class User(db.Model, UserMixin):
         db.ForeignKey(add_prefix_for_prod("workspaces.id"))
     )
     created_at = db.Column(
-        db.Date,
+        db.DateTime,
         nullable=False,
         default=func.now()
     )

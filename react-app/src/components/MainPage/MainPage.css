@@ -26,7 +26,7 @@
   margin-bottom: 8px;
 }
 
-#chat-room_workspaces-sidebar>div {
+#chat-room_workspaces-sidebar > div {
   position: relative;
 }
 
@@ -58,7 +58,7 @@
   padding: 10px;
   border-radius: 8px;
   font-size: 12px;
-  z-index: 100;
+  z-index: 100000;
 }
 
 .chat-room_workspace:hover+.chat-room_workspace-name {
@@ -190,6 +190,7 @@
   background-color: #f8f8f8;
   box-sizing: border-box;
   padding: 12px 0px;
+  z-index: 10;
 }
 
 #chat-room_workspace-dropdown li:nth-child(1) {
@@ -360,15 +361,19 @@
   padding: 0px 10px 10px 0px;
   width: 100%;
   box-sizing: border-box;
+  max-height: calc(100vh - 60px);
 }
 
 #channel-window_background {
   background-color: white;
   height: 100%;
+  width: 100%;
   border-top-right-radius: 15px;
   border-bottom-right-radius: 15px;
   padding: 15px 0px;
   box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
 }
 
 #channel-window_title {
@@ -397,6 +402,7 @@
   width: 100%;
   background-color: rgb(180, 180, 180);
   height: 1px;
+  margin-bottom: 0px;
 }
 
 #channel-window_title > i.fa-solid.fa-angle-down {
@@ -446,6 +452,7 @@
   background-color: #f8f8f8;
   box-sizing: border-box;
   padding: 12px 0px;
+  z-index: 10;
 }
 
 #channel-window_channel-dropdown li {
@@ -462,4 +469,99 @@
 #channel-window_delete-channel,
 #channel-window_leave-channel {
   color: red
+}
+
+#channel-window_body {
+  overflow: hidden;
+}
+
+#channel-window_textarea {
+  margin: 0px 20px 10px 20px;
+  box-sizing: border-box;
+  border: 1px solid lightgray;
+  position: relative;
+  border-radius: 10px;
+  padding: 20px 12px 40px 12px;
+  height: fit-content;
+}
+
+#channel-window_textarea > div {
+  min-height: 60px;
+  max-height: 300px;
+  overflow-y: scroll;
+  display: grid;
+}
+
+#channel-window_textarea > div::after {
+  content: attr(data-replicated-value) " ";
+  white-space: pre-wrap;
+  visibility: hidden;
+  font-size: 15px;
+  font-family: "circular_stdbook", sans-serif;
+}
+
+#channel-window_textarea textarea {
+  resize: none;
+  font-size: 15px !important;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+}
+
+#channel-window_textarea textarea,
+#channel-window_textarea > div::after {
+  grid-area: 1 / 1 / 2 / 2;
+}
+
+#channel-window_textarea textarea:focus {
+  outline: none;
+}
+
+
+#channel-window_textarea > div::-webkit-scrollbar {
+  background-color: transparent;
+  width: 16px;
+}
+
+#channel-window_textarea > div::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+#channel-window_textarea > div::-webkit-scrollbar-thumb {
+  background-color: #babac0;
+  border-radius: 16px;
+  border: 4px solid #f8f8f8;
+}
+
+#channel-window_textarea > div::-webkit-scrollbar-button {
+  display: none;
+}
+
+#channel-window_textarea button {
+  background-color: rgb(7, 126, 7);
+  border: none;
+  width: fit-content;
+  position: absolute;
+  bottom: 15px;
+  right: 12px;
+  padding: 8px;
+  border-radius: 5px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  column-gap: 5px;
+}
+
+#channel-window_textarea button:hover {
+  background-color: rgb(6, 153, 6);
+}
+
+#channel-window_textarea button:disabled {
+  background-color: transparent;
+  color: lightgray;
+  cursor: default;
 }
