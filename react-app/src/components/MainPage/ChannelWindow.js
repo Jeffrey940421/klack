@@ -8,8 +8,9 @@ import { ChannelDetails } from "../ChannelDetails";
 import { JoinChannel } from "../JoinChannel";
 import { Message } from "../Message";
 import { addChannelMessage, addWorkspaceMessage, createMessage, getChannelMessages, getWorkspaceMessages } from "../../store/messages";
+import { useRoom } from "../../context/RoomContext";
 
-export function ChannelWindow({ channel, socket }) {
+export function ChannelWindow({ socket }) {
   const { setModalContent } = useModal();
   const [showChannelMenu, setShowChannelMenu] = useState(false)
   const ulRef = useRef();
@@ -21,6 +22,10 @@ export function ChannelWindow({ channel, socket }) {
   const [focused, setFocused] = useState(false)
   const channels = useSelector((state) => state.channels.channels)
   const submitRef = useRef()
+  const channel = useSelector((state) => state.channels.activeChannel);
+  const [prevRooms, setPrevRooms] = useState([])
+  const { channelRooms, setChannelRooms } = useRoom()
+
 
   const openChannelMenu = () => {
     setShowChannelMenu((prev) => !prev);
@@ -79,20 +84,28 @@ export function ChannelWindow({ channel, socket }) {
     const channelArr = Object.values(channels)
     const rooms = channelArr.map(channel => `channel${channel.id}`)
     socket.emit("join_room", { rooms: rooms })
+    setChannelRooms(rooms)
+    console.log("joined", rooms)
+
+    return (() => {
+      socket.emit("leave_room", { rooms: channelRooms })
+      console.log("left", channelRooms)
+    })
+  }, [channels])
+
+  useEffect(() => {
     socket.on("send_message", async (data) => {
       const message = JSON.parse(data.message)
-      console.log(message)
       if (message.channelId === channel.id) {
         await dispatch(addChannelMessage(message))
       }
       await dispatch(addWorkspaceMessage(message))
     })
+
     return (() => {
-      const channelArr = Object.values(channels)
-      const rooms = channelArr.map(channel => `channel${channel.id}`)
-      socket.emit("leave_room", { rooms: rooms })
+      socket.off("send_message")
     })
-  }, [channels])
+  }, [channel])
 
   return (
     <div id="channel-window_container">
@@ -177,7 +190,10 @@ export function ChannelWindow({ channel, socket }) {
           <div>
             <textarea
               placeholder={`Message #${channel?.name}`}
-              onInput={(e) => e.target.parentNode.dataset.replicatedValue = e.target.value}
+              onInput={(e) => {
+                e.stopPropagation()
+                e.target.parentNode.dataset.replicatedValue = e.target.value
+              }}
               onChange={(e) => setNewMessage(e.target.value)}
               value={newMessage}
               onFocus={() => setFocused(true)}

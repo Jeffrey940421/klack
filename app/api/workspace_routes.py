@@ -1,9 +1,10 @@
 from flask import Blueprint, jsonify, session, request
-from app.models import Workspace, Channel, WorkspaceUser, WorkspaceInvitation, User, db
+from app.models import Workspace, Channel, WorkspaceUser, WorkspaceInvitation, User, ChannelMessage, db
 from flask_login import current_user, login_user, logout_user, login_required
 from app.forms import WorkspaceForm, WorkspaceUserForm, NewInvitationForm, ChannelForm
 from random import choice
 from app.socket import socketio
+import json
 
 workspace_routes = Blueprint('workspace', __name__)
 
@@ -158,6 +159,7 @@ def edit_workspace(id):
         if form.data["icon_url"]:
           workspace.icon_url=form.data["icon_url"]
         db.session.commit()
+        socketio.emit("edit_workspace", {"workspace": json.dumps(workspace.to_dict_detail(), default=str)}, to=f"workspace{id}")
         return workspace.to_dict_detail()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 

@@ -3,6 +3,8 @@ const LOAD_ACTIVE_WORKSPACE = "workspaces/LOAD_ACTIVE_WORKSPACE"
 const ADD_WORKSPACE = "workspaces/ADD_WORKSPACE"
 const DELTE_WORKSPACE = "workspaces/DELETE_WORKSPACE"
 const ADD_INVITATION = "workspaces/ADD_INVITATION"
+const UPDATE_WORKSPACE = "workspaces/UPDATE_WORKSPACE"
+const EDIT_ACTIVE_WORKSPACE = "workspaces/EDIT_ACTIVE_WORKSPACE"
 
 const loadWorkspaces = (workspaces) => ({
   type: LOAD_WORKSPACES,
@@ -27,6 +29,16 @@ const deleteWorkspace = (id, activeWorkspace) => ({
 const addInvitation = (invitation) => ({
   type: ADD_INVITATION,
   payload: invitation
+})
+
+export const updateWorkspace = (workspace) => ({
+  type: UPDATE_WORKSPACE,
+  payload: workspace
+})
+
+export const editActiveWorkspace = (workspace) => ({
+  type: EDIT_ACTIVE_WORKSPACE,
+  payload: workspace
 })
 
 const initialState = { workspaces: {}, activeWorkspace: null };
@@ -318,6 +330,26 @@ export default function reducer(state = initialState, action) {
       const activeWorkspace = state.activeWorkspace
       const invitation = action.payload
       activeWorkspace.associatedInvitations[invitation.id] = invitation
+      return { ...state, activeWorkspace }
+    }
+    case UPDATE_WORKSPACE: {
+      const workspace = {
+        id: action.payload.id,
+        name: action.payload.name,
+        ownerId: action.payload.owner.id,
+        iconUrl: action.payload.iconUrl,
+        createdAt: action.payload.createdAt
+      }
+      return { ...state, workspaces: { ...state.workspaces, [workspace.id]: workspace } }
+    }
+    case EDIT_ACTIVE_WORKSPACE: {
+      const { invitations, channels, users } = normalization(action.payload)
+      const activeWorkspace = {
+        ...action.payload,
+        associatedInvitations: invitations,
+        channels: channels,
+        users: users
+      }
       return { ...state, activeWorkspace }
     }
     default:

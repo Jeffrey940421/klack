@@ -6,13 +6,14 @@ import { addInvitation, deleteLastWorkspace, updateActiveChannel, updateActiveWo
 import { CreateWorkspace } from "../CreateWorkspace";
 import { useModal } from '../../context/Modal';
 import { EditWorkspace } from "../EditWorkspace";
-import { leaveCurrentWorkspace, removeWorkspace } from "../../store/workspaces";
+import { editActiveWorkspace, leaveCurrentWorkspace, removeWorkspace, updateWorkspace } from "../../store/workspaces";
 import { authenticate } from "../../store/session";
 import { io } from 'socket.io-client';
 import { Invitation } from "../Invitation";
 import { getActiveChannel, getChannels } from "../../store/channels";
 import { CreateChannel } from "../CreateChannel";
 import { ChannelWindow } from "./ChannelWindow";
+import { useRoom } from "../../context/RoomContext";
 
 
 export function ChatRoom({ user, socket }) {
@@ -26,6 +27,7 @@ export function ChatRoom({ user, socket }) {
   const [channelExpanded, setChannelExpanded] = useState(true)
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
   const [channelLoaded, setChannelLoaded] = useState(false)
+  const { workspaceRooms, setWorkspaceRooms } = useRoom()
 
   const switchWorkspace = (workspaceId) => {
     if (workspaceId !== activeWorkspace.id) {
@@ -78,7 +80,17 @@ export function ChatRoom({ user, socket }) {
   useEffect(() => {
     const workspaceArr = Object.values(workspaces)
     const rooms = workspaceArr.map((workspace => `workspace${workspace.id}`))
-    socket.emit("join_room", { rooms: rooms})
+    socket.emit("join_room", { rooms: rooms })
+    setWorkspaceRooms([...rooms])
+    console.log("joined", rooms)
+
+    return (() => {
+      socket.emit("leave_room", { rooms: workspaceRooms })
+      console.log("left", workspaceRooms)
+    })
+  }, [workspaces])
+
+  useEffect(() => {
     socket.on("delete_workspace", async (data) => {
       await dispatch(authenticate())
     })
@@ -86,12 +98,21 @@ export function ChatRoom({ user, socket }) {
       const invitation = data.invitation
       await dispatch(addInvitation(invitation))
     })
-    return (() => {
-      const workspaceArr = Object.values(workspaces)
-      const rooms = workspaceArr.map((workspace => `workspace${workspace.id}`))
-      socket.emit("leave_room", { rooms: rooms })
+    socket.on("edit_workspace", async (data) => {
+      const workspace = JSON.parse(data.workspace)
+      console.log(workspace.id, activeWorkspace.id)
+      if (workspace.id === activeWorkspace.id) {
+        await dispatch(editActiveWorkspace(workspace))
+      }
+      await dispatch(updateWorkspace(workspace))
     })
-  }, [dispatch, workspaces])
+
+    return (() => {
+      socket.off("delete_workspace");
+      socket.off("send_invitation");
+      socket.off("edit_workspace");
+    })
+  }, [activeWorkspace])
 
   useEffect(() => {
     dispatch(getChannels())
@@ -110,33 +131,38 @@ export function ChatRoom({ user, socket }) {
 
   return (
     <div id="chat-room_container">
-      <div id="chat-room_workspaces-sidebar">
-        {Object.values(workspaces).map(workspace => {
-          return (
-            <div key={workspace.id}>
-              <button
-                className={`chat-room_workspace ${workspace.id === activeWorkspace?.id ? "active" : ""}`}
-                onClick={() => switchWorkspace(workspace.id)}
-              >
-                <img src={workspace.iconUrl} />
-              </button>
-              <span className="chat-room_workspace-name">
-                {workspace.name}
-              </span>
-            </div>
-          )
-        })}
-        <div>
-          <button
-            id="chat-room_create-workspace"
-            onClick={() => setModalContent(<CreateWorkspace />)}
-          >
-            <i className="fa-solid fa-plus" />
-          </button>
-          <span id="chat-room_create-workspace-label">
-            Create workspaces
-          </span>
+      <div id="chat-room_workspaces-sidebar-container">
+        <div id="chat-room_workspaces-sidebar">
+          {Object.values(workspaces).map(workspace => {
+            return (
+              <div key={workspace.id}>
+                <button
+                  className={`chat-room_workspace ${workspace.id === activeWorkspace?.id ? "active" : ""}`}
+                  onClick={() => switchWorkspace(workspace.id)}
+                >
+                  <img src={workspace.iconUrl} />
+                </button>
+                <span className="chat-room_workspace-name">
+                  <span>
+                    {workspace.name}
+                  </span>
+                </span>
+              </div>
+            )
+          })}
+          <div>
+            <button
+              id="chat-room_create-workspace"
+              onClick={() => setModalContent(<CreateWorkspace />)}
+            >
+              <i className="fa-solid fa-plus" />
+            </button>
+            <span id="chat-room_create-workspace-label">
+              Create workspaces
+            </span>
+          </div>
         </div>
+        <div id="chat-room_workspaces-sidebar-spacer"></div>
       </div>
 
       {
@@ -150,52 +176,6 @@ export function ChatRoom({ user, socket }) {
               >
                 <h3>{activeWorkspace?.name}</h3><i className="fa-solid fa-angle-down" />
               </button>
-              <ul id="chat-room_workspace-dropdown" className={showWorkspaceMenu ? "" : "hidden"} ref={ulRef}>
-                <li>
-                  <img id="chat-room_workspace-icon" src={activeWorkspace?.iconUrl} alt="workspace icon" />
-                  <span>{activeWorkspace?.name}</span>
-                </li>
-                <hr className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}></hr>
-                <li
-                  className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
-                  onClick={() => {
-                    setShowWorkspaceMenu(false)
-                    setModalContent(<Invitation workspace={activeWorkspace} user={user} />)
-                  }}
-                >
-                  <span>Invite People to Join Workspace</span>
-                </li>
-                <li
-                  className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
-                  onClick={() => {
-                    setShowWorkspaceMenu(false)
-                    setModalContent(<EditWorkspace workspace={activeWorkspace} />)
-                  }}
-                >
-                  <span>Edit Workspace</span>
-                </li>
-                <hr></hr>
-                <li
-                  id="chat-room_delete-workspace"
-                  className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
-                  onClick={() => {
-                    setShowWorkspaceMenu(false)
-                    deleteWorkspace()
-                  }}
-                >
-                  <span>Delete Workspace</span>
-                </li>
-                <li
-                  id="chat-room_leave-workspace"
-                  className={user.id !== activeWorkspace?.owner.id ? "" : "hidden"}
-                  onClick={() => {
-                    setShowWorkspaceMenu(false)
-                    leaveWorkspace()
-                  }}
-                >
-                  <span>Leave Workspace</span>
-                </li>
-              </ul>
               <hr></hr>
               <div id="chat-room_channel">
                 <button
@@ -214,7 +194,8 @@ export function ChatRoom({ user, socket }) {
                         id={activeChannel?.id === channel.id ? "chat-room_active-channel" : ""}
                         onClick={() => switchChannel(channel.id)}
                       >
-                        <i className="fa-solid fa-hashtag" /> {channel.name}
+                        <i className="fa-solid fa-hashtag" />
+                        <span>{channel.name}</span>
                       </button>
                     </div>
                   )
@@ -237,7 +218,53 @@ export function ChatRoom({ user, socket }) {
               </button>
             </div>
           </div>
-          {activeChannel && <ChannelWindow channel={activeChannel} socket={socket} key={activeChannel.id}/>}
+          <ul id="chat-room_workspace-dropdown" className={showWorkspaceMenu ? "" : "hidden"} ref={ulRef}>
+            <li>
+              <img id="chat-room_workspace-icon" src={activeWorkspace?.iconUrl} alt="workspace icon" />
+              <span>{activeWorkspace?.name}</span>
+            </li>
+            <hr className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}></hr>
+            <li
+              className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
+              onClick={() => {
+                setShowWorkspaceMenu(false)
+                setModalContent(<Invitation workspace={activeWorkspace} user={user} />)
+              }}
+            >
+              <span>Invite People to Join Workspace</span>
+            </li>
+            <li
+              className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
+              onClick={() => {
+                setShowWorkspaceMenu(false)
+                setModalContent(<EditWorkspace workspace={activeWorkspace} />)
+              }}
+            >
+              <span>Edit Workspace</span>
+            </li>
+            <hr></hr>
+            <li
+              id="chat-room_delete-workspace"
+              className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
+              onClick={() => {
+                setShowWorkspaceMenu(false)
+                deleteWorkspace()
+              }}
+            >
+              <span>Delete Workspace</span>
+            </li>
+            <li
+              id="chat-room_leave-workspace"
+              className={user.id !== activeWorkspace?.owner.id ? "" : "hidden"}
+              onClick={() => {
+                setShowWorkspaceMenu(false)
+                leaveWorkspace()
+              }}
+            >
+              <span>Leave Workspace</span>
+            </li>
+          </ul>
+          {activeChannel && <ChannelWindow socket={socket} key={activeChannel.id} />}
         </>
       }
 

@@ -1,11 +1,14 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import "./ScrollContainer.css"
+import { useSelector } from "react-redux";
 
 export function ScrollContainer({ children, id }) {
   const outerDiv = useRef(null);
   const innerDiv = useRef(null);
   const [prevId, setPrevId] = useState("")
   const prevInnerDivHeight = useRef(null);
+  const messages = useSelector((state) => state.messages)
+  const channelMessages = messages?.channelMessages
 
   const [showScrollButton, setShowScrollButton] = useState(false);
 
@@ -17,10 +20,11 @@ export function ScrollContainer({ children, id }) {
       const outerDivHeight = outerDiv.current?.clientHeight;
       const innerDivHeight = innerDiv.current?.clientHeight;
       const outerDivScrollTop = outerDiv.current?.scrollTop;
-      if (
-        !prevInnerDivHeight.current ||
-        outerDivScrollTop === prevInnerDivHeight.current - outerDivHeight
-      ) {
+
+      if (!prevInnerDivHeight.current
+        || outerDivScrollTop === prevInnerDivHeight.current - outerDivHeight
+        || outerDivScrollTop === prevInnerDivHeight.current - outerDivHeight - 62
+        || outerDivScrollTop == 0) {
         outerDiv.current?.scrollTo({
           top: innerDivHeight - outerDivHeight,
           left: 0,
@@ -35,16 +39,28 @@ export function ScrollContainer({ children, id }) {
     }, 100)
   }
 
+  const handleButton = () => {
+    const outerDivHeight = outerDiv.current?.clientHeight;
+    const innerDivHeight = innerDiv.current?.clientHeight;
+    const outerDivScrollTop = outerDiv.current?.scrollTop;
+
+    if (outerDivScrollTop === innerDivHeight - outerDivHeight) {
+      setShowScrollButton(false);
+    }
+  }
+
   useEffect(() => {
-    const scrollEvent = window.addEventListener("resize", scroll)
+    const resizeEvent = window.addEventListener("resize", scroll)
+    const scrollEvent = document.querySelector("#scroll_outer").addEventListener("scroll", handleButton)
     return (() => {
-      window.removeEventListener("resize", scrollEvent)
+      window.removeEventListener("resize", resizeEvent)
+      document.querySelector("#scroll_outer")?.removeEventListener("scroll", handleButton)
     })
   }, [])
 
   useEffect(() => {
     scroll()
-  }, [children]);
+  }, [Object.values(channelMessages).length, id]);
 
   const handleScrollButtonClick = useCallback(() => {
     const outerDivHeight = outerDiv.current.clientHeight;
@@ -86,18 +102,14 @@ export function ScrollContainer({ children, id }) {
         </div>
       </div>
       <button
+        id="scroll_button"
         style={{
-          position: "absolute",
-          backgroundColor: "red",
-          color: "white",
-          left: "50%",
-          transform: "translateX(-50%)",
-          opacity: showScrollButton ? 1 : 0,
+          display: showScrollButton ? "flex" : "none",
           pointerEvents: showScrollButton ? "auto" : "none",
         }}
         onClick={handleScrollButtonClick}
       >
-        New message!
+        <i className="fa-solid fa-arrow-down" /> New Message
       </button>
     </div>
   );
