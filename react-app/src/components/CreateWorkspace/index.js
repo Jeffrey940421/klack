@@ -112,7 +112,7 @@ export function CreateWorkspace() {
         return
       } else {
         setServerErrors((prev) => {
-          prev.icon.push("An error occurred. Please try again.")
+          prev.icon = ["An error occurred. Please try again."]
           return { ...prev }
         })
         closePopup()
@@ -143,7 +143,7 @@ export function CreateWorkspace() {
         return
       } else {
         setServerErrors((prev) => {
-          prev.image.push("An error occurred. Please try again.")
+          prev.image = ["An error occurred. Please try again."]
           return { ...prev }
         })
         closePopup()

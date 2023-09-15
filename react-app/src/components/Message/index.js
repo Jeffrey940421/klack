@@ -32,9 +32,9 @@ export function Message({ channel }) {
             channelMessages && Object.values(channelMessages).map(message => {
               return (
                 <div className="message_message-body" key={message.id}>
-                  <img src={message.sender.profileImageUrl} alt="profile_image" />
+                  <img src={message.sender.profileImageUrl || "/images/profile_images/profile_images_1.png"} alt="profile_image" />
                   <div>
-                    <span className="message_sender">{message.sender.nickname}</span>
+                    <span className="message_sender">{message.sender.nickname || message.sender.email + " (not in workspace)"}</span>
                     <span>{new Date(message.createdAt).toLocaleString()}</span>
                   </div>
                   <span>{message.content}</span>

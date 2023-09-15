@@ -199,6 +199,12 @@
   flex-direction: row;
   column-gap: 10px;
   align-items: center;
+  height: fit-content;
+}
+
+.notification-button_invitation span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .notification-button_invitation-buttons {

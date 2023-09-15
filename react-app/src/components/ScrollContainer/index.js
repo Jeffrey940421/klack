@@ -31,13 +31,14 @@ export function ScrollContainer({ children, id }) {
       }
 
       prevInnerDivHeight.current = innerDivHeight;
+      setPrevId(id)
     }, 100)
   }
 
   useEffect(() => {
     const scrollEvent = window.addEventListener("resize", scroll)
     return (() => {
-      window.removeEventListener("resize", scroll)
+      window.removeEventListener("resize", scrollEvent)
     })
   }, [])
 
