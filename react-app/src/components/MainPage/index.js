@@ -59,7 +59,7 @@ export function MainPage() {
       return (
         <div className="main-page_container">
           {socketCreated && <Navigation hasWorkspace={false} socket={socket} />}
-          <NoWorkspace />
+          {socketCreated && <NoWorkspace socket={socket} />}
         </div>
       )
     } else {
