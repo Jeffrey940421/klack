@@ -290,5 +290,6 @@ def send_invitation(id):
       )
       db.session.add(invitation)
       db.session.commit()
+      socketio.emit("send_invitation", {"invitation": invitation.to_dict()}, to=f"user{user.id}")
       return invitation.to_dict()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401

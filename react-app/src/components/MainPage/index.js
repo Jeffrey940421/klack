@@ -15,6 +15,7 @@ export function MainPage() {
   const dispatch = useDispatch();
   const sessionUser = useSelector((state) => state.session.user);
   const [workspaceLoaded, setWorkspaceLoaded] = useState(false)
+  const [socketCreated, setSocketCreated] = useState(false)
 
 
   // If user has workspaces but no active workspace, set the first workspace
@@ -40,8 +41,9 @@ export function MainPage() {
   useEffect(() => {
     socket = io();
     if (sessionUser) {
-      socket.emit("join_room", { room: `user${sessionUser.id}`, email: sessionUser.email })
+      socket.emit("join_room", { room: `user${sessionUser.id}` })
     }
+    setSocketCreated(true)
 
     return (() => {
       socket.disconnect()
@@ -56,15 +58,15 @@ export function MainPage() {
     if (!workspaces.length) {
       return (
         <div className="main-page_container">
-          <Navigation hasWorkspace={false} socket={socket} />
+          {socketCreated && <Navigation hasWorkspace={false} socket={socket} />}
           <NoWorkspace />
         </div>
       )
     } else {
       return (
         <div className="main-page_container">
-          {workspaceLoaded && <Navigation hasWorkspace={true} socket={socket} />}
-          {workspaceLoaded && <ChatRoom user={sessionUser} socket={socket} />}
+          {workspaceLoaded && socketCreated && <Navigation hasWorkspace={true} socket={socket} />}
+          {workspaceLoaded && socketCreated && <ChatRoom user={sessionUser} socket={socket} />}
         </div>
       )
     }

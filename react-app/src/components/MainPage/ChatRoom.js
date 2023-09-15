@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Redirect } from "react-router-dom";
 import "./MainPage.css"
-import { deleteLastWorkspace, updateActiveChannel, updateActiveWorkspace } from "../../store/session";
+import { addInvitation, deleteLastWorkspace, updateActiveChannel, updateActiveWorkspace } from "../../store/session";
 import { CreateWorkspace } from "../CreateWorkspace";
 import { useModal } from '../../context/Modal';
 import { EditWorkspace } from "../EditWorkspace";
@@ -83,13 +83,17 @@ export function ChatRoom({ user, socket }) {
     socket.on("delete_workspace", async (data) => {
       await dispatch(authenticate())
     })
+    socket.on("send_invitation", async (data) => {
+      const invitation = data.invitation
+      await dispatch(addInvitation(invitation))
+    })
     return (() => {
       const workspaceArr = Object.values(workspaces)
       for (let workspace of workspaceArr) {
         socket.emit("leave_room", { room: `workspace${workspace.id}` })
       }
     })
-  }, [workspaces])
+  }, [dispatch, workspaces])
 
   useEffect(() => {
     dispatch(getChannels())
@@ -195,7 +199,7 @@ export function ChatRoom({ user, socket }) {
                 </li>
               </ul>
               <hr></hr>
-              <div button id="chat-room_channel">
+              <div id="chat-room_channel">
                 <button
                   onClick={() => setChannelExpanded((prev) => !prev)}
                 >
@@ -222,7 +226,7 @@ export function ChatRoom({ user, socket }) {
                 id="chat-room_add-channel"
                 onClick={() => setModalContent(<CreateChannel type="create" workspace={activeWorkspace} />)}
               >
-                <i class="fa-solid fa-plus" />
+                <i className="fa-solid fa-plus" />
                 Add Channels
               </button>
               <button
@@ -230,7 +234,7 @@ export function ChatRoom({ user, socket }) {
                 className={user.id === activeWorkspace?.owner.id ? "" : "hidden"}
                 onClick={() => setModalContent(<Invitation workspace={activeWorkspace} user={user} />)}
               >
-                <i class="fa-solid fa-plus" />
+                <i className="fa-solid fa-plus" />
                 Add Cowokers
               </button>
             </div>

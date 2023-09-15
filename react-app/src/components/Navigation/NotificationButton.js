@@ -10,12 +10,13 @@ function NotificationButton({ user, hasWorkspace }) {
   const [showMenu, setShowMenu] = useState(false);
   const ulRef = useRef();
   const { setModalContent } = useModal()
+  const allInvitations = useSelector((state) => state.session.user.receivedWorkspaceInvitations)
 
   const openMenu = () => {
     setShowMenu((prev) => !prev);
   };
 
-  const invitations = user.receivedWorkspaceInvitations.filter(invitation => invitation.status === "pending")
+  const invitations = allInvitations.filter(invitation => invitation.status === "pending")
 
   useEffect(() => {
     if (!showMenu) return;
