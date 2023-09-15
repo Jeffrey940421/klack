@@ -1,4 +1,5 @@
 from flask_socketio import SocketIO, emit, join_room, leave_room
+from engineio.payload import Payload
 import os
 
 if os.environ.get("FLASK_ENV") == "production":
@@ -6,6 +7,8 @@ if os.environ.get("FLASK_ENV") == "production":
 else:
     origins = "*"
 
+
+Payload.max_decode_packets = 50
 socketio = SocketIO(cors_allowed_origins=origins)
 
 @socketio.on('join_room')

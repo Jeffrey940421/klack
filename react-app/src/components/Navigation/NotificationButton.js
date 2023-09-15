@@ -47,8 +47,8 @@ function NotificationButton({ user, hasWorkspace }) {
             invitations.map((invitation, i) => {
               return (
                 <li className="notification-button_invitation" key={invitation.id}>
-                  {invitation.sender.nickname} ({invitation.sender.email}) invited you to join workspace {invitation.workspaceName}.
-                  <li className="notification-button_invitation-buttons">
+                  <span>{invitation.sender.nickname} ({invitation.sender.email}) invited you to join workspace {invitation.workspaceName}.</span>
+                  <div className="notification-button_invitation-buttons">
                     <button
                       onClick={() => setModalContent(<JoinWorkspace invitation={invitation}/>)}
                     >
@@ -59,7 +59,7 @@ function NotificationButton({ user, hasWorkspace }) {
                     >
                       Ignore
                     </button>
-                  </li>
+                  </div>
                 </li>
               )
             }) :
