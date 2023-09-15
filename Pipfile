@@ -29,9 +29,9 @@ faker = "==18.13.0"
 eventlet = "==0.30.2"
 email-validator = "*"
 flask-socketio = "*"
+boto3 = "*"
 gevent = "*"
 gevent-websocket = "*"
-boto3 = "*"
 
 [dev-packages]
 
