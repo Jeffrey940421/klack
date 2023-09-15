@@ -16,3 +16,24 @@
 #scroll_outer::-webkit-scrollbar-button {
   display: none;
 }
+
+#scroll_button {
+  position: absolute;
+  background-color: #611f69;
+  border: none;
+  color: white;
+  left: 50%;
+  bottom: 10px;
+  height: 20px;
+  font-size: 12px;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  column-gap: 5px;
+  border-radius: 10px;
+  opacity: 0.5;
+}
+
+#scroll_button:hover {
+  opacity: 1;
+}

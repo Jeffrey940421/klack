@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import { ModalProvider, Modal } from "./context/Modal";
 import { Popup, PopupProvider } from './context/Popup';
+import { RoomProvider } from "./context/RoomContext";
 import configureStore from "./store";
 import * as sessionActions from "./store/session";
 import App from "./App";
@@ -25,13 +26,15 @@ function Root() {
 	return (
 		<ModalProvider>
 			<PopupProvider>
-				<Provider store={store}>
-					<BrowserRouter>
-						<App />
-						<Modal />
-						<Popup />
-					</BrowserRouter>
-				</Provider>
+				<RoomProvider>
+					<Provider store={store}>
+						<BrowserRouter>
+							<App />
+							<Modal />
+							<Popup />
+						</BrowserRouter>
+					</Provider>
+				</RoomProvider>
 			</PopupProvider>
 		</ModalProvider>
 	);
