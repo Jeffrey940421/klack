@@ -67,10 +67,11 @@ export function EditProfile({ profile, workspace }) {
         const data = await imageResponse.json()
         if (data.errors) {
           setServerErrors((prev) => {
-            prev.image.push(data.errors)
+            prev.image = [data.errors]
             return { ...prev }
           })
         }
+        closePopup()
         return
       } else {
         setServerErrors((prev) => {

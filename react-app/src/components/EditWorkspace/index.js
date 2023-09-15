@@ -68,10 +68,11 @@ export function EditWorkspace({ workspace }) {
         const data = await iconResponse.json()
         if (data.errors) {
           setServerErrors((prev) => {
-            prev.icon.push(data.errors)
+            prev.icon = [data.errors]
             return { ...prev }
           })
         }
+        closePopup()
         return
       } else {
         setServerErrors((prev) => {

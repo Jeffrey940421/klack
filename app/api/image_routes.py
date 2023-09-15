@@ -32,7 +32,7 @@ def upload_image():
         # if the dictionary doesn't have a url key
         # it means that there was an error when you tried to upload
         # so you send back that error message (and you printed it above)
-            return {"errors": [upload["errors"] + "Error from upload"]}, 400
+            return {"errors": [upload["errors"]]}, 400
 
         url = upload["url"]
         return {"url": url}

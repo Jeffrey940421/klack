@@ -104,7 +104,7 @@ export function CreateWorkspace() {
         const data = await iconResponse.json()
         if (data.errors) {
           setServerErrors((prev) => {
-            prev.icon.push(data.errors)
+            prev.icon = [data.errors]
             return { ...prev }
           })
         }
@@ -135,7 +135,7 @@ export function CreateWorkspace() {
         const data = await imageResponse.json()
         if (data.errors) {
           setServerErrors((prev) => {
-            prev.image.push(data.errors)
+            prev.image = [data.errors]
             return { ...prev }
           })
         }
