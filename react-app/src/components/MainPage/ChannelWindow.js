@@ -20,6 +20,7 @@ export function ChannelWindow({ channel, socket }) {
   const [newMessage, setNewMessage] = useState("")
   const [focused, setFocused] = useState(false)
   const channels = useSelector((state) => state.channels.channels)
+  const submitRef = useRef()
 
   const openChannelMenu = () => {
     setShowChannelMenu((prev) => !prev);
@@ -35,6 +36,21 @@ export function ChannelWindow({ channel, socket }) {
     setShowChannelMenu(false)
     await dispatch(leaveCurrentChannel(channel.id))
     await dispatch(authenticate())
+  }
+
+  const handleEnter = (e) => {
+    const keyCode = e.which || e.keyCode;
+
+    if (keyCode === 13 && !e.shiftKey) {
+      e.preventDefault()
+      submitRef && submitRef.current.click()
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    await dispatch(createMessage(channel.id, newMessage))
+    setNewMessage("")
+    e.target.parentNode.dataset.replicatedValue = ""
   }
 
   useEffect(() => {
@@ -62,7 +78,7 @@ export function ChannelWindow({ channel, socket }) {
   useEffect(() => {
     const channelArr = Object.values(channels)
     for (let channel of channelArr) {
-      socket.emit("join_room", { room: `channel${channel.id}`})
+      socket.emit("join_room", { room: `channel${channel.id}` })
     }
     socket.on("send_message", async (data) => {
       console.log("aaaaaaaa")
@@ -76,7 +92,7 @@ export function ChannelWindow({ channel, socket }) {
     return (() => {
       const channelArr = Object.values(channels)
       for (let channel of channelArr) {
-        socket.emit("leave_room", { room: `channel${channel.id}`})
+        socket.emit("leave_room", { room: `channel${channel.id}` })
       }
     })
   }, [channels])
@@ -169,14 +185,12 @@ export function ChannelWindow({ channel, socket }) {
               value={newMessage}
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
+              onKeyDown={handleEnter}
             />
             <button
+              ref={submitRef}
               disabled={!newMessage}
-              onClick={async (e) => {
-                await dispatch(createMessage(channel.id, newMessage))
-                setNewMessage("")
-                e.target.parentNode.dataset.replicatedValue = ""
-              }}
+              onClick={handleSubmit}
             >
               <i className="fa-solid fa-paper-plane" /> Send
             </button>

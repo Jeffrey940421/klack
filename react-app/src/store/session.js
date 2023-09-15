@@ -2,6 +2,7 @@
 const SET_USER = "session/SET_USER";
 const REMOVE_USER = "session/REMOVE_USER";
 const LOAD_INVITATIONS = "session/LOAD_INVITATIONS"
+const ADD_INVITATION = "session/ADD_INVITATION"
 const DELETE_LAST_WORKSPACE = "session/DELETE_LAST_WORKSPACE"
 
 const setUser = (user) => ({
@@ -20,6 +21,11 @@ const loadInvitations = (invitations) => ({
 
 export const deleteLastWorkspace = () => ({
 	type: DELETE_LAST_WORKSPACE
+})
+
+export const addInvitation = (invitation) => ({
+	type: ADD_INVITATION,
+	payload: invitation
 })
 
 const initialState = { user: null };
@@ -208,6 +214,12 @@ export default function reducer(state = initialState, action) {
 			return { ...state, user: { ...state.user, receivedWorkspaceInvitations: action.payload } }
 		case DELETE_LAST_WORKSPACE:
 			return { ...state, user: { ...state.user, activeWorkspace: null, workspaces: [] } }
+		case ADD_INVITATION:
+			const receivedWorkspaceInvitations = [ ...state.user.receivedWorkspaceInvitations, action.payload ]
+			if (state.user.receivedWorkspaceInvitations.find(invitation => invitation.id === action.payload.id)) {
+				return state
+			}
+			return { ...state, user: { ...state.user, receivedWorkspaceInvitations }}
 		default:
 			return state;
 	}
