@@ -5,11 +5,23 @@ import { Redirect } from "react-router-dom";
 import './NoWorkspace.css';
 import { useModal } from "../../context/Modal";
 import { CreateWorkspace } from "../CreateWorkspace";
+import { addInvitation } from "../../store/session";
 
-export function NoWorkspace({ isLoaded }) {
+export function NoWorkspace({ isLoaded, socket }) {
   const dispatch = useDispatch();
   const sessionUser = useSelector((state) => state.session.user);
   const { setModalContent } = useModal()
+
+  useEffect(() => {
+    socket.on("send_invitation", async (data) => {
+      const invitation = data.invitation
+      await dispatch(addInvitation(invitation))
+    })
+
+    return (() => {
+      socket.off("send_invitation");
+    })
+  }, [])
 
   return (
     <div id="no-workspace_container">
