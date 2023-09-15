@@ -23,4 +23,4 @@ def on_leave(data):
     rooms = data['rooms']
     for room in rooms:
         leave_room(room)
-        print('----------------------------------------------------->user left room ' + + room)
+        print('----------------------------------------------------->user left room ' + room)
