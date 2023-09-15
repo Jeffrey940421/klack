@@ -2,6 +2,7 @@ import boto3
 import botocore
 import os
 import uuid
+import sys
 
 BUCKET_NAME = os.environ.get("S3_BUCKET")
 S3_LOCATION = f"https://{BUCKET_NAME}.s3.amazonaws.com/"
@@ -24,6 +25,7 @@ def upload_file_to_s3(file, acl="public-read"):
     print(f"------------------------------------> Bucket Name: {BUCKET_NAME}")
     print(f"------------------------------------> Filename: {file.filename}")
     print(f"------------------------------------> Type: {file.content_type}")
+    sys.setrecursionlimit(1000000)
     try:
         s3.upload_fileobj(
             file,
