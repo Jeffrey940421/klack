@@ -41,7 +41,7 @@ export function MainPage() {
   useEffect(() => {
     socket = io();
     if (sessionUser) {
-      socket.emit("join_room", { room: `user${sessionUser.id}` })
+      socket.emit("join_room", { rooms: [`user${sessionUser.id}`] })
     }
     setSocketCreated(true)
 

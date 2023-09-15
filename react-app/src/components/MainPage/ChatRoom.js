@@ -77,9 +77,8 @@ export function ChatRoom({ user, socket }) {
 
   useEffect(() => {
     const workspaceArr = Object.values(workspaces)
-    for (let workspace of workspaceArr) {
-      socket.emit("join_room", { room: `workspace${workspace.id}`})
-    }
+    const rooms = workspaceArr.map((workspace => `workspace${workspace.id}`))
+    socket.emit("join_room", { rooms: rooms})
     socket.on("delete_workspace", async (data) => {
       await dispatch(authenticate())
     })
@@ -89,9 +88,8 @@ export function ChatRoom({ user, socket }) {
     })
     return (() => {
       const workspaceArr = Object.values(workspaces)
-      for (let workspace of workspaceArr) {
-        socket.emit("leave_room", { room: `workspace${workspace.id}` })
-      }
+      const rooms = workspaceArr.map((workspace => `workspace${workspace.id}`))
+      socket.emit("leave_room", { rooms: rooms })
     })
   }, [dispatch, workspaces])
 

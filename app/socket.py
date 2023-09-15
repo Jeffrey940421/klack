@@ -13,12 +13,14 @@ socketio = SocketIO(cors_allowed_origins=origins)
 
 @socketio.on('join_room')
 def on_join(data):
-    room = data['room']
-    join_room(room)
-    print(f'----------------------------------------------------->user joined room ' + room)
+    rooms = data['rooms']
+    for room in rooms:
+        join_room(room)
+        print(f'----------------------------------------------------->user joined room ' + room)
 
 @socketio.on('leave_room')
 def on_leave(data):
-    room = data['room']
-    leave_room(room)
-    print('----------------------------------------------------->user left room ' + room)
+    rooms = data['rooms']
+    for room in rooms:
+        leave_room(room)
+        print('----------------------------------------------------->user left room ' + + room)

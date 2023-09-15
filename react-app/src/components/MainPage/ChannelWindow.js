@@ -77,11 +77,9 @@ export function ChannelWindow({ channel, socket }) {
 
   useEffect(() => {
     const channelArr = Object.values(channels)
-    for (let channel of channelArr) {
-      socket.emit("join_room", { room: `channel${channel.id}` })
-    }
+    const rooms = channelArr.map(channel => `channel${channel.id}`)
+    socket.emit("join_room", { rooms: rooms })
     socket.on("send_message", async (data) => {
-      console.log("aaaaaaaa")
       const message = JSON.parse(data.message)
       console.log(message)
       if (message.channelId === channel.id) {
@@ -91,9 +89,8 @@ export function ChannelWindow({ channel, socket }) {
     })
     return (() => {
       const channelArr = Object.values(channels)
-      for (let channel of channelArr) {
-        socket.emit("leave_room", { room: `channel${channel.id}` })
-      }
+      const rooms = channelArr.map(channel => `channel${channel.id}`)
+      socket.emit("leave_room", { rooms: rooms })
     })
   }, [channels])
 
