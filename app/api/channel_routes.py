@@ -70,6 +70,13 @@ def edit_channel(id):
         channel.name=form.data["name"]
         if form.data["description"]:
           channel.description=form.data["description"]
+        message = ChannelMessage(
+            sender=current_user,
+            channel=channel,
+            content="Set channel description",
+            system_message=True
+        )
+        db.session.add(message)
         db.session.commit()
         return channel.to_dict_detail()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
@@ -92,7 +99,14 @@ def add_to_channel(channel_id, user_id):
         return {"errors": ["Users are not allowed to add themselves to the channel"]}, 403
     if user in channel.users:
         return {"errors": ["Only users that are not in the channel are allowed to be added"]}, 403
+    message = ChannelMessage(
+        sender=user,
+        channel=channel,
+        content="Joined",
+        system_message= True
+    )
     channel.users.append(user)
+    db.session.add(message)
     db.session.commit()
     return channel.to_dict_detail()
 
@@ -116,6 +130,13 @@ def leave_channel(id):
     workspace_user = WorkspaceUser.query.get((workspace.id, current_user.id))
     channels = [channel for channel in current_user.channels if channel.workspace_id == workspace.id]
     workspace_user.active_channel = channels[0]
+    message = ChannelMessage(
+        sender=current_user,
+        channel=channel,
+        content="Left",
+        system_message= True
+    )
+    db.session.add(message)
     db.session.commit()
     return {'activeChannel': workspace_user.active_channel.to_dict_detail()}
 

@@ -62,7 +62,7 @@ export function CreateChannel({ type, channel, workspace }) {
     <form id="create-channel_form">
       <h2>{type === "edit" ? "Edit Channel" : "Create Channel"}</h2>
       <div
-        className={`input ${Object.values(validationErrors.name).length || Object.values(serverErrors.name).length ? "error" : ""}`}
+        className={`input ${Object.values(validationErrors.name).length || Object.values(serverErrors).flat().length ? "error" : ""}`}
         id="create-channel_name-input"
       >
         <label htmlFor="name">

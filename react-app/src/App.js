@@ -22,7 +22,7 @@ function App() {
         <>
           <Switch>
             <Route exact path="/">
-              <MainPage />
+              <MainPage isLoaded={isLoaded} />
             </Route>
             <Route exact path="/login">
               <LoginFormPage />

@@ -98,10 +98,17 @@ def create_workspace():
             workspace=workspace,
             users=[current_user]
         )
+        message = ChannelMessage(
+            sender=current_user,
+            channel=channel,
+            content="Joined",
+            system_message=True
+        )
         workspace_user.active_channel = channel
         db.session.add(workspace)
         db.session.add(workspace_user)
         db.session.add(channel)
+        db.session.add(message)
         db.session.commit()
         current_user.active_workspace_id = workspace.id
         db.session.commit()
@@ -132,7 +139,14 @@ def create_channel(id):
             workspace=workspace,
             users=[current_user]
         )
+        message = ChannelMessage(
+            sender=current_user,
+            channel=channel,
+            content="Joined",
+            system_message=True
+        )
         db.session.add(channel)
+        db.session.add(message)
         db.session.commit()
         workspace_user = WorkspaceUser.query.get((workspace.id, current_user.id))
         workspace_user.active_channel_id = channel.id
@@ -181,6 +195,7 @@ def edit_profile(workspace_id, user_id):
         if form.data["profile_image_url"]:
           workspace_user.profile_image_url=form.data["profile_image_url"]
         db.session.commit()
+        socketio.emit("edit_profile", {"profile": workspace_user.to_dict()}, to=f"workspace{workspace_id}")
         return workspace_user.workspace.to_dict_detail()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
@@ -202,7 +217,7 @@ def join_workspace(id):
         return {"errors": ["Only users that receives the invitation can join the workspace"]}, 403
     if form.validate_on_submit():
         workspace_user = WorkspaceUser(
-            workspace_id = id,
+            workspace_id=id,
             user=current_user,
             nickname=form.data['nickname'],
             profile_image_url=form.data['profile_image_url'] if form.data['profile_image_url'] else choice(profile_images),
@@ -212,8 +227,17 @@ def join_workspace(id):
         channel.users.append(current_user)
         current_user.active_workspace_id = id
         workspace_user.active_channel = channel
+        message = ChannelMessage(
+            sender=current_user,
+            channel=channel,
+            content="Joined",
+            system_message=True
+        )
         db.session.add(workspace_user)
+        db.session.add(message)
         db.session.commit()
+        socketio.emit("send_message", {"message": json.dumps(message.to_dict_summary(), default=str)}, to=f"channel{channel.id}")
+        socketio.emit("join_workspace", {"profile": current_user.to_dict_workspace(id), "workspaceId": id}, to=f"workspace{id}")
         return workspace.to_dict_detail()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
@@ -232,7 +256,18 @@ def leave_workspace(id):
         return {"errors": ["Workspace owner cannot leave the workspace"]}, 403
     workspace_user = WorkspaceUser.query.get((id, current_user.id))
     channels = workspace.channels
-    _ = [channel.users.remove(current_user) for channel in channels if current_user in channel.users]
+    messages = []
+    for channel in channels:
+        if current_user in channel.users:
+            message = ChannelMessage(
+                sender=current_user,
+                channel=channel,
+                content="Left",
+                system_message=True
+            )
+            messages.append(message)
+            db.session.add(message)
+            channel.users.remove(current_user)
     db.session.delete(workspace_user)
     db.session.commit()
     if len(current_user.workspaces):
@@ -240,6 +275,9 @@ def leave_workspace(id):
     else:
         current_user.active_workspace = None
     db.session.commit()
+    for message in messages:
+        socketio.emit("send_message", {"message": json.dumps(message.to_dict_summary(), default=str)}, to=f"channel{message.channel_id}")
+    socketio.emit("leave_workspace", {"profile": message.sender.to_dict_workspace(id), "workspaceId": id}, to=f"workspace{id}")
     return {"activeWorkspace": current_user.active_workspace.to_dict_detail() if current_user.active_workspace else None}
 
 @workspace_routes.route('/<int:id>', methods=['DELETE'])

@@ -5,6 +5,8 @@ const DELTE_WORKSPACE = "workspaces/DELETE_WORKSPACE"
 const ADD_INVITATION = "workspaces/ADD_INVITATION"
 const UPDATE_WORKSPACE = "workspaces/UPDATE_WORKSPACE"
 const EDIT_ACTIVE_WORKSPACE = "workspaces/EDIT_ACTIVE_WORKSPACE"
+const UPDATE_WORKSPACE_USER = "workspaces/UPDATE_WORKSPACE_USER"
+const REMOVE_WORKSPACE_USER = "workspaces/REMOVE_WORKSPACE_USER"
 
 const loadWorkspaces = (workspaces) => ({
   type: LOAD_WORKSPACES,
@@ -26,7 +28,7 @@ const deleteWorkspace = (id, activeWorkspace) => ({
   payload: { id, activeWorkspace }
 })
 
-const addInvitation = (invitation) => ({
+export const addInvitation = (invitation) => ({
   type: ADD_INVITATION,
   payload: invitation
 })
@@ -39,6 +41,16 @@ export const updateWorkspace = (workspace) => ({
 export const editActiveWorkspace = (workspace) => ({
   type: EDIT_ACTIVE_WORKSPACE,
   payload: workspace
+})
+
+export const updateWorkspaceUser = (profile) => ({
+  type: UPDATE_WORKSPACE_USER,
+  payload: profile
+})
+
+export const removeWorkspaceUser = (profile) => ({
+  type: REMOVE_WORKSPACE_USER,
+  payload: profile
 })
 
 const initialState = { workspaces: {}, activeWorkspace: null };
@@ -351,6 +363,29 @@ export default function reducer(state = initialState, action) {
         users: users
       }
       return { ...state, activeWorkspace }
+    }
+    case UPDATE_WORKSPACE_USER: {
+      return {
+        ...state,
+        activeWorkspace: {
+          ...state.activeWorkspace,
+          users: {
+            ...state.activeWorkspace.users,
+            [action.payload.id]: action.payload
+          }
+        }
+      }
+    }
+    case REMOVE_WORKSPACE_USER: {
+      const users = { ...state.activeWorkspace.users }
+      delete users[action.payload.id]
+      return {
+        ...state,
+        activeWorkspace: {
+          ...state.activeWorkspace,
+          users
+        }
+      }
     }
     default:
       return state;

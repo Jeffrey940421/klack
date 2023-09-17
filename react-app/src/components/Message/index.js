@@ -4,11 +4,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { getChannelMessages } from "../../store/messages";
 import { ScrollContainer } from "../ScrollContainer";
 import "./Message.css"
+import { JoinChannel } from "../JoinChannel";
 
 export function Message({ channel }) {
   const dispatch = useDispatch()
   const messages = useSelector((state) => state.messages)
   const channelMessages = messages?.channelMessages
+  const { setModalContent } = useModal()
 
   return (
     <>
@@ -22,7 +24,9 @@ export function Message({ channel }) {
             <p>{channel.description}</p>
             {
               channel.name !== "general" &&
-              <button>
+              <button
+                onClick={() => setModalContent(<JoinChannel />)}
+              >
                 <i className="fa-solid fa-user-plus" />
                 Add People
               </button>
@@ -31,7 +35,7 @@ export function Message({ channel }) {
           {
             channelMessages && Object.values(channelMessages).map(message => {
               return (
-                <div className="message_message-body" key={message.id}>
+                <div className={`message_message-body${message.systemMessage? " message_system-message" : ""}`} key={message.id}>
                   <img src={message.sender.profileImageUrl || "/images/profile_images/profile_images_1.png"} alt="profile_image" />
                   <div>
                     <span className="message_sender">{message.sender.nickname || message.sender.email + " (not in workspace)"}</span>

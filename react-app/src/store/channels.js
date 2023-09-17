@@ -2,6 +2,8 @@ const LOAD_CHANNELS = "channels/LOAD_CHANNELS"
 const LOAD_ACTIVE_CHANNEL = "workspaces/LOAD_ACTIVE_CHANNEL"
 const ADD_CHANNEL = "channels/ADD_CHANNEL"
 const DELETE_CHANNEL = "channels/DELETE_CHANNEL"
+const UPDATE_CHANNEL_USER = "channels/UPDATE_CHANNEL_USER"
+const REMOVE_CHANNEL_USER = "channels/REMOVE_CHANNEL_USER"
 
 const loadChannels = (channels) => ({
   type: LOAD_CHANNELS,
@@ -21,6 +23,16 @@ const addChannel = (channel) => ({
 const deleteChannel = (id, activeChannel) => ({
   type: DELETE_CHANNEL,
   payload: {id, activeChannel}
+})
+
+export const updateChannelUser = (profile) => ({
+  type: UPDATE_CHANNEL_USER,
+  payload: profile
+})
+
+export const removeChannelUser = (profile) => ({
+  type: REMOVE_CHANNEL_USER,
+  payload: profile
 })
 
 const initialState = { channels: {}, activeChannel: null };
@@ -245,6 +257,29 @@ export default function reducer(state = initialState, action) {
       const channels = state.channels
       delete channels[id]
       return { ...state, channels, activeChannel }
+    }
+    case UPDATE_CHANNEL_USER: {
+      return {
+        ...state,
+        activeChannel: {
+          ...state.activeChannel,
+          users: {
+            ...state.activeChannel.users,
+            [action.payload.id]: action.payload
+          }
+        }
+      }
+    }
+    case REMOVE_CHANNEL_USER: {
+      const users = {...state.activeChannel.users}
+      delete users[action.payload.id]
+      return {
+        ...state,
+        activeChannel: {
+          ...state.activeChannel,
+          users
+        }
+      }
     }
     default:
       return state;

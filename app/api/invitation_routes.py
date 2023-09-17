@@ -2,6 +2,8 @@ from flask import Blueprint, jsonify, session, request
 from app.models import Workspace, Channel, WorkspaceUser, WorkspaceInvitation, db
 from flask_login import current_user, login_user, logout_user, login_required
 from app.forms import WorkspaceForm, WorkspaceUserForm
+from app.socket import socketio
+import json
 
 invitation_routes = Blueprint('invitation', __name__)
 
@@ -36,6 +38,7 @@ def ignore_invitation(id):
         return {"errors": ["User is not the recipient of invitation and is not allowed to ignore it"]}, 403
     invitation.status = "ignored"
     db.session.commit()
+    socketio.emit("invitation_change", {"invitation": invitation.to_dict()}, to=f"workspace{invitation.workspace_id}")
     return {'receivedWorkspaceInvitations': current_user.to_dict_detail()["receivedWorkspaceInvitations"]}
 
 @invitation_routes.route('/<int:id>/accept', methods=['PUT'])
@@ -51,4 +54,5 @@ def accept_invitation(id):
         return {"errors": ["User is not the recipient of invitation and is not allowed to ignore it"]}, 403
     invitation.status = "accepted"
     db.session.commit()
+    socketio.emit("invitation_change", {"invitation": invitation.to_dict()}, to=f"workspace{invitation.workspace_id}")
     return {'receivedWorkspaceInvitations': current_user.to_dict_detail()["receivedWorkspaceInvitations"]}

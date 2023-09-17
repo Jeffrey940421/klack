@@ -25,6 +25,11 @@ class ChannelMessage(db.Model):
       db.Text,
       nullable=False
     )
+    system_message = db.Column(
+       db.Boolean,
+       nullable=False,
+       default=False
+    )
     created_at = db.Column(
       db.DateTime,
       nullable=False,
@@ -54,6 +59,7 @@ class ChannelMessage(db.Model):
           'sender': self.sender.to_dict_workspace(self.channel.workspace_id),
           'channelId': self.channel_id,
           'content': self.content,
+          'systemMessage': self.system_message,
           'createdAt': self.created_at,
           'updatedAt': self.updated_at
        }
