@@ -64,6 +64,12 @@ def fake_workspaces(workspace_num):
     channel_messages.append(ChannelMessage(
       sender = owner,
       channel = channel,
+      content = "Joined",
+      system_message=True
+    ))
+    channel_messages.append(ChannelMessage(
+      sender = owner,
+      channel = channel,
       content = "Welcome on board"
     ))
   return {"workspaces": workspaces, "workspace_users": workspace_users, "channels": channels, "channel_messages": channel_messages}

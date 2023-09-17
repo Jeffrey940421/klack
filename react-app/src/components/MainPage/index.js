@@ -11,7 +11,7 @@ import { authenticate } from "../../store/session";
 
 let socket
 
-export function MainPage() {
+export function MainPage({ isLoaded }) {
   const dispatch = useDispatch();
   const sessionUser = useSelector((state) => state.session.user);
   const [workspaceLoaded, setWorkspaceLoaded] = useState(false)
@@ -59,7 +59,7 @@ export function MainPage() {
       return (
         <div className="main-page_container">
           {socketCreated && <Navigation hasWorkspace={false} socket={socket} />}
-          {socketCreated && <NoWorkspace socket={socket} />}
+          {socketCreated && <NoWorkspace isLoaded={isLoaded} socket={socket} />}
         </div>
       )
     } else {

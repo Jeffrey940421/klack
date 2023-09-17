@@ -23,7 +23,7 @@ function SentInvitation({ sentInvitations }) {
   )
 }
 
-export function Invitation({ workspace, user }) {
+export function Invitation() {
   const dispatch = useDispatch();
   const [emails, setEmails] = useState([])
   const [newEmail, setNewEmail] = useState("")
@@ -32,6 +32,9 @@ export function Invitation({ workspace, user }) {
   const [serverErrors, setServerErrors] = useState({ emails: [], other: [] })
   const { setPopupContent } = usePopup()
   const { closeModal } = useModal()
+  const [response, setResponse] = useState({})
+  const workspace = useSelector((state) => state.workspaces.activeWorkspace)
+  const user = useSelector((state) => state.session.user)
 
 
   const validateEmail = (email) => {
@@ -51,9 +54,13 @@ export function Invitation({ workspace, user }) {
       })
     )
 
-      console.log(data)
-
     if (data.filter(res => res).length) {
+      const res = {}
+
+      data.forEach((resData, i) => {
+        res[emails[i]] = resData
+      })
+      setResponse(res)
       const errors = { emails: [], other: [] }
       const emailErrors = data.flat().filter(error => error && error.startsWith("recipient"))
       const otherErrors = data.flat().filter(error => error && !error.startsWith("recipient"))
@@ -99,10 +106,10 @@ export function Invitation({ workspace, user }) {
     <div id="invitation_container">
       <h2>Invite people to {workspace.name}</h2>
       <span>To:</span>
-      <div id="invitation_input" className={(focused ? "focused " : "") + (validationErrors.filter(error => error !== "No Error").length ? "error" : "")}>
+      <div id="invitation_input" className={(focused ? "focused " : "") + (validationErrors.filter(error => error !== "No Error").length || Object.values(serverErrors).flat().length ? "error" : "")}>
         {emails.map(((email, i) => {
           return (
-            <div className={`invitation_email${validationErrors[i] === "No Error" ? "" : " error"}`} key={i}>
+            <div className={`invitation_email${(validationErrors[i] === "No Error" && !response[email]) ? "" : " error"}`} key={i}>
               <span>{email}</span>
               <button
                 onClick={() => setEmails((prev) => {

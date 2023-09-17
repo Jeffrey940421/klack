@@ -50,9 +50,13 @@ export function JoinChannel() {
           ref={inputRef}
           placeholder="Find members"
           value={keyword}
-          onChange={(e) => setKeywork(e.target.value)}
+          onChange={(e) => {
+            setKeywork(e.target.value)
+            if (e.target.value) {
+              setShowResult(true)
+            }
+          }}
           onFocus={() => setShowResult(true)}
-          // onBlur={() => setFocused(false)}
         />
       </div>
 

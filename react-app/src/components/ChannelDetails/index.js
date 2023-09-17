@@ -3,10 +3,11 @@ import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "./ChannelDetails.css"
 
-export function ChannelDetails({ channel, defaultMenu }) {
+export function ChannelDetails({ defaultMenu }) {
   const dispatch = useDispatch()
   const [menu, setMenu] = useState(defaultMenu)
   const [keyword, setKeyword] = useState("")
+  const channel = useSelector((state) => state.channels.activeChannel)
   const channelUsers = Object.values(channel.users)
   const foundUsers = channelUsers.filter(user => user.nickname.toLowerCase().includes(keyword.toLowerCase()) || user.email.includes(keyword.toLowerCase()))
 

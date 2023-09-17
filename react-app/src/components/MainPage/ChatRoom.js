@@ -6,14 +6,16 @@ import { addInvitation, deleteLastWorkspace, updateActiveChannel, updateActiveWo
 import { CreateWorkspace } from "../CreateWorkspace";
 import { useModal } from '../../context/Modal';
 import { EditWorkspace } from "../EditWorkspace";
-import { editActiveWorkspace, leaveCurrentWorkspace, removeWorkspace, updateWorkspace } from "../../store/workspaces";
+import { editActiveWorkspace, leaveCurrentWorkspace, removeWorkspace, removeWorkspaceUser, updateWorkspace, updateWorkspaceUser } from "../../store/workspaces";
 import { authenticate } from "../../store/session";
 import { io } from 'socket.io-client';
 import { Invitation } from "../Invitation";
-import { getActiveChannel, getChannels } from "../../store/channels";
+import { getActiveChannel, getChannels, removeChannelUser, updateChannelUser } from "../../store/channels";
 import { CreateChannel } from "../CreateChannel";
 import { ChannelWindow } from "./ChannelWindow";
 import { useRoom } from "../../context/RoomContext";
+import * as workspaceActions from "../../store/workspaces"
+import { addChannelMessage, addWorkspaceMessage } from "../../store/messages";
 
 
 export function ChatRoom({ user, socket }) {
@@ -100,19 +102,62 @@ export function ChatRoom({ user, socket }) {
     })
     socket.on("edit_workspace", async (data) => {
       const workspace = JSON.parse(data.workspace)
-      console.log(workspace.id, activeWorkspace.id)
       if (workspace.id === activeWorkspace.id) {
         await dispatch(editActiveWorkspace(workspace))
       }
       await dispatch(updateWorkspace(workspace))
+    })
+    socket.on("invitation_change", async (data) => {
+      const invitation = data.invitation
+      console.log("aaaaaaaaaaa")
+      if (invitation.workspaceId === activeWorkspace.id) {
+        await dispatch(workspaceActions.addInvitation(invitation))
+      }
     })
 
     return (() => {
       socket.off("delete_workspace");
       socket.off("send_invitation");
       socket.off("edit_workspace");
+      socket.off("invitation_change")
     })
   }, [activeWorkspace])
+
+  useEffect(() => {
+    socket.on("edit_profile", async (data) => {
+      const profile = data.profile
+      const userId = profile.userId
+      if (activeWorkspace.users[userId]) {
+        await dispatch(authenticate())
+      }
+    })
+    socket.on("join_workspace", async (data) => {
+      const profile = data.profile
+      const workspaceId = data.workspaceId
+      if (workspaceId === activeWorkspace.id) {
+        await dispatch(updateWorkspaceUser(profile))
+      }
+      if (activeChannel.name === "general") {
+        await dispatch(updateChannelUser(profile))
+      }
+    })
+    socket.on("leave_workspace", async (data) => {
+      const profile = data.profile
+      const workspaceId = data.workspaceId
+      console.log(profile, workspaceId)
+      if (workspaceId === activeWorkspace.id) {
+        await dispatch(removeWorkspaceUser(profile))
+      }
+      if (activeChannel.users[profile.id]) {
+        await dispatch(removeChannelUser(profile))
+      }
+    })
+    return (() => {
+      socket.off("edit_profile")
+      socket.off("join_workspace")
+      socket.off("leave_workspace")
+    })
+  }, [activeWorkspace, activeChannel])
 
   useEffect(() => {
     dispatch(getChannels())
