@@ -67,18 +67,31 @@ def edit_channel(id):
             return {"errors": ["Workspace already had a channel with the same name"]}, 403
         if channel.name == "general" and form.data["name"] != "general":
             return {"errors": ["Cannot edit the name of general channel"]}, 403
+        name_message = None
+        description_message = None
+        if form.data["name"] != channel.name:
+            name_message = ChannelMessage(
+                sender=current_user,
+                channel=channel,
+                content="Set channel name",
+                system_message=True
+            )
+            db.session.add(name_message)
         channel.name=form.data["name"]
-        if form.data["description"]:
-          channel.description=form.data["description"]
-        message = ChannelMessage(
-            sender=current_user,
-            channel=channel,
-            content="Set channel description",
-            system_message=True
-        )
-        db.session.add(message)
+        if form.data["description"] and form.data["description"] != channel.description:
+            description_message = ChannelMessage(
+                sender=current_user,
+                channel=channel,
+                content="Set channel description",
+                system_message=True
+            )
+            db.session.add(description_message)
+            channel.description=form.data["description"]
         db.session.commit()
-        socketio.emit("send_message", {"message": json.dumps(message.to_dict_summary(), default=str)}, to=f"channel{id}")
+        if name_message:
+            socketio.emit("send_message", {"message": json.dumps(name_message.to_dict_summary(), default=str)}, to=f"channel{id}")
+        if description_message:
+            socketio.emit("send_message", {"message": json.dumps(description_message.to_dict_summary(), default=str)}, to=f"channel{id}")
         socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(), default=str)}, to=f"channel{id}")
         return channel.to_dict_detail()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401

@@ -28,7 +28,7 @@ function LoginFormPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!Object.values(validationErrors).flat().length) {
-      const data = await dispatch(login(email, password));
+      const data = await dispatch(login(email.toLowerCase(), password));
       const errors = { email: [], password: [], other: [] }
       if (data) {
         const emailErrors = data.filter(error => error.startsWith("email"))

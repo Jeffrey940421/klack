@@ -12,7 +12,7 @@ function SentInvitation({ sentInvitations }) {
     <div id="sent-invitations">
       <h2>Congratulations</h2>
       <span>Invitations have been successfully sent to
-        <span> {sentInvitations.join(', ')}</span>.
+        <span> {sentInvitations.map(email => email.toLowerCase()).join(', ')}</span>.
       </span>
       <button
         onClick={() => closePopup()}
@@ -39,8 +39,6 @@ export function Invitation() {
   const divRef = useRef()
   const emailRef = useRef()
 
-
-
   const validateEmail = (email) => {
     return String(email)
       .toLowerCase()
@@ -54,7 +52,7 @@ export function Invitation() {
 
     const data = await Promise.all(
       emails.map(email => {
-        return dispatch(createInvitation(workspace.id, email))
+        return dispatch(createInvitation(workspace.id, email.toLowerCase()))
       })
     )
 
@@ -86,6 +84,7 @@ export function Invitation() {
     const errors = []
 
     for (let email of emails) {
+      email = email.toLowerCase()
       if (!validateEmail(email)) {
         errors.push(`${email} is not a valid email`)
       } else if (Object.values(workspace.users).map(user => user.email).includes(email)) {
@@ -146,6 +145,7 @@ export function Invitation() {
                 onClick={(e) => {
                   e.stopPropagation()
                   e.target.nextElementSibling.classList.remove("hidden")
+                  e.target.nextElementSibling.nextElementSibling.classList.add("hidden")
                   e.target.nextElementSibling.focus()
                   e.target.nextElementSibling.style.width = `${e.target.scrollWidth}px`
                   e.target.classList.add("hidden")
@@ -173,8 +173,10 @@ export function Invitation() {
                   }
                 }}
                 onBlur={(e) => {
+                  e.stopPropagation()
                   e.target.classList.add("hidden")
                   e.target.previousElementSibling.classList.remove("hidden")
+                  e.target.nextElementSibling.classList.remove("hidden")
                 }}
                 onClick={(e) => e.stopPropagation()}
               />
@@ -196,10 +198,8 @@ export function Invitation() {
           value={newEmail}
           onChange={(e) => {
             setNewEmail(e.target.value)
-            e.target.style.width = "150px"
-            if (e.target.scrollWidth > 150) {
-              e.target.style.width = `${e.target.scrollWidth}px`
-            }
+            e.target.style.width = "0px"
+            e.target.style.width = `${e.target.scrollWidth}px`
           }}
           onFocus={() => setFocuesd(true)}
           onBlur={(e) => {
