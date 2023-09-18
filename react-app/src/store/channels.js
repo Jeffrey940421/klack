@@ -4,6 +4,8 @@ const ADD_CHANNEL = "channels/ADD_CHANNEL"
 const DELETE_CHANNEL = "channels/DELETE_CHANNEL"
 const UPDATE_CHANNEL_USER = "channels/UPDATE_CHANNEL_USER"
 const REMOVE_CHANNEL_USER = "channels/REMOVE_CHANNEL_USER"
+const UPDATE_ACTIVE_CHANNEL = 'channels/UPDATE_ACTIVE_CHANNEL'
+const UPDATE_CHANNEL = 'channels/UPDATE_CHANNEL'
 
 const loadChannels = (channels) => ({
   type: LOAD_CHANNELS,
@@ -20,9 +22,9 @@ const addChannel = (channel) => ({
   payload: channel
 })
 
-const deleteChannel = (id, activeChannel) => ({
+export const deleteChannel = (id, activeChannel) => ({
   type: DELETE_CHANNEL,
-  payload: {id, activeChannel}
+  payload: { id, activeChannel }
 })
 
 export const updateChannelUser = (profile) => ({
@@ -33,6 +35,16 @@ export const updateChannelUser = (profile) => ({
 export const removeChannelUser = (profile) => ({
   type: REMOVE_CHANNEL_USER,
   payload: profile
+})
+
+export const updateActiveChannel = (channel) => ({
+  type: UPDATE_ACTIVE_CHANNEL,
+  payload: channel
+})
+
+export const updateChannel = (channel) => ({
+  type: UPDATE_CHANNEL,
+  payload: channel
 })
 
 const initialState = { channels: {}, activeChannel: null };
@@ -271,7 +283,7 @@ export default function reducer(state = initialState, action) {
       }
     }
     case REMOVE_CHANNEL_USER: {
-      const users = {...state.activeChannel.users}
+      const users = { ...state.activeChannel.users }
       delete users[action.payload.id]
       return {
         ...state,
@@ -280,6 +292,33 @@ export default function reducer(state = initialState, action) {
           users
         }
       }
+    }
+    case UPDATE_ACTIVE_CHANNEL: {
+      const { messages, users } = normalization(action.payload)
+      const activeChannel = {
+        ...action.payload,
+        messages: messages,
+        users: users
+      }
+      return { ...state, activeChannel }
+    }
+    case UPDATE_CHANNEL: {
+      const channel = {
+        id: action.payload.id,
+        name: action.payload.name,
+        creatorId: action.payload.creator.id,
+        description: action.payload.description,
+        messageNum: action.payload.messages.length,
+        createdAt: action.payload.createdAt
+      }
+      let channels = Object.values(state.channels)
+      channels.push(channel)
+      channels = channels.sort((a, b) => a.id - b.id)
+      const sortedChannels = {}
+      for (let channel of channels) {
+        sortedChannels[channel.id] = channel
+      }
+      return { ...state, channels: sortedChannels }
     }
     default:
       return state;

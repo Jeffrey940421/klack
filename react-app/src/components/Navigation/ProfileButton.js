@@ -34,7 +34,6 @@ function ProfileButton({ user, hasWorkspace, socket }) {
   const handleLogout = (e) => {
     e.preventDefault();
     setShowMenu(false)
-    console.log(socket)
     socket.emit("leave_room", {room: `user${user.id}`})
     dispatch(logout());
   };

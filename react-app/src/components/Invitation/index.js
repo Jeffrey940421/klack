@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createInvitation } from "../../store/workspaces";
 import { usePopup } from "../../context/Popup";
@@ -10,8 +10,8 @@ function SentInvitation({ sentInvitations }) {
 
   return (
     <div id="sent-invitations">
-      <h2>Congradulations!</h2>
-      <span>Invitations haven been successfully sent to
+      <h2>Congratulations</h2>
+      <span>Invitations have been successfully sent to
         <span> {sentInvitations.join(', ')}</span>.
       </span>
       <button
@@ -35,6 +35,10 @@ export function Invitation() {
   const [response, setResponse] = useState({})
   const workspace = useSelector((state) => state.workspaces.activeWorkspace)
   const user = useSelector((state) => state.session.user)
+  const inputRef = useRef()
+  const divRef = useRef()
+  const emailRef = useRef()
+
 
 
   const validateEmail = (email) => {
@@ -102,15 +106,78 @@ export function Invitation() {
 
   }, [emails, user, workspace])
 
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (divRef.current.contains(e.target) && inputRef.current) {
+        if (emailRef.current) {
+          if (!emailRef.current.contains(e.target)) {
+            inputRef.current.focus()
+          }
+        } else {
+          inputRef.current.focus()
+        }
+
+      }
+    }
+    document.addEventListener("click", handleClick)
+
+    return (() => {
+      document.removeEventListener("click", handleClick)
+    })
+  }, [emails])
+
   return (
     <div id="invitation_container">
       <h2>Invite people to {workspace.name}</h2>
       <span>To:</span>
-      <div id="invitation_input" className={(focused ? "focused " : "") + (validationErrors.filter(error => error !== "No Error").length || Object.values(serverErrors).flat().length ? "error" : "")}>
+      <div
+        ref={divRef}
+        id="invitation_input"
+        className={(focused ? "focused " : "") + (validationErrors.filter(error => error !== "No Error").length || Object.values(serverErrors).flat().length ? "error" : "")}
+      >
         {emails.map(((email, i) => {
           return (
-            <div className={`invitation_email${(validationErrors[i] === "No Error" && !response[email]) ? "" : " error"}`} key={i}>
-              <span>{email}</span>
+            <div
+              ref={emailRef}
+              className={`invitation_email${(validationErrors[i] === "No Error" && !response[email]) ? "" : " error"}`}
+              key={i}
+            >
+              <span
+                onClick={(e) => {
+                  e.stopPropagation()
+                  e.target.nextElementSibling.classList.remove("hidden")
+                  e.target.nextElementSibling.focus()
+                  e.target.nextElementSibling.style.width = `${e.target.scrollWidth}px`
+                  e.target.classList.add("hidden")
+                }}
+              >
+                {email}
+              </span>
+              <input
+                className="hidden invitation_email-edit"
+                type="text"
+                value={email}
+                onChange={(e) => {
+                  if (!e.target.value) {
+                    setEmails((prev) => {
+                      prev.splice(i, 1);
+                      return [...prev]
+                    })
+                  } else {
+                    setEmails((prev) => {
+                      prev[i] = e.target.value
+                      return [...prev]
+                    })
+                    e.target.style.width = "0px"
+                    e.target.style.width = `${e.target.scrollWidth}px`
+                  }
+                }}
+                onBlur={(e) => {
+                  e.target.classList.add("hidden")
+                  e.target.previousElementSibling.classList.remove("hidden")
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
               <button
                 onClick={() => setEmails((prev) => {
                   prev.splice(i, 1);
@@ -124,6 +191,7 @@ export function Invitation() {
         }))}
         <input
           type="text"
+          ref={inputRef}
           placeholder="name@example.com"
           value={newEmail}
           onChange={(e) => {

@@ -164,7 +164,6 @@ export const createInvitation = (id, email) => async (dispatch) => {
   } else if (response.status < 500) {
     const data = await response.json();
     if (data.errors) {
-      console.log(data.errors)
       return data.errors;
     }
   } else {
