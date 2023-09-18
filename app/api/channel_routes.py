@@ -62,7 +62,7 @@ def edit_channel(id):
     if channel.creator_id != current_user.id:
         return {"errors": ["Only channel creator is authorized to edit the channel"]}, 403
     if form.validate_on_submit():
-        duplicate_channel = Channel.query.filter(Channel.workspace_id == channel.workspace_id, Channel.name == form.data["name"]).first()
+        duplicate_channel = Channel.query.filter(Channel.workspace_id == channel.workspace_id, Channel.id != id, Channel.name == form.data["name"]).first()
         if duplicate_channel:
             return {"errors": ["Workspace already had a channel with the same name"]}, 403
         if channel.name == "general" and form.data["name"] != "general":
@@ -78,6 +78,8 @@ def edit_channel(id):
         )
         db.session.add(message)
         db.session.commit()
+        socketio.emit("send_message", {"message": json.dumps(message.to_dict_summary(), default=str)}, to=f"channel{id}")
+        socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(), default=str)}, to=f"channel{id}")
         return channel.to_dict_detail()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
@@ -108,6 +110,9 @@ def add_to_channel(channel_id, user_id):
     channel.users.append(user)
     db.session.add(message)
     db.session.commit()
+    socketio.emit("send_message", {"message": json.dumps(message.to_dict_summary(), default=str)}, to=f"channel{channel_id}")
+    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(), default=str)}, to=f"user{user_id}")
+    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(), default=str)}, to=f"channel{channel_id}")
     return channel.to_dict_detail()
 
 @channel_routes.route('/<int:id>/leave', methods=['PUT'])
@@ -138,6 +143,8 @@ def leave_channel(id):
     )
     db.session.add(message)
     db.session.commit()
+    socketio.emit("send_message", {"message": json.dumps(message.to_dict_summary(), default=str)}, to=f"channel{id}")
+    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(), default=str)}, to=f"channel{id}")
     return {'activeChannel': workspace_user.active_channel.to_dict_detail()}
 
 @channel_routes.route('/<int:id>', methods=['DELETE'])
@@ -160,6 +167,7 @@ def delete_channel(id):
     channels = [channel for channel in current_user.channels if channel.workspace_id == workspace.id]
     workspace_user.active_channel = channels[0]
     db.session.commit()
+    socketio.emit("delete_channel", {"channel": json.dumps(workspace_user.active_channel.to_dict_detail(), default=str), "id": id}, to=f"channel{id}")
     return {'activeChannel': workspace_user.active_channel.to_dict_detail()}
 
 @channel_routes.route('/<int:id>/messages/new', methods=['POST'])

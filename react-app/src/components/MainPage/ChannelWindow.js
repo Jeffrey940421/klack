@@ -2,13 +2,14 @@ import { useModal } from "../../context/Modal"
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CreateChannel } from "../CreateChannel";
-import { removeChannel, leaveCurrentChannel } from "../../store/channels";
+import { removeChannel, leaveCurrentChannel, updateActiveChannel, updateChannel } from "../../store/channels";
 import { authenticate } from "../../store/session";
 import { ChannelDetails } from "../ChannelDetails";
 import { JoinChannel } from "../JoinChannel";
 import { Message } from "../Message";
 import { addChannelMessage, addWorkspaceMessage, createMessage, getChannelMessages, getWorkspaceMessages } from "../../store/messages";
 import { useRoom } from "../../context/RoomContext";
+import * as channelActions from "../../store/channels"
 
 export function ChannelWindow({ socket }) {
   const { setModalContent } = useModal();
@@ -31,7 +32,7 @@ export function ChannelWindow({ socket }) {
     setShowChannelMenu((prev) => !prev);
   };
 
-  const deleteChennel = async () => {
+  const deleteChannel = async () => {
     setShowChannelMenu(false)
     await dispatch(removeChannel(channel.id))
     await dispatch(authenticate())
@@ -85,11 +86,9 @@ export function ChannelWindow({ socket }) {
     const rooms = channelArr.map(channel => `channel${channel.id}`)
     socket.emit("join_room", { rooms: rooms })
     setChannelRooms(rooms)
-    console.log("joined", rooms)
 
     return (() => {
       socket.emit("leave_room", { rooms: channelRooms })
-      console.log("left", channelRooms)
     })
   }, [channels])
 
@@ -101,9 +100,23 @@ export function ChannelWindow({ socket }) {
       }
       await dispatch(addWorkspaceMessage(message))
     })
+    socket.on("edit_channel", async (data) => {
+      const updatedChannel = JSON.parse(data.channel)
+      if (updatedChannel.id === channel.id) {
+        await dispatch(updateActiveChannel(updatedChannel))
+      }
+      await dispatch(updateChannel(updatedChannel))
+    })
+    socket.on("delete_channel", async (data) => {
+      const activeChannel = JSON.parse(data.channel)
+      const id = data.id
+      await dispatch(channelActions.deleteChannel(id, activeChannel))
+    })
 
     return (() => {
       socket.off("send_message")
+      socket.off("edit_channel")
+      socket.off("delete_channel")
     })
   }, [channel])
 
@@ -164,7 +177,7 @@ export function ChannelWindow({ socket }) {
                     <hr></hr>
                     <li
                       id="channel-window_delete-channel"
-                      onClick={deleteChennel}
+                      onClick={deleteChannel}
                     >
                       Delete Channel
                     </li>

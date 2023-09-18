@@ -84,11 +84,9 @@ export function ChatRoom({ user, socket }) {
     const rooms = workspaceArr.map((workspace => `workspace${workspace.id}`))
     socket.emit("join_room", { rooms: rooms })
     setWorkspaceRooms([...rooms])
-    console.log("joined", rooms)
 
     return (() => {
       socket.emit("leave_room", { rooms: workspaceRooms })
-      console.log("left", workspaceRooms)
     })
   }, [workspaces])
 
@@ -109,7 +107,6 @@ export function ChatRoom({ user, socket }) {
     })
     socket.on("invitation_change", async (data) => {
       const invitation = data.invitation
-      console.log("aaaaaaaaaaa")
       if (invitation.workspaceId === activeWorkspace.id) {
         await dispatch(workspaceActions.addInvitation(invitation))
       }
@@ -144,7 +141,6 @@ export function ChatRoom({ user, socket }) {
     socket.on("leave_workspace", async (data) => {
       const profile = data.profile
       const workspaceId = data.workspaceId
-      console.log(profile, workspaceId)
       if (workspaceId === activeWorkspace.id) {
         await dispatch(removeWorkspaceUser(profile))
       }

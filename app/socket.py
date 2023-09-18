@@ -16,11 +16,9 @@ def on_join(data):
     rooms = data['rooms']
     for room in rooms:
         join_room(room)
-        print(f'----------------------------------------------------->user joined room ' + room)
 
 @socketio.on('leave_room')
 def on_leave(data):
     rooms = data['rooms']
     for room in rooms:
         leave_room(room)
-        print('----------------------------------------------------->user left room ' + room)
