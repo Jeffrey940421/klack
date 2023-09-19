@@ -105,6 +105,7 @@ def upgrade():
     sa.Column('profile_image_url', sa.String(length=255), nullable=False),
     sa.Column('role', sa.String(length=30), nullable=False),
     sa.Column('active_channel_id', sa.Integer(), nullable=True),
+    sa.Column('unread_message', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['active_channel_id'], ['channels.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['workspace_id'], ['workspaces.id'], ),
@@ -131,6 +132,7 @@ def upgrade():
     op.create_table('channel_users',
     sa.Column('channel_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('last_viewed_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['channel_id'], ['channels.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('channel_id', 'user_id')

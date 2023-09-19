@@ -1,4 +1,4 @@
-from app.models import db, Workspace, WorkspaceUser, Channel, ChannelMessage, environment, SCHEMA
+from app.models import db, Workspace, WorkspaceUser, Channel, ChannelMessage, ChannelUser, environment, SCHEMA
 from sqlalchemy.sql import text
 from faker import Faker
 from random import randint, choice
@@ -33,6 +33,7 @@ def fake_workspaces(workspace_num):
   workspace_users = []
   channels = []
   channel_messages = []
+  channel_users = []
   for i in range(0, workspace_num):
     name = faker.company()
     while name in existing_workspace:
@@ -59,8 +60,12 @@ def fake_workspaces(workspace_num):
       creator = owner,
       workspace = workspace
     )
-    channel.users = [owner]
+    channel_user = ChannelUser(
+      channel = channel,
+      user = owner
+    )
     channels.append(channel)
+    channel_users.append(channel_user)
     channel_messages.append(ChannelMessage(
       sender = owner,
       channel = channel,
@@ -72,13 +77,14 @@ def fake_workspaces(workspace_num):
       channel = channel,
       content = "Welcome on board"
     ))
-  return {"workspaces": workspaces, "workspace_users": workspace_users, "channels": channels, "channel_messages": channel_messages}
+  return {"workspaces": workspaces, "workspace_users": workspace_users, "channels": channels, "channel_messages": channel_messages, "channel_users": channel_users}
 
 result = fake_workspaces(3)
 workspaces = result["workspaces"]
 workspace_users = result["workspace_users"]
 channels = result["channels"]
 channel_messages = result["channel_messages"]
+channel_users = result["channel_users"]
 
 
 # Adds a demo user, you can add other users here if you want
@@ -86,6 +92,7 @@ def seed_workspaces():
     _ = [db.session.add(workspace) for workspace in workspaces]
     _ = [db.session.add(workspace_user) for workspace_user in workspace_users]
     _ = [db.session.add(channel) for channel in channels]
+    _ = [db.session.add(channel_user) for channel_user in channel_users]
     _ = [db.session.add(channel_message) for channel_message in channel_messages]
     db.session.commit()
 

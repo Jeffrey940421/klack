@@ -60,6 +60,6 @@ class ChannelMessage(db.Model):
           'channelId': self.channel_id,
           'content': self.content,
           'systemMessage': self.system_message,
-          'createdAt': self.created_at,
-          'updatedAt': self.updated_at
+          'createdAt': self.created_at.strftime("%a, %d %b %Y %H:%M:%S GMT"),
+          'updatedAt': self.updated_at.strftime("%a, %d %b %Y %H:%M:%S GMT")
        }

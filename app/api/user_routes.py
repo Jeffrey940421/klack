@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
-from app.models import User, Workspace, Channel, db, WorkspaceUser
+from app.models import User, Workspace, Channel, db, WorkspaceUser, ChannelUser
 from app.forms import ActiveWorkspaceForm, ActiveChannelForm
+from datetime import datetime
 
 user_routes = Blueprint('users', __name__)
 
@@ -52,6 +53,11 @@ def update_active_workspace(id):
     if form.validate_on_submit():
         workspace_id = form.data["active_workspace_id"]
         if workspace_id in [workspace.id for workspace in user.workspaces]:
+            workspace_user = WorkspaceUser.query.get((workspace_id, user.id))
+            prev_active_channel = workspace_user.active_channel
+            if prev_active_channel:
+                channel_user = ChannelUser.query.get((prev_active_channel.id, user.id))
+                channel_user.last_viewed_at = datetime.utcnow()
             user.active_workspace_id=workspace_id
             db.session.commit()
             return user.to_dict_detail()
@@ -80,6 +86,10 @@ def update_active_channel(id):
         if channel not in current_user.active_workspace.channels:
             return {"errors": "Users are only allowed to set the channels that are in the active workspace as active"}, 403
         workspace_user = WorkspaceUser.query.get((current_user.active_workspace.id, current_user.id))
+        prev_active_channel = workspace_user.active_channel
+        if prev_active_channel:
+            channel_user = ChannelUser.query.get((prev_active_channel.id, current_user.id))
+            channel_user.last_viewed_at = datetime.utcnow()
         workspace_user.active_channel = channel
         db.session.commit()
         return user.to_dict_detail()

@@ -45,6 +45,8 @@
   grid-template-rows: auto auto;
   column-gap: 10px;
   padding: 10px 20px;
+  height: 62px;
+  box-sizing: border-box;
 }
 
 .message_message-body img {

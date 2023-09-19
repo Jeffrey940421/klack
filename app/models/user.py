@@ -2,7 +2,6 @@ from .db import db, environment, SCHEMA, add_prefix_for_prod
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from sqlalchemy.sql import func
-from .channel_user import channel_users
 from .workspace_users import WorkspaceUser
 from sqlalchemy.ext.associationproxy import association_proxy
 
@@ -63,10 +62,15 @@ class User(db.Model, UserMixin):
         "workspace_associations",
         "workspace"
     )
-    channels = db.relationship(
-        "Channel",
-        secondary=channel_users,
-        back_populates="users"
+    channel_associations = db.relationship(
+        "ChannelUser",
+        foreign_keys="ChannelUser.user_id",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    channels = association_proxy(
+        "channel_associations",
+        "channel"
     )
     sent_workspace_invitations = db.relationship(
         "WorkspaceInvitation",
@@ -110,10 +114,10 @@ class User(db.Model, UserMixin):
         return {
             'id': self.id,
             'email': self.email,
-            'activeWorkspace': self.active_workspace.to_dict_summary() if self.active_workspace else None,
-            'activeChannel': workspace_association.active_channel.to_dict_summary() if workspace_association and workspace_association.active_channel else None,
-            'createdAt': self.created_at,
-            'workspaces': [workspace.to_dict_summary() for workspace in self.workspaces],
+            'activeWorkspace': self.active_workspace.to_dict_summary(self.id) if self.active_workspace else None,
+            'activeChannel': workspace_association.active_channel.to_dict_summary(self.id) if workspace_association and workspace_association.active_channel else None,
+            'createdAt': self.created_at.strftime("%a, %d %b %Y %H:%M:%S GMT"),
+            'workspaces': [workspace.to_dict_summary(self.id) for workspace in self.workspaces],
             'receivedWorkspaceInvitations': [invitation.to_dict() for invitation in self.received_workspace_invitations]
         }
 

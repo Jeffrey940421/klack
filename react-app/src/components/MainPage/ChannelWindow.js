@@ -79,7 +79,7 @@ export function ChannelWindow({ socket }) {
         .then(() => dispatch(getWorkspaceMessages(workspace.id)))
         .then(() => setMessageLoaded(true))
     }
-  }, [dispatch, channel])
+  }, [dispatch, channel, workspace])
 
   useEffect(() => {
     const channelArr = Object.values(channels)

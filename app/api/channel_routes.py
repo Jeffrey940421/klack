@@ -1,10 +1,11 @@
 from flask import Blueprint, jsonify, session, request
-from app.models import Workspace, Channel, WorkspaceUser, WorkspaceInvitation, User, ChannelMessage, db
+from app.models import Workspace, Channel, WorkspaceUser, WorkspaceInvitation, ChannelUser, User, ChannelMessage, db
 from flask_login import current_user, login_user, logout_user, login_required
 from app.forms import WorkspaceForm, WorkspaceUserForm, NewInvitationForm, ChannelForm, ChannelMessageForm
 from random import choice
 from app.socket import socketio
 import json
+import datetime
 
 channel_routes = Blueprint('channel', __name__)
 
@@ -27,7 +28,7 @@ def channel(id):
     channel = Channel.query.get(id)
     if not channel:
       return {"errors": ["Channel is not found"]}, 404
-    return channel.to_dict_detail()
+    return channel.to_dict_detail(current_user.id)
 
 @channel_routes.route('/current', methods=['GET'])
 @login_required
@@ -35,7 +36,7 @@ def current_channel():
     """
     Query for all the channels in the active workspace that the current user is in
     """
-    return {"channels": [channel.to_dict_summary() for channel in current_user.channels if channel.workspace_id == current_user.active_workspace_id]}
+    return {"channels": [channel.to_dict_summary(current_user.id) for channel in current_user.channels if channel.workspace_id == current_user.active_workspace_id]}
 
 @channel_routes.route('/<int:id>/messages', methods=['GET'])
 @login_required
@@ -92,8 +93,8 @@ def edit_channel(id):
             socketio.emit("send_message", {"message": json.dumps(name_message.to_dict_summary(), default=str)}, to=f"channel{id}")
         if description_message:
             socketio.emit("send_message", {"message": json.dumps(description_message.to_dict_summary(), default=str)}, to=f"channel{id}")
-        socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(), default=str)}, to=f"channel{id}")
-        return channel.to_dict_detail()
+        socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(current_user.id), default=str)}, to=f"channel{id}")
+        return channel.to_dict_detail(current_user.id)
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
 @channel_routes.route('/<int:channel_id>/users/<int:user_id>', methods=['PUT'])
@@ -120,13 +121,17 @@ def add_to_channel(channel_id, user_id):
         content="Joined",
         system_message= True
     )
-    channel.users.append(user)
+    channel_user = ChannelUser(
+        channel=channel,
+        user=user
+    )
+    db.session.add(channel_user)
     db.session.add(message)
     db.session.commit()
     socketio.emit("send_message", {"message": json.dumps(message.to_dict_summary(), default=str)}, to=f"channel{channel_id}")
-    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(), default=str)}, to=f"user{user_id}")
-    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(), default=str)}, to=f"channel{channel_id}")
-    return channel.to_dict_detail()
+    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(current_user.id), default=str)}, to=f"user{user_id}")
+    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(current_user.id), default=str)}, to=f"channel{channel_id}")
+    return channel.to_dict_detail(current_user.id)
 
 @channel_routes.route('/<int:id>/leave', methods=['PUT'])
 @login_required
@@ -143,7 +148,7 @@ def leave_channel(id):
         return {"errors": ["Channel creator cannot leave the channel"]}, 403
     if channel.name == "general":
         return {"errors": ["User is not allowed leave general channel"]}, 403
-    channel.users.remove(current_user)
+    channel_user = ChannelUser.query.get((channel.id, current_user.id))
     workspace = channel.workspace
     workspace_user = WorkspaceUser.query.get((workspace.id, current_user.id))
     channels = [channel for channel in current_user.channels if channel.workspace_id == workspace.id]
@@ -155,10 +160,11 @@ def leave_channel(id):
         system_message= True
     )
     db.session.add(message)
+    db.session.delete(channel_user)
     db.session.commit()
     socketio.emit("send_message", {"message": json.dumps(message.to_dict_summary(), default=str)}, to=f"channel{id}")
-    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(), default=str)}, to=f"channel{id}")
-    return {'activeChannel': workspace_user.active_channel.to_dict_detail()}
+    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(current_user.id), default=str)}, to=f"channel{id}")
+    return {'activeChannel': workspace_user.active_channel.to_dict_detail(current_user.id)}
 
 @channel_routes.route('/<int:id>', methods=['DELETE'])
 @login_required
@@ -180,8 +186,8 @@ def delete_channel(id):
     channels = [channel for channel in current_user.channels if channel.workspace_id == workspace.id]
     workspace_user.active_channel = channels[0]
     db.session.commit()
-    socketio.emit("delete_channel", {"channel": json.dumps(workspace_user.active_channel.to_dict_detail(), default=str), "id": id}, to=f"channel{id}")
-    return {'activeChannel': workspace_user.active_channel.to_dict_detail()}
+    socketio.emit("delete_channel", {"channel": json.dumps(workspace_user.active_channel.to_dict_detail(current_user.id), default=str), "id": id}, to=f"channel{id}")
+    return {'activeChannel': workspace_user.active_channel.to_dict_detail(current_user.id)}
 
 @channel_routes.route('/<int:id>/messages/new', methods=['POST'])
 @login_required

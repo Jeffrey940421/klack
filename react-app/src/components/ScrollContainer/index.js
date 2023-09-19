@@ -20,7 +20,6 @@ export function ScrollContainer({ children, id }) {
       const outerDivHeight = outerDiv.current?.clientHeight;
       const innerDivHeight = innerDiv.current?.clientHeight;
       const outerDivScrollTop = outerDiv.current?.scrollTop;
-      console.log(outerDivScrollTop, prevInnerDivHeight.current, outerDivHeight)
 
       if (!prevInnerDivHeight.current
         || outerDivScrollTop === prevInnerDivHeight.current - outerDivHeight

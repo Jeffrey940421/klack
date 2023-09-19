@@ -362,23 +362,27 @@
   color: gray;
   padding: 7px 15px 7px 15px;
   border-radius: 5px;
-  display: flex;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: space-between;
   margin-left: 5px;
   margin-right: 5px;
   width: 250px;
   box-sizing: border-box;
-  column-gap: 10px;
   align-items: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-#chat-room_channel-dropdown button span {
+#chat-room_channel-dropdown button span:first-child {
   line-height: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+#chat-room_channel-dropdown button span i {
+  padding-right: 10px;
 }
 
 #chat-room_channel-dropdown button:hover {
@@ -663,4 +667,18 @@
   background-color: transparent;
   color: lightgray;
   cursor: default;
+}
+
+.chat-room_channel_new_message {
+  width: 25px;
+  height: 15px;
+  border-radius: 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background-color: #611f69;
+  position: relative;
+  left: 10px;
 }

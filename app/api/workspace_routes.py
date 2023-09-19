@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, session, request
-from app.models import Workspace, Channel, WorkspaceUser, WorkspaceInvitation, User, ChannelMessage, db
+from app.models import Workspace, Channel, WorkspaceUser, WorkspaceInvitation, ChannelUser, User, ChannelMessage, db
 from flask_login import current_user, login_user, logout_user, login_required
 from app.forms import WorkspaceForm, WorkspaceUserForm, NewInvitationForm, ChannelForm
 from random import choice
@@ -44,7 +44,7 @@ def workspace(id):
     workspace = Workspace.query.get(id)
     if not workspace:
       return {"errors": ["Workspace is not found"]}, 404
-    return workspace.to_dict_detail()
+    return workspace.to_dict_detail(current_user.id)
 
 @workspace_routes.route('/current', methods=['GET'])
 @login_required
@@ -52,7 +52,7 @@ def current_workspace():
     """
     Query for all the workspaces that the current user is in
     """
-    return {"workspaces": [workspace.to_dict_summary() for workspace in current_user.workspaces]}
+    return {"workspaces": [workspace.to_dict_summary(current_user.id) for workspace in current_user.workspaces]}
 
 @workspace_routes.route('/<int:id>/messages', methods=['GET'])
 @login_required
@@ -95,8 +95,7 @@ def create_workspace():
             name="general",
             description="This is the one channel that will always include everyone. It’s a great spot for announcements and team-wide conversations.",
             creator=current_user,
-            workspace=workspace,
-            users=[current_user]
+            workspace=workspace
         )
         message = ChannelMessage(
             sender=current_user,
@@ -104,15 +103,20 @@ def create_workspace():
             content="Joined",
             system_message=True
         )
+        channel_user = ChannelUser(
+            channel=channel,
+            user=current_user
+        )
         workspace_user.active_channel = channel
         db.session.add(workspace)
         db.session.add(workspace_user)
         db.session.add(channel)
         db.session.add(message)
+        db.session.add(channel_user)
         db.session.commit()
         current_user.active_workspace_id = workspace.id
         db.session.commit()
-        return workspace.to_dict_detail()
+        return workspace.to_dict_detail(current_user.id)
     return {'errors': validation_errors_to_error_messages(workspace_form.errors) + validation_errors_to_error_messages(workspace_user_form.errors)}, 401
 
 @workspace_routes.route('/<int:id>/channels/new', methods=['POST'])
@@ -137,7 +141,6 @@ def create_channel(id):
             description=form.data["description"],
             creator=current_user,
             workspace=workspace,
-            users=[current_user]
         )
         message = ChannelMessage(
             sender=current_user,
@@ -145,13 +148,18 @@ def create_channel(id):
             content="Joined",
             system_message=True
         )
+        channel_user = ChannelUser(
+            channel=channel,
+            user=current_user
+        )
         db.session.add(channel)
         db.session.add(message)
+        db.session.add(channel_user)
         db.session.commit()
         workspace_user = WorkspaceUser.query.get((workspace.id, current_user.id))
         workspace_user.active_channel_id = channel.id
         db.session.commit()
-        return channel.to_dict_detail()
+        return channel.to_dict_detail(current_user.id)
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
 
@@ -173,8 +181,8 @@ def edit_workspace(id):
         if form.data["icon_url"]:
           workspace.icon_url=form.data["icon_url"]
         db.session.commit()
-        socketio.emit("edit_workspace", {"workspace": json.dumps(workspace.to_dict_detail(), default=str)}, to=f"workspace{id}")
-        return workspace.to_dict_detail()
+        socketio.emit("edit_workspace", {"workspace": json.dumps(workspace.to_dict_detail(current_user.id), default=str)}, to=f"workspace{id}")
+        return workspace.to_dict_detail(current_user.id)
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
 @workspace_routes.route('/<int:workspace_id>/users/<int:user_id>', methods=['PUT'])
@@ -196,7 +204,7 @@ def edit_profile(workspace_id, user_id):
           workspace_user.profile_image_url=form.data["profile_image_url"]
         db.session.commit()
         socketio.emit("edit_profile", {"profile": workspace_user.to_dict()}, to=f"workspace{workspace_id}")
-        return workspace_user.workspace.to_dict_detail()
+        return workspace_user.workspace.to_dict_detail(current_user.id)
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
 @workspace_routes.route('/<int:id>/join', methods=['PUT'])
@@ -224,7 +232,10 @@ def join_workspace(id):
             role="guest"
         )
         channel = Channel.query.filter(Channel.workspace_id == id, Channel.name == "general").first()
-        channel.users.append(current_user)
+        channel_user = ChannelUser(
+            channel=channel,
+            user=current_user
+        )
         current_user.active_workspace_id = id
         workspace_user.active_channel = channel
         message = ChannelMessage(
@@ -235,10 +246,11 @@ def join_workspace(id):
         )
         db.session.add(workspace_user)
         db.session.add(message)
+        db.session.add(channel_user)
         db.session.commit()
         socketio.emit("send_message", {"message": json.dumps(message.to_dict_summary(), default=str)}, to=f"channel{channel.id}")
         socketio.emit("join_workspace", {"profile": current_user.to_dict_workspace(id), "workspaceId": id}, to=f"workspace{id}")
-        return workspace.to_dict_detail()
+        return workspace.to_dict_detail(current_user.id)
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
 @workspace_routes.route('/<int:id>/leave', methods=['PUT'])
@@ -266,8 +278,9 @@ def leave_workspace(id):
                 system_message=True
             )
             messages.append(message)
+            channel_user = ChannelUser.query.get((channel.id, current_user.id))
             db.session.add(message)
-            channel.users.remove(current_user)
+            db.session.delete(channel_user)
     db.session.delete(workspace_user)
     db.session.commit()
     if len(current_user.workspaces):
@@ -278,7 +291,7 @@ def leave_workspace(id):
     for message in messages:
         socketio.emit("send_message", {"message": json.dumps(message.to_dict_summary(), default=str)}, to=f"channel{message.channel_id}")
     socketio.emit("leave_workspace", {"profile": message.sender.to_dict_workspace(id), "workspaceId": id}, to=f"workspace{id}")
-    return {"activeWorkspace": current_user.active_workspace.to_dict_detail() if current_user.active_workspace else None}
+    return {"activeWorkspace": current_user.active_workspace.to_dict_detail(current_user.id) if current_user.active_workspace else None}
 
 @workspace_routes.route('/<int:id>', methods=['DELETE'])
 @login_required
@@ -299,7 +312,7 @@ def delete_workspace(id):
         current_user.active_workspace = None
     db.session.commit()
     socketio.emit("delete_workspace", {"id": id}, to=f"workspace{id}")
-    return {"activeWorkspace": current_user.active_workspace.to_dict_detail() if current_user.active_workspace else None}
+    return {"activeWorkspace": current_user.active_workspace.to_dict_detail(current_user.id) if current_user.active_workspace else None}
 
 @workspace_routes.route('/<int:id>/invitations/new', methods=['POST'])
 @login_required
