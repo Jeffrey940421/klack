@@ -67,18 +67,24 @@ class Workspace(db.Model):
     )
 
     def to_dict_summary(self, user_id):
-        workspace_user = WorkspaceUser.query.get((self.id, user_id))
+        if user_id:
+          workspace_user = WorkspaceUser.query.get((self.id, user_id))
+        else:
+          workspace_user = None
         return {
             'id': self.id,
             'name': self.name,
             'iconUrl': self.icon_url,
             'ownerId': self.owner_id,
             'createdAt': self.created_at.strftime("%a, %d %b %Y %H:%M:%S GMT"),
-            'unreadMessage': workspace_user.unread_message if workspace_user else None
+            'lastViewedAt': workspace_user.last_viewed_at.strftime("%a, %d %b %Y %H:%M:%S GMT") if workspace_user else None
         }
 
     def to_dict_detail(self, user_id):
-        workspace_user = WorkspaceUser.query.get((self.id, user_id))
+        if user_id:
+          workspace_user = WorkspaceUser.query.get((self.id, user_id))
+        else:
+          workspace_user = None
         return {
             'id': self.id,
             'name': self.name,
@@ -88,5 +94,5 @@ class Workspace(db.Model):
             'users': [user.to_dict_workspace(self.id) for user in self.users],
             'channels': [channel.to_dict_summary(user_id) for channel in self.channels],
             'associatedInvitations': [invitation.to_dict() for invitation in self.associated_invitations],
-            'unreadMessage': workspace_user.unread_message if workspace_user else None
+            'lastViewedAt': workspace_user.last_viewed_at.strftime("%a, %d %b %Y %H:%M:%S GMT") if workspace_user else None
         }

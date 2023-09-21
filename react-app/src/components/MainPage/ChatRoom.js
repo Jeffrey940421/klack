@@ -10,7 +10,7 @@ import { editActiveWorkspace, leaveCurrentWorkspace, removeWorkspace, removeWork
 import { authenticate } from "../../store/session";
 import { io } from 'socket.io-client';
 import { Invitation } from "../Invitation";
-import { getActiveChannel, getChannels, removeChannelUser, updateChannelUser, updateViewTime } from "../../store/channels";
+import { getActiveChannel, getChannels, getAllChannels, removeChannelUser, updateChannelUser, updateViewTime } from "../../store/channels";
 import { CreateChannel } from "../CreateChannel";
 import { ChannelWindow } from "./ChannelWindow";
 import { useRoom } from "../../context/RoomContext";
@@ -166,6 +166,7 @@ export function ChatRoom({ user, socket }) {
           dispatch(getActiveChannel(user.activeChannel.id))
         }
       })
+      .then(() => dispatch(getAllChannels()))
       .then(() => setChannelLoaded(true))
   }, [dispatch, user])
 
@@ -181,6 +182,14 @@ export function ChatRoom({ user, socket }) {
                   onClick={() => switchWorkspace(workspace.id)}
                 >
                   <img src={workspace.iconUrl} />
+                  {
+                    workspace.id !== activeWorkspace?.id &&
+                    messages.allMessages[workspace.id] &&
+                    Object.values(messages.allMessages[workspace.id]).filter(message => new Date(message?.createdAt) > new Date(workspace.lastViewedAt)).length > 0 &&
+                    <div className="chat-room_workspace-message-alert">
+                      <div></div>
+                    </div>
+                  }
                 </button>
                 <span className="chat-room_workspace-name">
                   <span>
@@ -243,7 +252,11 @@ export function ChatRoom({ user, socket }) {
                           messages.workspaceMessages[channel.id] &&
                           Object.values(messages.workspaceMessages[channel.id]).filter(message => new Date(message?.createdAt) > new Date(channel.lastViewedAt)).length > 0 &&
                           <span className="chat-room_channel_new_message">
-                            {Object.values(messages.workspaceMessages[channel.id]).filter(message => new Date(message?.createdAt) > new Date(channel.lastViewedAt)).length}
+                            {
+                              Object.values(messages.workspaceMessages[channel.id]).filter(message => new Date(message?.createdAt) > new Date(channel.lastViewedAt)).length <= 99 ?
+                                Object.values(messages.workspaceMessages[channel.id]).filter(message => new Date(message?.createdAt) > new Date(channel.lastViewedAt)).length :
+                                "99+"
+                            }
                           </span>
                         }
                       </button>

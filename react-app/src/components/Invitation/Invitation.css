@@ -65,6 +65,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding-top: 1px;
 }
 
 .invitation_email.error {
@@ -143,4 +144,12 @@
 
 .invitation_email-edit {
   background-color: transparent;
+}
+
+.invitation_email:has(input:not(.hidden)):not(.error) {
+  border-color: #377cb1;
+}
+
+.invitation_email.error:has(input:not(.hidden)) {
+  border-color: rgb(224, 30, 90);
 }

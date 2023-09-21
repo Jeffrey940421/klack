@@ -7,7 +7,7 @@ import { authenticate } from "../../store/session";
 import { useModal } from '../../context/Modal';
 import { usePopup } from "../../context/Popup";
 import { Loader } from "../Loader";
-import { joinWorkspace } from "../../store/workspaces";
+import { joinWorkspace, setWorkspaceLastViewed } from "../../store/workspaces";
 import { processInvitation } from "../../store/session";
 
 export function JoinWorkspace({invitation}) {
@@ -41,6 +41,7 @@ export function JoinWorkspace({invitation}) {
   const imageUploadRef = useRef()
   const { closeModal } = useModal();
   const { setPopupContent, closePopup } = usePopup();
+  const activeWorkspace = useSelector((state) => state.workspaces.activeWorkspace)
 
   const extensionList = {
     "image/apng": "apng",
@@ -118,6 +119,9 @@ export function JoinWorkspace({invitation}) {
       setServerErrors(errors)
       closePopup()
     } else {
+      if (activeWorkspace) {
+        await dispatch(setWorkspaceLastViewed(activeWorkspace.id))
+      }
       await dispatch(authenticate())
       await dispatch(processInvitation(invitation.id, "accept"))
       closePopup()

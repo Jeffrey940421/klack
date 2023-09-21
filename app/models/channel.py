@@ -85,7 +85,10 @@ class Channel(db.Model):
     )
 
     def to_dict_summary(self, user_id):
-       channel_user = ChannelUser.query.get((self.id, user_id))
+       if user_id:
+          channel_user = ChannelUser.query.get((self.id, user_id))
+       else:
+          channel_user = None
        return {
           'id': self.id,
           'name': self.name,
@@ -97,7 +100,10 @@ class Channel(db.Model):
        }
 
     def to_dict_detail(self, user_id):
-       channel_user = ChannelUser.query.get((self.id, user_id))
+       if user_id:
+          channel_user = ChannelUser.query.get((self.id, user_id))
+       else:
+          channel_user = None
        return {
           'id': self.id,
           'name': self.name,

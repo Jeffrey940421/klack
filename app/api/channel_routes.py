@@ -38,6 +38,14 @@ def current_channel():
     """
     return {"channels": [channel.to_dict_summary(current_user.id) for channel in current_user.channels if channel.workspace_id == current_user.active_workspace_id]}
 
+@channel_routes.route('/all', methods=['GET'])
+@login_required
+def all_channels():
+    """
+    Query for all the channels that the current user is in
+    """
+    return {"channels": [channel.id for channel in current_user.channels]}
+
 @channel_routes.route('/<int:id>/messages', methods=['GET'])
 @login_required
 def channel_messages(id):
@@ -58,10 +66,11 @@ def edit_channel(id):
     form = ChannelForm()
     form['csrf_token'].data = request.cookies['csrf_token']
     channel = Channel.query.get(id)
+    workspace = channel.workspace
     if not channel:
         return {"errors": ["Channel is not found"]}, 404
-    if channel.creator_id != current_user.id:
-        return {"errors": ["Only channel creator is authorized to edit the channel"]}, 403
+    if channel.creator_id != current_user.id and workspace.owner_id != current_user.id:
+        return {"errors": ["Only channel creator and workspace owner are authorized to edit the channel"]}, 403
     if form.validate_on_submit():
         duplicate_channel = Channel.query.filter(Channel.workspace_id == channel.workspace_id, Channel.id != id, Channel.name == form.data["name"]).first()
         if duplicate_channel:
@@ -93,7 +102,7 @@ def edit_channel(id):
             socketio.emit("send_message", {"message": json.dumps(name_message.to_dict_summary(), default=str)}, to=f"channel{id}")
         if description_message:
             socketio.emit("send_message", {"message": json.dumps(description_message.to_dict_summary(), default=str)}, to=f"channel{id}")
-        socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(current_user.id), default=str)}, to=f"channel{id}")
+        socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(None), default=str)}, to=f"channel{id}")
         return channel.to_dict_detail(current_user.id)
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
@@ -104,6 +113,7 @@ def add_to_channel(channel_id, user_id):
     Add someone in the workspace to the channel
     """
     channel = Channel.query.get(channel_id)
+    workspace = channel.workspace
     user = User.query.get(user_id)
     if not channel:
         return {"errors": ["Channel is not found"]}, 404
@@ -129,8 +139,8 @@ def add_to_channel(channel_id, user_id):
     db.session.add(message)
     db.session.commit()
     socketio.emit("send_message", {"message": json.dumps(message.to_dict_summary(), default=str)}, to=f"channel{channel_id}")
-    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(current_user.id), default=str)}, to=f"user{user_id}")
-    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(current_user.id), default=str)}, to=f"channel{channel_id}")
+    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(None), default=str)}, to=f"user{user_id}")
+    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(None), default=str)}, to=f"channel{channel_id}")
     return channel.to_dict_detail(current_user.id)
 
 @channel_routes.route('/<int:id>/leave', methods=['PUT'])
@@ -140,6 +150,7 @@ def leave_channel(id):
     Leave a channel
     """
     channel = Channel.query.get(id)
+    workspace = channel.workspace
     if not channel:
         return {"errors": ["Channel is not found"]}, 404
     if current_user not in channel.users:
@@ -147,7 +158,7 @@ def leave_channel(id):
     if current_user == channel.creator:
         return {"errors": ["Channel creator cannot leave the channel"]}, 403
     if channel.name == "general":
-        return {"errors": ["User is not allowed leave general channel"]}, 403
+        return {"errors": ["User is not allowed to leave general channel"]}, 403
     channel_user = ChannelUser.query.get((channel.id, current_user.id))
     workspace = channel.workspace
     workspace_user = WorkspaceUser.query.get((workspace.id, current_user.id))
@@ -163,7 +174,7 @@ def leave_channel(id):
     db.session.delete(channel_user)
     db.session.commit()
     socketio.emit("send_message", {"message": json.dumps(message.to_dict_summary(), default=str)}, to=f"channel{id}")
-    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(current_user.id), default=str)}, to=f"channel{id}")
+    socketio.emit("edit_channel", {"channel": json.dumps(channel.to_dict_detail(None), default=str)}, to=f"channel{id}")
     return {'activeChannel': workspace_user.active_channel.to_dict_detail(current_user.id)}
 
 @channel_routes.route('/<int:id>', methods=['DELETE'])
@@ -176,8 +187,8 @@ def delete_channel(id):
     workspace = channel.workspace
     if not channel:
         return {"errors": ["Channel is not found"]}, 404
-    if current_user != channel.creator:
-        return {"errors": ["Only channel creator can delete the channel"]}, 403
+    if channel.creator_id != current_user.id and workspace.owner_id != current_user.id:
+        return {"errors": ["Only channel creator and workspace owner can delete the channel"]}, 403
     if channel.name == "general":
         return {"errors": ["Cannot delete general channel"]}, 403
     db.session.delete(channel)
@@ -186,7 +197,7 @@ def delete_channel(id):
     channels = [channel for channel in current_user.channels if channel.workspace_id == workspace.id]
     workspace_user.active_channel = channels[0]
     db.session.commit()
-    socketio.emit("delete_channel", {"channel": json.dumps(workspace_user.active_channel.to_dict_detail(current_user.id), default=str), "id": id}, to=f"channel{id}")
+    socketio.emit("delete_channel", {"channel": json.dumps(workspace_user.active_channel.to_dict_detail(None), default=str), "id": id}, to=f"channel{id}")
     return {'activeChannel': workspace_user.active_channel.to_dict_detail(current_user.id)}
 
 @channel_routes.route('/<int:id>/messages/new', methods=['POST'])
@@ -198,6 +209,7 @@ def create_channel(id):
     form = ChannelMessageForm()
     form['csrf_token'].data = request.cookies['csrf_token']
     channel = Channel.query.get(id)
+    workspace = channel.workspace
     if not channel:
         return {"errors": ["Channel is not found"]}, 404
     if current_user not in channel.users:

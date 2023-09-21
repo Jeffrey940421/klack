@@ -7,6 +7,7 @@ const UPDATE_WORKSPACE = "workspaces/UPDATE_WORKSPACE"
 const EDIT_ACTIVE_WORKSPACE = "workspaces/EDIT_ACTIVE_WORKSPACE"
 const UPDATE_WORKSPACE_USER = "workspaces/UPDATE_WORKSPACE_USER"
 const REMOVE_WORKSPACE_USER = "workspaces/REMOVE_WORKSPACE_USER"
+const SET_WORKSPACE_LAST_VIEWED = "workspaces/SET_WORKSPACE_LAST_VIEWED"
 
 const loadWorkspaces = (workspaces) => ({
   type: LOAD_WORKSPACES,
@@ -51,6 +52,11 @@ export const updateWorkspaceUser = (profile) => ({
 export const removeWorkspaceUser = (profile) => ({
   type: REMOVE_WORKSPACE_USER,
   payload: profile
+})
+
+export const setWorkspaceLastViewed = (workspaceId) => ({
+  type: SET_WORKSPACE_LAST_VIEWED,
+  payload: workspaceId
 })
 
 const initialState = { workspaces: {}, activeWorkspace: null };
@@ -311,7 +317,8 @@ export default function reducer(state = initialState, action) {
         name: action.payload.name,
         ownerId: action.payload.owner.id,
         iconUrl: action.payload.iconUrl,
-        createdAt: action.payload.createdAt
+        createdAt: action.payload.createdAt,
+        lastViewedAt: action.payload.lastViewedAt
       }
       let workspaces = Object.values(state.workspaces)
       workspaces.push(workspace)
@@ -330,7 +337,12 @@ export default function reducer(state = initialState, action) {
           ...activeWorkspace,
           associatedInvitations: invitations,
           channels: channels,
-          users: users
+          users: users,
+          lastViewedAt: action.payload.lastViewedAt ?
+          action.payload.lastViewedAt :
+          state.workspaces[action.payload.id] ?
+            state.workspaces[action.payload.id].lastViewedAt :
+            new Date(Date.now()).toGMTString()
         }
       }
       const workspaces = state.workspaces
@@ -349,7 +361,12 @@ export default function reducer(state = initialState, action) {
         name: action.payload.name,
         ownerId: action.payload.owner.id,
         iconUrl: action.payload.iconUrl,
-        createdAt: action.payload.createdAt
+        createdAt: action.payload.createdAt,
+        lastViewedAt: action.payload.lastViewedAt ?
+          action.payload.lastViewedAt :
+          state.workspaces[action.payload.id] ?
+            state.workspaces[action.payload.id].lastViewedAt :
+            new Date(Date.now()).toGMTString()
       }
       return { ...state, workspaces: { ...state.workspaces, [workspace.id]: workspace } }
     }
@@ -359,7 +376,12 @@ export default function reducer(state = initialState, action) {
         ...action.payload,
         associatedInvitations: invitations,
         channels: channels,
-        users: users
+        users: users,
+        lastViewedAt: action.payload.lastViewedAt ?
+          action.payload.lastViewedAt :
+          state.workspaces[action.payload.id] ?
+            state.workspaces[action.payload.id].lastViewedAt :
+            new Date(Date.now()).toGMTString()
       }
       return { ...state, activeWorkspace }
     }
@@ -385,6 +407,16 @@ export default function reducer(state = initialState, action) {
           users
         }
       }
+    }
+    case SET_WORKSPACE_LAST_VIEWED: {
+      const workspaceId = action.payload
+      const activeWorkspace = { ...state.activeWorkspace}
+      const workspaces = { ...state.workspaces }
+      if (workspaceId === activeWorkspace.id) {
+        activeWorkspace.lastViewedAt = new Date(Date.now()).toGMTString()
+      }
+      workspaces[workspaceId].lastViewedAt = new Date(Date.now()).toGMTString()
+      return { ...state, workspaces, activeWorkspace }
     }
     default:
       return state;

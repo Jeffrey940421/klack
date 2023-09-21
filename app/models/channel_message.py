@@ -58,6 +58,7 @@ class ChannelMessage(db.Model):
           'id': self.id,
           'sender': self.sender.to_dict_workspace(self.channel.workspace_id),
           'channelId': self.channel_id,
+          'workspaceId': self.channel.workspace_id,
           'content': self.content,
           'systemMessage': self.system_message,
           'createdAt': self.created_at.strftime("%a, %d %b %Y %H:%M:%S GMT"),

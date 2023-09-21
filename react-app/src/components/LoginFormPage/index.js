@@ -151,7 +151,9 @@ function LoginFormPage() {
               type={showPassword ? "text" : "password"}
               placeholder="●●●●●●"
               value={onchangePassword}
-              onChange={(e) => setOnchangePassword(e.target.value)}
+              onChange={(e) => {
+                setOnchangePassword(e.target.value)
+              }}
               onBlur={(e) => {
                 setPassword(e.target.value)
                 setPasswordEdited(true)

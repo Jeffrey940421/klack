@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Redirect } from "react-router-dom";
 import "./CreateChannel.css"
-import { createChannel, editChannel } from "../../store/channels";
+import { createChannel, editChannel, setChannelLastViewed } from "../../store/channels";
 import { authenticate } from "../../store/session";
 import { useModal } from '../../context/Modal';
 import { usePopup } from "../../context/Popup";
@@ -18,6 +18,7 @@ export function CreateChannel({ type, channel, workspace }) {
   const [serverErrors, setServerErrors] = useState({ name: [], other: [] })
   const { closeModal } = useModal();
   const { setPopupContent, closePopup } = usePopup()
+  const activeChannel = useSelector((state) => state.channels.activeChannel)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -38,6 +39,9 @@ export function CreateChannel({ type, channel, workspace }) {
       closePopup()
       setServerErrors(errors)
     } else {
+      if (activeChannel) {
+        await dispatch(setChannelLastViewed(activeChannel.id))
+      }
       await dispatch(authenticate())
       closePopup()
       closeModal()

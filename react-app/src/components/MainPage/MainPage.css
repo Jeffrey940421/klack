@@ -682,3 +682,23 @@
   position: relative;
   left: 10px;
 }
+
+.chat-room_workspace-message-alert {
+  width: 15px;
+  height: 15px;
+  border-radius: 20px;
+  background-color: #611f69;
+  position: absolute;
+  right: -2px;
+  top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-room_workspace-message-alert > div {
+  width: 10px;
+  height: 10px;
+  border-radius: 20px;
+  background-color: red;
+}

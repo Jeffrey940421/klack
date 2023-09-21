@@ -5,6 +5,7 @@ from app.forms import WorkspaceForm, WorkspaceUserForm, NewInvitationForm, Chann
 from random import choice
 from app.socket import socketio
 import json
+from datetime import datetime
 
 workspace_routes = Blueprint('workspace', __name__)
 
@@ -33,6 +34,21 @@ def validation_errors_to_error_messages(validation_errors):
         for error in validation_errors[field]:
             errorMessages.append(f'{field} : {error}')
     return errorMessages
+
+def has_read_messages(workspace, user):
+    """
+    Return a boolean indicating wheather users have read all the messages in the channels that they are in in the given workspace
+    """
+    channels = [channel for channel in workspace.channels if user in channel.users]
+    workspace_user = WorkspaceUser.query.get((workspace.id, user.id))
+    active_channel = workspace_user.active_channel
+    for channel in channels:
+        if channel != active_channel:
+            channel_user = ChannelUser.query.get((channel.id, user.id))
+            for message in channel.messages:
+                if message.created_at > channel_user.last_viewed_at:
+                    return False
+    return True
 
 
 @workspace_routes.route('/<int:id>', methods=['GET'])
@@ -107,6 +123,16 @@ def create_workspace():
             channel=channel,
             user=current_user
         )
+        if current_user.active_workspace:
+            prev_workspace_user = WorkspaceUser.query.get((current_user.active_workspace.id, current_user.id))
+            if prev_workspace_user:
+                if has_read_messages(current_user.active_workspace, current_user):
+                    prev_workspace_user.last_viewed_at = datetime.utcnow()
+                prev_active_channel = prev_workspace_user.active_channel
+                if prev_active_channel:
+                    prev_channel_user = ChannelUser.query.get((prev_active_channel.id, current_user.id))
+                    if prev_channel_user:
+                        prev_channel_user.last_viewed_at = datetime.utcnow()
         workspace_user.active_channel = channel
         db.session.add(workspace)
         db.session.add(workspace_user)
@@ -152,6 +178,14 @@ def create_channel(id):
             channel=channel,
             user=current_user
         )
+        if current_user.active_workspace:
+            prev_workspace_user = WorkspaceUser.query.get((current_user.active_workspace.id, current_user.id))
+            if prev_workspace_user:
+                prev_active_channel = prev_workspace_user.active_channel
+                if prev_active_channel:
+                    prev_channel_user = ChannelUser.query.get((prev_active_channel.id, current_user.id))
+                    if prev_channel_user:
+                        prev_channel_user.last_viewed_at = datetime.utcnow()
         db.session.add(channel)
         db.session.add(message)
         db.session.add(channel_user)
@@ -181,7 +215,7 @@ def edit_workspace(id):
         if form.data["icon_url"]:
           workspace.icon_url=form.data["icon_url"]
         db.session.commit()
-        socketio.emit("edit_workspace", {"workspace": json.dumps(workspace.to_dict_detail(current_user.id), default=str)}, to=f"workspace{id}")
+        socketio.emit("edit_workspace", {"workspace": json.dumps(workspace.to_dict_detail(None), default=str)}, to=f"workspace{id}")
         return workspace.to_dict_detail(current_user.id)
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
@@ -236,6 +270,16 @@ def join_workspace(id):
             channel=channel,
             user=current_user
         )
+        if current_user.active_workspace:
+            prev_workspace_user = WorkspaceUser.query.get((current_user.active_workspace.id, current_user.id))
+            if prev_workspace_user:
+                if has_read_messages(current_user.active_workspace, current_user):
+                    prev_workspace_user.last_viewed_at = datetime.utcnow()
+                prev_active_channel = prev_workspace_user.active_channel
+                if prev_active_channel:
+                    prev_channel_user = ChannelUser.query.get((prev_active_channel.id, current_user.id))
+                    if prev_channel_user:
+                        prev_channel_user.last_viewed_at = datetime.utcnow()
         current_user.active_workspace_id = id
         workspace_user.active_channel = channel
         message = ChannelMessage(

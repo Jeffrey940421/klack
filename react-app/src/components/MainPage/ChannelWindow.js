@@ -7,7 +7,7 @@ import { authenticate } from "../../store/session";
 import { ChannelDetails } from "../ChannelDetails";
 import { JoinChannel } from "../JoinChannel";
 import { Message } from "../Message";
-import { addChannelMessage, addWorkspaceMessage, createMessage, getChannelMessages, getWorkspaceMessages } from "../../store/messages";
+import { addChannelMessage, addMessage, addWorkspaceMessage, createMessage, getAllMessages, getChannelMessages, getWorkspaceMessages } from "../../store/messages";
 import { useRoom } from "../../context/RoomContext";
 import * as channelActions from "../../store/channels"
 
@@ -24,6 +24,7 @@ export function ChannelWindow({ socket }) {
   const channels = useSelector((state) => state.channels.channels)
   const submitRef = useRef()
   const channel = useSelector((state) => state.channels.activeChannel);
+  const allChannels = useSelector((state) => state.channels.allChannels)
   const [prevRooms, setPrevRooms] = useState([])
   const { channelRooms, setChannelRooms } = useRoom()
 
@@ -77,20 +78,20 @@ export function ChannelWindow({ socket }) {
     if (channel) {
       dispatch(getChannelMessages(channel.id))
         .then(() => dispatch(getWorkspaceMessages(workspace.id)))
+        .then(() => dispatch(getAllMessages()))
         .then(() => setMessageLoaded(true))
     }
   }, [dispatch, channel, workspace])
 
   useEffect(() => {
-    const channelArr = Object.values(channels)
-    const rooms = channelArr.map(channel => `channel${channel.id}`)
+    const rooms = allChannels.map(channelId => `channel${channelId}`)
     socket.emit("join_room", { rooms: rooms })
     setChannelRooms(rooms)
 
     return (() => {
       socket.emit("leave_room", { rooms: channelRooms })
     })
-  }, [channels])
+  }, [allChannels])
 
   useEffect(() => {
     socket.on("send_message", async (data) => {
@@ -98,8 +99,19 @@ export function ChannelWindow({ socket }) {
       if (message.channelId === channel.id) {
         await dispatch(addChannelMessage(message))
       }
-      await dispatch(addWorkspaceMessage(message))
+      if (message.workspaceId === workspace.id) {
+        await dispatch(addWorkspaceMessage(message))
+      }
+      await dispatch(addMessage(message))
     })
+
+    return (() => {
+      socket.off("send_message")
+    })
+  }, [channel, workspace])
+
+  useEffect(() => {
+
     socket.on("edit_channel", async (data) => {
       const updatedChannel = JSON.parse(data.channel)
       if (updatedChannel.id === channel.id) {
@@ -114,7 +126,6 @@ export function ChannelWindow({ socket }) {
     })
 
     return (() => {
-      socket.off("send_message")
       socket.off("edit_channel")
       socket.off("delete_channel")
     })
@@ -136,12 +147,12 @@ export function ChannelWindow({ socket }) {
             id="channel-window_members"
             onClick={() => setModalContent(<ChannelDetails channel={channel} defaultMenu="members" />)}
           >
-            <img src={channel?.creator.profileImageUrl} alt="member" />
+            <img src={channel?.creator.profileImageUrl ? channel?.creator.profileImageUrl : Object.values(channel?.users)[0].profileImageUrl} alt="member" />
             <span>{channel?.users && Object.values(channel.users)?.length}</span>
           </div>
           <ul id="channel-window_channel-dropdown" className={showChannelMenu ? "" : "hidden"} ref={ulRef}>
             {
-              user?.id === channel?.creator.id &&
+              (user?.id === channel?.creator.id || user?.id === workspace?.owner.id) &&
               <li
                 onClick={() => {
                   setModalContent(<CreateChannel type="edit" channel={channel} workspace={workspace} />)
@@ -172,9 +183,18 @@ export function ChannelWindow({ socket }) {
             </li>
             {
               channel?.name !== "general" ?
-                user?.id === channel?.creator.id ?
+                (user?.id === channel?.creator.id || user?.id === workspace?.owner.id) ?
                   <>
                     <hr></hr>
+                    {
+                      user?.id === workspace?.owner.id &&
+                      <li
+                        id="channel-window_leave-channel"
+                        onClick={leaveChannel}
+                      >
+                        Leave Channel
+                      </li>
+                    }
                     <li
                       id="channel-window_delete-channel"
                       onClick={deleteChannel}

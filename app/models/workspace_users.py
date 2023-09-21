@@ -1,5 +1,6 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
 from sqlalchemy.orm import validates
+from sqlalchemy.sql import func
 
 class WorkspaceUser(db.Model):
     __tablename__ = 'workspace_users'
@@ -29,10 +30,10 @@ class WorkspaceUser(db.Model):
       db.String(30),
       nullable=False
     )
-    unread_message = db.Column(
-        db.Boolean,
+    last_viewed_at = db.Column(
+        db.DateTime,
         nullable=False,
-        default=False
+        default=func.now()
     )
 
     active_channel_id = db.Column(
