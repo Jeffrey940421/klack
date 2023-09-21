@@ -58,6 +58,7 @@
   align-items: center;
   justify-content: center;
   height: 21px;
+  border: 2px solid transparent
 }
 
 .invitation_email > span {
