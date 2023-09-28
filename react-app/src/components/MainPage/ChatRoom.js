@@ -10,13 +10,11 @@ import { editActiveWorkspace, leaveCurrentWorkspace, removeWorkspace, removeWork
 import { authenticate } from "../../store/session";
 import { io } from 'socket.io-client';
 import { Invitation } from "../Invitation";
-import { getActiveChannel, getChannels, removeChannelUser, updateChannelUser } from "../../store/channels";
+import { getActiveChannel, getChannels, getAllChannels, removeChannelUser, updateChannelUser, updateViewTime } from "../../store/channels";
 import { CreateChannel } from "../CreateChannel";
 import { ChannelWindow } from "./ChannelWindow";
 import { useRoom } from "../../context/RoomContext";
 import * as workspaceActions from "../../store/workspaces"
-import { addChannelMessage, addWorkspaceMessage } from "../../store/messages";
-
 
 export function ChatRoom({ user, socket }) {
   const dispatch = useDispatch();
@@ -30,16 +28,17 @@ export function ChatRoom({ user, socket }) {
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
   const [channelLoaded, setChannelLoaded] = useState(false)
   const { workspaceRooms, setWorkspaceRooms } = useRoom()
+  const messages = useSelector((state) => state.messages)
 
-  const switchWorkspace = (workspaceId) => {
+  const switchWorkspace = async (workspaceId) => {
     if (workspaceId !== activeWorkspace.id) {
-      dispatch(updateActiveWorkspace(user.id, workspaceId))
+      await dispatch(updateActiveWorkspace(user.id, workspaceId))
     }
   }
 
-  const switchChannel = (channelId) => {
+  const switchChannel = async (channelId) => {
     if (channelId !== activeChannel?.id) {
-      dispatch(updateActiveChannel(user.id, channelId))
+      await dispatch(updateActiveChannel(user.id, channelId))
     }
   }
 
@@ -167,6 +166,7 @@ export function ChatRoom({ user, socket }) {
           dispatch(getActiveChannel(user.activeChannel.id))
         }
       })
+      .then(() => dispatch(getAllChannels()))
       .then(() => setChannelLoaded(true))
   }, [dispatch, user])
 
@@ -182,6 +182,14 @@ export function ChatRoom({ user, socket }) {
                   onClick={() => switchWorkspace(workspace.id)}
                 >
                   <img src={workspace.iconUrl} />
+                  {
+                    workspace.id !== activeWorkspace?.id &&
+                    messages.allMessages[workspace.id] &&
+                    Object.values(messages.allMessages[workspace.id]).filter(message => new Date(message?.createdAt) > new Date(workspace.lastViewedAt)).length > 0 &&
+                    <div className="chat-room_workspace-message-alert">
+                      <div></div>
+                    </div>
+                  }
                 </button>
                 <span className="chat-room_workspace-name">
                   <span>
@@ -235,8 +243,22 @@ export function ChatRoom({ user, socket }) {
                         id={activeChannel?.id === channel.id ? "chat-room_active-channel" : ""}
                         onClick={() => switchChannel(channel.id)}
                       >
-                        <i className="fa-solid fa-hashtag" />
-                        <span>{channel.name}</span>
+                        <span>
+                          <i className="fa-solid fa-hashtag" />
+                          {channel.name}
+                        </span>
+                        {
+                          channel.id !== activeChannel?.id &&
+                          messages.workspaceMessages[channel.id] &&
+                          Object.values(messages.workspaceMessages[channel.id]).filter(message => new Date(message?.createdAt) > new Date(channel.lastViewedAt)).length > 0 &&
+                          <span className="chat-room_channel_new_message">
+                            {
+                              Object.values(messages.workspaceMessages[channel.id]).filter(message => new Date(message?.createdAt) > new Date(channel.lastViewedAt)).length <= 99 ?
+                                Object.values(messages.workspaceMessages[channel.id]).filter(message => new Date(message?.createdAt) > new Date(channel.lastViewedAt)).length :
+                                "99+"
+                            }
+                          </span>
+                        }
                       </button>
                     </div>
                   )

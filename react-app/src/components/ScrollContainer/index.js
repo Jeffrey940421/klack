@@ -2,43 +2,58 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import "./ScrollContainer.css"
 import { useSelector } from "react-redux";
 
-export function ScrollContainer({ children, id }) {
+export function ScrollContainer({ children, id, editorHeight }) {
   const outerDiv = useRef(null);
   const innerDiv = useRef(null);
   const [prevId, setPrevId] = useState("")
-  const prevInnerDivHeight = useRef(null);
+  const [prevInnerDivHeight, setPrevInnerDivHeight] = useState("");
+  const [prevOuterDivHeight, setPrevOuterDivHeight] = useState("");
+  const [prevOuterDivScrollTop, setPrevOuterDivScrollTop] = useState("");
   const messages = useSelector((state) => state.messages)
   const channelMessages = messages?.channelMessages
-
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const bottomRef = useRef()
 
-  const scroll = async () => {
-    setTimeout(() => {
-      if (id !== prevId) {
-        prevInnerDivHeight.current = null
-      }
-      const outerDivHeight = outerDiv.current?.clientHeight;
-      const innerDivHeight = innerDiv.current?.clientHeight;
-      const outerDivScrollTop = outerDiv.current?.scrollTop;
-      console.log(outerDivScrollTop, prevInnerDivHeight.current, outerDivHeight)
+  const scroll = () => {
+    if (id !== prevId) {
+      setPrevInnerDivHeight("")
+    }
+    const outerDivHeight = outerDiv.current?.clientHeight;
+    const innerDivHeight = innerDiv.current?.clientHeight;
+    const outerDivScrollTop = outerDiv.current?.scrollTop;
 
-      if (!prevInnerDivHeight.current
-        || outerDivScrollTop === prevInnerDivHeight.current - outerDivHeight
-        || outerDivScrollTop === prevInnerDivHeight.current - outerDivHeight - 62
-        || outerDivScrollTop === prevInnerDivHeight.current - outerDivHeight + 62
-        || outerDivScrollTop == 0) {
-        outerDiv.current?.scrollTo({
-          top: innerDivHeight - outerDivHeight,
-          left: 0,
-          behavior: prevInnerDivHeight.current ? "smooth" : "auto",
-        });
-      } else {
-        setShowScrollButton(true);
-      }
+    if (bottomRef.current && (!prevInnerDivHeight
+      || prevInnerDivHeight - prevOuterDivHeight - prevOuterDivScrollTop < 1
+      || outerDivScrollTop === 0)) {
+      bottomRef.current?.scrollIntoView({
+        behavior: prevInnerDivHeight ? "smooth" : "auto",
+      });
+    } else {
+      setShowScrollButton(true);
+    }
 
-      prevInnerDivHeight.current = innerDivHeight;
-      setPrevId(id)
-    }, 100)
+    setPrevOuterDivHeight(outerDivHeight);
+    setPrevOuterDivScrollTop(outerDivScrollTop);
+    setPrevInnerDivHeight(innerDivHeight);
+    setPrevId(id)
+  }
+
+  const scrollBottom = () => {
+    const outerDivHeight = outerDiv.current?.clientHeight;
+    const innerDivHeight = innerDiv.current?.clientHeight;
+    const outerDivScrollTop = outerDiv.current?.scrollTop;
+
+    if (bottomRef.current && (!prevInnerDivHeight
+      || prevInnerDivHeight - prevOuterDivHeight - prevOuterDivScrollTop < 1
+      || outerDivScrollTop == 0)) {
+      bottomRef.current?.scrollIntoView({
+        behavior: "auto",
+      });
+    }
+
+    setPrevOuterDivHeight(outerDivHeight);
+    setPrevOuterDivScrollTop(outerDivScrollTop);
+    setPrevInnerDivHeight(innerDivHeight);
   }
 
   const handleButton = () => {
@@ -46,23 +61,32 @@ export function ScrollContainer({ children, id }) {
     const innerDivHeight = innerDiv.current?.clientHeight;
     const outerDivScrollTop = outerDiv.current?.scrollTop;
 
-    if (outerDivScrollTop === innerDivHeight - outerDivHeight) {
+    if (innerDivHeight - outerDivHeight - outerDivScrollTop < 1) {
       setShowScrollButton(false);
     }
+
+    setPrevOuterDivHeight(outerDivHeight);
+    setPrevOuterDivScrollTop(outerDivScrollTop);
+    setPrevInnerDivHeight(innerDivHeight);
   }
 
   useEffect(() => {
-    const resizeEvent = window.addEventListener("resize", scroll)
-    const scrollEvent = document.querySelector("#scroll_outer").addEventListener("scroll", handleButton)
+
+    window.addEventListener("resize", scrollBottom)
+    document.querySelector("#scroll_outer").addEventListener("scroll", handleButton)
     return (() => {
-      window.removeEventListener("resize", resizeEvent)
+      window.removeEventListener("resize", scrollBottom)
       document.querySelector("#scroll_outer")?.removeEventListener("scroll", handleButton)
     })
-  }, [])
+  }, [prevInnerDivHeight, prevOuterDivHeight, prevOuterDivScrollTop])
 
   useEffect(() => {
     scroll()
   }, [Object.values(channelMessages).length, id]);
+
+  useEffect(() => {
+    scrollBottom()
+  }, [editorHeight]);
 
   const handleScrollButtonClick = useCallback(() => {
     const outerDivHeight = outerDiv.current.clientHeight;
@@ -101,6 +125,7 @@ export function ScrollContainer({ children, id }) {
           }}
         >
           {children}
+          <div ref={bottomRef}></div>
         </div>
       </div>
       <button

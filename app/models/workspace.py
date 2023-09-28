@@ -1,4 +1,5 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
+from .workspace_users import WorkspaceUser
 from sqlalchemy.sql import func
 from sqlalchemy.ext.associationproxy import association_proxy
 
@@ -65,23 +66,33 @@ class Workspace(db.Model):
       cascade="all, delete-orphan"
     )
 
-    def to_dict_summary(self):
+    def to_dict_summary(self, user_id):
+        if user_id:
+          workspace_user = WorkspaceUser.query.get((self.id, user_id))
+        else:
+          workspace_user = None
         return {
             'id': self.id,
             'name': self.name,
             'iconUrl': self.icon_url,
             'ownerId': self.owner_id,
-            'createdAt': self.created_at
+            'createdAt': self.created_at.strftime("%a, %d %b %Y %H:%M:%S GMT"),
+            'lastViewedAt': workspace_user.last_viewed_at.strftime("%a, %d %b %Y %H:%M:%S GMT") if workspace_user else None
         }
 
-    def to_dict_detail(self):
+    def to_dict_detail(self, user_id):
+        if user_id:
+          workspace_user = WorkspaceUser.query.get((self.id, user_id))
+        else:
+          workspace_user = None
         return {
             'id': self.id,
             'name': self.name,
             'iconUrl': self.icon_url,
             'owner': self.owner.to_dict_workspace(self.id),
-            'createdAt': self.created_at,
+            'createdAt': self.created_at.strftime("%a, %d %b %Y %H:%M:%S GMT"),
             'users': [user.to_dict_workspace(self.id) for user in self.users],
-            'channels': [channel.to_dict_summary() for channel in self.channels],
-            'associatedInvitations': [invitation.to_dict() for invitation in self.associated_invitations]
+            'channels': [channel.to_dict_summary(user_id) for channel in self.channels],
+            'associatedInvitations': [invitation.to_dict() for invitation in self.associated_invitations],
+            'lastViewedAt': workspace_user.last_viewed_at.strftime("%a, %d %b %Y %H:%M:%S GMT") if workspace_user else None
         }

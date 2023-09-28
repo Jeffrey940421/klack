@@ -6,6 +6,8 @@ const UPDATE_CHANNEL_USER = "channels/UPDATE_CHANNEL_USER"
 const REMOVE_CHANNEL_USER = "channels/REMOVE_CHANNEL_USER"
 const UPDATE_ACTIVE_CHANNEL = 'channels/UPDATE_ACTIVE_CHANNEL'
 const UPDATE_CHANNEL = 'channels/UPDATE_CHANNEL'
+const LOAD_ALL_CHANNELS = 'channels/LOAD_ALL_CHANNELS'
+const SET_CHANNEL_LAST_VIEWED = 'channels/SET_CHANNEL_LAST_VIEWED'
 
 const loadChannels = (channels) => ({
   type: LOAD_CHANNELS,
@@ -15,6 +17,11 @@ const loadChannels = (channels) => ({
 const loadActiveChannel = (channel) => ({
   type: LOAD_ACTIVE_CHANNEL,
   payload: channel
+})
+
+const loadAllChannels = (channels) => ({
+  type: LOAD_ALL_CHANNELS,
+  payload: channels
 })
 
 const addChannel = (channel) => ({
@@ -47,7 +54,12 @@ export const updateChannel = (channel) => ({
   payload: channel
 })
 
-const initialState = { channels: {}, activeChannel: null };
+export const setChannelLastViewed = (channelId) => ({
+  type: SET_CHANNEL_LAST_VIEWED,
+  payload: channelId
+})
+
+const initialState = { channels: {}, activeChannel: null, allChannels: [] };
 
 export const getChannels = () => async (dispatch) => {
   const response = await fetch("api/channels/current", {
@@ -78,6 +90,26 @@ export const getActiveChannel = (id) => async (dispatch) => {
   if (response.ok) {
     const data = await response.json();
     dispatch(loadActiveChannel(data));
+    return null;
+  } else if (response.status < 500) {
+    const data = await response.json();
+    if (data.errors) {
+      return data.errors;
+    }
+  } else {
+    return ["An error occurred. Please try again."];
+  }
+}
+
+export const getAllChannels = () => async (dispatch) => {
+  const response = await fetch("api/channels/all", {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (response.ok) {
+    const data = await response.json();
+    dispatch(loadAllChannels(data.channels));
     return null;
   } else if (response.status < 500) {
     const data = await response.json();
@@ -232,12 +264,15 @@ export default function reducer(state = initialState, action) {
       }
       return { ...state, activeChannel }
     }
+    case LOAD_ALL_CHANNELS: {
+      return { ...state, allChannels: action.payload }
+    }
     case ADD_CHANNEL: {
       const { messages, users } = normalization(action.payload)
       const activeChannel = {
         ...action.payload,
         messages: messages,
-        users: users
+        users: users,
       }
       const channel = {
         id: action.payload.id,
@@ -245,16 +280,21 @@ export default function reducer(state = initialState, action) {
         creatorId: action.payload.creator.id,
         description: action.payload.description,
         messageNum: action.payload.messages.length,
-        createdAt: action.payload.createdAt
+        createdAt: action.payload.createdAt,
+        lastViewedAt: action.payload.lastViewedAt
       }
       let channels = Object.values(state.channels)
+      let allChannels = [...state.allChannels]
+      if (!allChannels.includes(channel.id)) {
+        allChannels.push(channel.id)
+      }
       channels.push(channel)
       channels = channels.sort((a, b) => a.id - b.id)
       const sortedChannels = {}
       for (let channel of channels) {
         sortedChannels[channel.id] = channel
       }
-      return { ...state, channels: sortedChannels, activeChannel }
+      return { ...state, channels: sortedChannels, activeChannel, allChannels }
     }
     case DELETE_CHANNEL: {
       let { id, activeChannel } = action.payload
@@ -263,12 +303,19 @@ export default function reducer(state = initialState, action) {
         activeChannel = {
           ...activeChannel,
           messages: messages,
-          users: users
+          users: users,
+          lastViewedAt: action.payload.lastViewedAt ?
+            action.payload.lastViewedAt :
+            state.channels[action.payload.id] ?
+              state.channels[action.payload.id].lastViewedAt :
+              new Date(Date.now()).toGMTString()
         }
       }
       const channels = state.channels
       delete channels[id]
-      return { ...state, channels, activeChannel }
+      const allChannels = [...state.allChannels]
+      allChannels.splice(allChannels.indexOf(id), 1)
+      return { ...state, channels, activeChannel, allChannels }
     }
     case UPDATE_CHANNEL_USER: {
       return {
@@ -298,7 +345,12 @@ export default function reducer(state = initialState, action) {
       const activeChannel = {
         ...action.payload,
         messages: messages,
-        users: users
+        users: users,
+        lastViewedAt: action.payload.lastViewedAt ?
+          action.payload.lastViewedAt :
+          state.channels[action.payload.id] ?
+            state.channels[action.payload.id].lastViewedAt :
+            new Date(Date.now()).toGMTString()
       }
       return { ...state, activeChannel }
     }
@@ -309,7 +361,12 @@ export default function reducer(state = initialState, action) {
         creatorId: action.payload.creator.id,
         description: action.payload.description,
         messageNum: action.payload.messages.length,
-        createdAt: action.payload.createdAt
+        createdAt: action.payload.createdAt,
+        lastViewedAt: action.payload.lastViewedAt ?
+          action.payload.lastViewedAt :
+          state.channels[action.payload.id] ?
+            state.channels[action.payload.id].lastViewedAt :
+            new Date(Date.now()).toGMTString()
       }
       let channels = Object.values(state.channels)
       channels.push(channel)
@@ -318,7 +375,21 @@ export default function reducer(state = initialState, action) {
       for (let channel of channels) {
         sortedChannels[channel.id] = channel
       }
-      return { ...state, channels: sortedChannels }
+      let allChannels = [...state.allChannels]
+      if (!allChannels.includes(channel.id)) {
+        allChannels.push(channel.id)
+      }
+      return { ...state, channels: sortedChannels, allChannels }
+    }
+    case SET_CHANNEL_LAST_VIEWED: {
+      const channelId = action.payload
+      const activeChannel = { ...state.activeChannel }
+      const channels = { ...state.channels }
+      if (activeChannel.id === channelId) {
+        activeChannel.lastViewedAt = new Date(Date.now()).toGMTString()
+      }
+      channels[channelId].lastViewedAt = new Date(Date.now()).toGMTString()
+      return { ...state, activeChannel, channels }
     }
     default:
       return state;

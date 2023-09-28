@@ -1,7 +1,10 @@
 const LOAD_CHANNEL_MESSAGES = "messages/LOAD_CHANNEL_MESSAGES"
 const LOAD_WORKSPACE_MESSAGES = "messages/LOAD_WORKSPACE_MESSAGES"
+const LOAD_ALL_MESSAGES = "messages/LOAD_ALL_MESSAGES"
 const ADD_CHANNEL_MESSAGE = "messages/ADD_CHANNEL_MESSAGE"
 const ADD_WORKSPACE_MESSAGE = "messages/ADD_WORKSPACE_MESSAGE"
+const ADD_MESSAGE = "messages/ADD_ALL_MESSAGE"
+
 
 const loadChannelMessages = (messages) => ({
   type: LOAD_CHANNEL_MESSAGES,
@@ -10,6 +13,11 @@ const loadChannelMessages = (messages) => ({
 
 const loadWorkspaceMessages = (messages) => ({
   type: LOAD_WORKSPACE_MESSAGES,
+  payload: messages
+})
+
+const loadAllMessages = (messages) => ({
+  type: LOAD_ALL_MESSAGES,
   payload: messages
 })
 
@@ -23,7 +31,12 @@ export const addWorkspaceMessage = (message) => ({
   payload: message
 })
 
-const initialState = { channelMessages: {}, workspaceMessages: {} };
+export const addMessage = (message) => ({
+  type: ADD_MESSAGE,
+  payload: message
+})
+
+const initialState = { channelMessages: {}, workspaceMessages: {}, allMessages: {} };
 
 export const getChannelMessages = (id) => async (dispatch) => {
   const response = await fetch(`api/channels/${id}/messages`, {
@@ -54,6 +67,26 @@ export const getWorkspaceMessages = (id) => async (dispatch) => {
   if (response.ok) {
     const data = await response.json();
     dispatch(loadWorkspaceMessages(data.messages));
+    return null;
+  } else if (response.status < 500) {
+    const data = await response.json();
+    if (data.errors) {
+      return data.errors;
+    }
+  } else {
+    return ["An error occurred. Please try again."];
+  }
+}
+
+export const getAllMessages = () => async (dispatch) => {
+  const response = await fetch("api/messages/current", {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (response.ok) {
+    const data = await response.json();
+    dispatch(loadAllMessages(data.messages));
     return null;
   } else if (response.status < 500) {
     const data = await response.json();
@@ -110,6 +143,9 @@ export default function reducer(state = initialState, action) {
       }
       return { ...state, workspaceMessages: messages };
     }
+    case LOAD_ALL_MESSAGES: {
+      return { ...state, allMessages: action.payload };
+    }
     case ADD_CHANNEL_MESSAGE: {
       return {
         ...state,
@@ -127,6 +163,20 @@ export default function reducer(state = initialState, action) {
           [action.payload.channelId]: state.workspaceMessages[action.payload.channelId] ?
             {
               ...state.workspaceMessages[action.payload.channelId],
+              [action.payload.id]: action.payload
+            } :
+            { [action.payload.id]: action.payload }
+        }
+      }
+    }
+    case ADD_MESSAGE: {
+      return {
+        ...state,
+        allMessages: {
+          ...state.allMessages,
+          [action.payload.workspaceId]: state.allMessages[action.payload.workspaceId] ?
+            {
+              ...state.allMessages[action.payload.workspaceId],
               [action.payload.id]: action.payload
             } :
             { [action.payload.id]: action.payload }

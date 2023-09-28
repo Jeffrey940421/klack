@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Redirect } from "react-router-dom";
 import "./CreateWorkspace.css"
 import AvatarEditor from 'react-avatar-editor'
-import { createWorkspace } from "../../store/workspaces";
+import { createWorkspace, setWorkspaceLastViewed } from "../../store/workspaces";
 import { authenticate } from "../../store/session";
 import { useModal } from '../../context/Modal';
 import { usePopup } from "../../context/Popup";
@@ -48,6 +48,7 @@ export function CreateWorkspace() {
   const imageUploadRef = useRef()
   const { closeModal } = useModal();
   const { setPopupContent, closePopup } = usePopup();
+  const activeWorkspace = useSelector((state) => state.workspaces.activeWorkspace)
 
   const extensionList = {
     "image/apng": "apng",
@@ -174,6 +175,9 @@ export function CreateWorkspace() {
       setServerErrors(errors)
       closePopup()
     } else {
+      if (activeWorkspace) {
+        await dispatch(setWorkspaceLastViewed(activeWorkspace.id))
+      }
       await dispatch(authenticate())
       closePopup()
       closeModal()

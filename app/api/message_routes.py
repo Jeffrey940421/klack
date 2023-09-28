@@ -4,6 +4,8 @@ from flask_login import current_user, login_user, logout_user, login_required
 from app.forms import WorkspaceForm, WorkspaceUserForm, NewInvitationForm, ChannelForm
 from random import choice
 from app.socket import socketio
+from collections import defaultdict
+
 
 message_routes = Blueprint('message', __name__)
 
@@ -16,3 +18,17 @@ def validation_errors_to_error_messages(validation_errors):
         for error in validation_errors[field]:
             errorMessages.append(f'{field} : {error}')
     return errorMessages
+
+@message_routes.route('/current', methods=['GET'])
+@login_required
+def current_messages():
+    """
+    Query for all the messages that the current user receive
+    """
+    all_messages = defaultdict(dict)
+    channles = current_user.channels
+    for channel in channles:
+        messages = channel.messages
+        for message in messages:
+            all_messages[channel.workspace_id][message.id] = message.to_dict_summary()
+    return {"messages": all_messages}

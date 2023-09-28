@@ -44,7 +44,7 @@ export function ChannelDetails({ defaultMenu }) {
           </div>
           <div>
             <h3>Created by</h3>
-            <span>{channel.creator.nickname} on {new Date(channel.createdAt).toLocaleString('en-us', { year: 'numeric', month: 'long', day: '2-digit' })}</span>
+            <span>{channel.creator.nickname || channel.creator.email} on {new Date(channel.createdAt).toLocaleString('en-us', { year: 'numeric', month: 'long', day: '2-digit' })}</span>
           </div>
         </div>
       }

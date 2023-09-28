@@ -1,5 +1,6 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
 from sqlalchemy.orm import validates
+from sqlalchemy.sql import func
 
 class WorkspaceUser(db.Model):
     __tablename__ = 'workspace_users'
@@ -29,12 +30,16 @@ class WorkspaceUser(db.Model):
       db.String(30),
       nullable=False
     )
+    last_viewed_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=func.now()
+    )
 
     active_channel_id = db.Column(
        db.Integer,
        db.ForeignKey(add_prefix_for_prod("channels.id"))
     )
-
     workspace = db.relationship(
       "Workspace",
       foreign_keys="WorkspaceUser.workspace_id",
@@ -45,7 +50,6 @@ class WorkspaceUser(db.Model):
       foreign_keys="WorkspaceUser.user_id",
       back_populates="workspace_associations"
     )
-
     active_channel = db.relationship(
        "Channel",
        foreign_keys="WorkspaceUser.active_channel_id",

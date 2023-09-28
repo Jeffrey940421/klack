@@ -1,8 +1,9 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
 from .workspace_users import WorkspaceUser
+from .channel_user import ChannelUser
 from sqlalchemy.sql import func
-from .channel_user import channel_users
 from datetime import date
+from sqlalchemy.ext.associationproxy import association_proxy
 
 def setDefaultDescription(context):
   creator_id = context.get_current_parameters()["creator_id"]
@@ -60,10 +61,15 @@ class Channel(db.Model):
       foreign_keys="Channel.workspace_id",
       back_populates="channels"
     )
-    users = db.relationship(
-      "User",
-      secondary=channel_users,
-      back_populates="channels"
+    user_associations = db.relationship(
+      "ChannelUser",
+      foreign_keys="ChannelUser.channel_id",
+      back_populates="channel",
+      cascade="all, delete-orphan"
+    )
+    users = association_proxy(
+      "user_associations",
+      "user"
     )
     messages = db.relationship(
       "ChannelMessage",
@@ -78,17 +84,26 @@ class Channel(db.Model):
        back_populates="active_channel"
     )
 
-    def to_dict_summary(self):
+    def to_dict_summary(self, user_id):
+       if user_id:
+          channel_user = ChannelUser.query.get((self.id, user_id))
+       else:
+          channel_user = None
        return {
           'id': self.id,
           'name': self.name,
           'description': self.description,
           'creatorId': self.creator_id,
           'messageNum': len(self.messages),
-          'createdAt': self.created_at
+          'createdAt': self.created_at.strftime("%a, %d %b %Y %H:%M:%S GMT"),
+          'lastViewedAt': channel_user.last_viewed_at.strftime("%a, %d %b %Y %H:%M:%S GMT") if channel_user else None
        }
 
-    def to_dict_detail(self):
+    def to_dict_detail(self, user_id):
+       if user_id:
+          channel_user = ChannelUser.query.get((self.id, user_id))
+       else:
+          channel_user = None
        return {
           'id': self.id,
           'name': self.name,
@@ -97,5 +112,6 @@ class Channel(db.Model):
           'workspaceId': self.workspace_id,
           'users': [user.to_dict_workspace(self.workspace_id) for user in self.users],
           'messages': [message.to_dict_summary() for message in self.messages],
-          'createdAt': self.created_at
+          'createdAt': self.created_at.strftime("%a, %d %b %Y %H:%M:%S GMT"),
+          'lastViewedAt': channel_user.last_viewed_at.strftime("%a, %d %b %Y %H:%M:%S GMT") if channel_user else None
        }
