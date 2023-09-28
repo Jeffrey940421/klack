@@ -40,13 +40,15 @@
   display: grid;
   grid-template-areas:
     "a b"
-    "a c";
+    "a c"
+    "a d";
   grid-template-columns: auto 1fr;
   grid-template-rows: auto auto;
   column-gap: 10px;
-  padding: 10px 20px;
-  height: 62px;
+  row-gap: 5px;
+  padding: 10px 20px 5px 20px;
   box-sizing: border-box;
+  position: relative;
 }
 
 .message_message-body img {
@@ -58,7 +60,7 @@
   grid-area: a;
 }
 
-.message_message-body div {
+.message_message-body > div:nth-child(2) {
   display: flex;
   column-gap: 10px;
   align-items: flex-end;
@@ -81,4 +83,198 @@
 
 .message_system-message > span {
   color: gray
+}
+
+.message_message-body > span * {
+  font-size: 15px;
+  word-break: break-all;
+  white-space: pre-wrap !important;
+}
+
+
+.message_message-body > span p {
+  margin: 0px !important;
+}
+
+.message_message-body > span ol {
+  display: block;
+  margin: 0px !important;
+  text-align: left;
+  counter-reset: list0;
+}
+
+.message_message-body > span ol li {
+  margin-left: 20px;
+}
+
+.message_message-body > span ol li::before {
+  counter-increment: list0 1;
+  display: inline-block;
+  width: 1.3em;
+  margin-left: -1.3em;
+  text-align: left;
+}
+
+.message_message-body > span ol > li::before {
+  content: counter(list0) ". ";
+}
+.message_message-body > span ol > li ol > li::before {
+  content: counter(list0, lower-alpha) ". ";
+}
+
+.message_message-body > span ul {
+  display: block;
+  margin: 0px !important;
+  text-align: left;
+}
+
+.message_message-body > span ul li {
+  margin-left: 20px;
+}
+
+.message_message-body > span ul li::before {
+  display: inline-block;
+  width: 1.3em;
+  margin-left: -1.3em;
+  text-align: left;
+}
+
+.message_message-body > span ul > li::before {
+  content: "•";
+}
+
+.message_message-body > span ul > li ul > li::before {
+  content: "○";
+}
+
+.message_message-body > span pre {
+  word-wrap: break-word;
+  word-break: break-all !important;
+  line-height: 140%;
+  border-radius: 5px !important;
+  background-color: rgba(29, 28, 29, 0.04) !important;
+  padding: 8px !important;
+  margin: 0px !important;
+  border: 1px solid #c4c4c4;
+  color: #353535;
+  direction: ltr;
+  font-style: normal;
+  min-width: 200px;
+  tab-size: 4;
+  text-align: left;
+  white-space: pre-wrap;
+  position: relative;
+}
+
+.message_message-body > span pre:after {
+  background: #757575;
+  color: #fff;
+  font-size: 10px;
+  line-height: 16px;
+  padding: 1.8px 4.8px;
+  right: 10px;
+  top: -1px;
+  white-space: nowrap;
+  position: absolute;
+  font-family: "circular_stdbook", sans-serif !important;
+  border-bottom-left-radius: 5px !important;
+  border-bottom-right-radius: 5px !important;
+}
+
+.message_message-body > span pre code {
+  font-family: Monaco, Menlo, Consolas !important;
+  font-size: 12px !important;
+  line-height: 150%;
+}
+
+.message_message-body > span pre:has(.language-cs)::after {
+  content: "C#";
+}
+
+.message_message-body > span pre:has(.language-plaintext)::after {
+  content: "Plain Text";
+}
+
+.message_message-body > span pre:has(.language-c)::after {
+  content: "C";
+}
+
+.message_message-body > span pre:has(.language-cpp)::after {
+  content: "C++";
+}
+
+.message_message-body > span pre:has(.language-css)::after {
+  content: "CSS";
+}
+
+.message_message-body > span pre:has(.language-diff)::after {
+  content: "Diff";
+}
+
+.message_message-body > span pre:has(.language-diff)::after {
+  content: "Diff";
+}
+
+.message_message-body > span pre:has(.language-html)::after {
+  content: "HTML";
+}
+
+.message_message-body > span pre:has(.language-java)::after {
+  content: "Java";
+}
+
+.message_message-body > span pre:has(.language-javascript)::after {
+  content: "JavaScript";
+}
+
+.message_message-body > span pre:has(.language-php)::after {
+  content: "PHP";
+}
+
+.message_message-body > span pre:has(.language-python)::after {
+  content: "Python";
+}
+
+.message_message-body > span pre:has(.language-typescript)::after {
+  content: "TypeScript";
+}
+
+.message_message-body > span pre:has(.language-xml)::after {
+  content: "XML";
+}
+
+.message_message-body > span blockquote {
+  border-left: 5px solid #ccc;
+  margin: 0px;
+  overflow: hidden;
+  padding-left: 1.5em;
+  padding-right: 1.5em;
+}
+
+.message_message-body > span span.mention {
+  color: rgb(18, 100, 163);
+  background-color: #f2c74466;
+  padding: 2px;
+}
+
+#edit {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  column-gap: 10px;
+  align-items: center;
+}
+
+#message_editor {
+  grid-area: d;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border: 1px solid lightgray !important;
+  border-radius: 10px;
+  box-sizing: border-box;
+  padding-bottom: 30px;
 }
