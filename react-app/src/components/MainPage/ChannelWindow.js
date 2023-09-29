@@ -324,7 +324,6 @@ export function ChannelWindow({ socket }) {
             }}
             onChange={(e, editor) => {
               setNewMessage(editor.getData())
-              console.log(editor.getData())
             }}
             onFocus={() => {
               setFocused(true)
@@ -361,7 +360,6 @@ export function ChannelWindow({ socket }) {
                   writer.setSelection(latestSelection);
                 })
               }}
-              ref={emojiButtonRef}
             >
               <img src="/mention.svg" alt="format" />
             </button>
