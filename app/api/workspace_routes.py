@@ -124,7 +124,7 @@ def create_workspace():
             user=current_user
         )
         if current_user.active_workspace:
-            prev_workspace_user = WorkspaceUser.query.get((current_user.active_workspace.id, current_user.id))
+            prev_workspace_user = WorkspaceUser.query.get((current_user.active_workspace.id, current_user.id)) if current_user.active_workspace else None
             if prev_workspace_user:
                 if has_read_messages(current_user.active_workspace, current_user):
                     prev_workspace_user.last_viewed_at = datetime.utcnow()
@@ -179,7 +179,7 @@ def create_channel(id):
             user=current_user
         )
         if current_user.active_workspace:
-            prev_workspace_user = WorkspaceUser.query.get((current_user.active_workspace.id, current_user.id))
+            prev_workspace_user = WorkspaceUser.query.get((current_user.active_workspace.id, current_user.id)) if current_user.active_workspace else None
             if prev_workspace_user:
                 prev_active_channel = prev_workspace_user.active_channel
                 if prev_active_channel:
@@ -271,7 +271,7 @@ def join_workspace(id):
             user=current_user
         )
         if current_user.active_workspace:
-            prev_workspace_user = WorkspaceUser.query.get((current_user.active_workspace.id, current_user.id))
+            prev_workspace_user = WorkspaceUser.query.get((current_user.active_workspace.id, current_user.id)) if current_user.active_workspace else None
             if prev_workspace_user:
                 if has_read_messages(current_user.active_workspace, current_user):
                     prev_workspace_user.last_viewed_at = datetime.utcnow()

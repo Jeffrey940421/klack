@@ -68,7 +68,7 @@ def update_active_workspace(id):
     if form.validate_on_submit():
         workspace_id = form.data["active_workspace_id"]
         if workspace_id in [workspace.id for workspace in user.workspaces]:
-            prev_workspace_user = WorkspaceUser.query.get((user.active_workspace.id, user.id))
+            prev_workspace_user = WorkspaceUser.query.get((user.active_workspace.id, user.id)) if user.active_workspace else None
             if prev_workspace_user:
                 if has_read_messages(user.active_workspace, user):
                     prev_workspace_user.last_viewed_at = datetime.utcnow()
