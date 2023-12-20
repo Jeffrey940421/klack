@@ -1,10 +1,12 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request
+from sqlalchemy.orm import joinedload
 from flask_login import login_required, current_user
-from app.models import User, Workspace, Channel, db, WorkspaceUser, ChannelUser
-from app.forms import ActiveWorkspaceForm, ActiveChannelForm
+from app.models import User, Workspace, Channel, db, WorkspaceUser
+from app.forms import ActiveWorkspaceForm
 from datetime import datetime
 
 user_routes = Blueprint('users', __name__)
+
 
 def validation_errors_to_error_messages(validation_errors):
     """
@@ -16,102 +18,79 @@ def validation_errors_to_error_messages(validation_errors):
             errorMessages.append(f'{field} : {error}')
     return errorMessages
 
-def has_read_messages(workspace, user):
-    """
-    Return a boolean indicating wheather users have read all the messages in the channels that they are in in the given workspace
-    """
-    channels = [channel for channel in workspace.channels if user in channel.users]
-    workspace_user = WorkspaceUser.query.get((workspace.id, user.id))
-    active_channel = workspace_user.active_channel
-    for channel in channels:
-        if channel != active_channel:
-            channel_user = ChannelUser.query.get((channel.id, user.id))
-            for message in channel.messages:
-                if message.created_at > channel_user.last_viewed_at:
-                    return False
-    return True
 
-@user_routes.route('/')
+@user_routes.route('/current')
 @login_required
 def users():
     """
-    Query for all users and returns them in a list of user dictionaries
+    Query for all the users that are in the same workspaces as the current user and return workspaces' profiles
     """
-    users = User.query.all()
-    return {'users': [user.to_dict_summary() for user in users]}
+    user = User.query.options(
+        joinedload(User.workspace_associations)
+        .joinedload(WorkspaceUser.workspace)
+        .joinedload(Workspace.user_associations)
+        .joinedload(WorkspaceUser.user)
+    ).filter(User.id == current_user.id).first()
+    workspace_users = [
+        workspace_user for workspace in user.workspaces for workspace_user in workspace.user_associations]
+
+    return {'users': [workspace_user.to_dict() for workspace_user in workspace_users]}
 
 
 @user_routes.route('/<int:id>')
 @login_required
 def user(id):
     """
-    Query for a user by id and returns that user in a dictionary
+    Query for a user by id and return user's information
     """
     user = User.query.get(id)
     if not user:
         return {"errors": ["User is not found"]}, 404
-    return user.to_dict_detail()
+    return user.to_dict()
+
 
 @user_routes.route('/<int:id>/active_workspace', methods=["PUT"])
 @login_required
 def update_active_workspace(id):
     """
-    Update the active workspace of current user
+    Update the last viewed time of the active channel of the active workspace, update the active workspace, and return the updated user information
     """
     form = ActiveWorkspaceForm()
     form['csrf_token'].data = request.cookies['csrf_token']
-    user = User.query.get(id)
+    user = User.query.options(
+        joinedload(User.workspace_associations)
+        .joinedload(WorkspaceUser.workspace),
+        joinedload(User.workspace_associations)
+        .joinedload(WorkspaceUser.active_channel)
+        .joinedload(Channel.user_associations)
+    ).filter(User.id == id).first()
     if not user:
         return {"errors": ["User is not found"]}, 404
     if user != current_user:
-        return {"errors": ["Users are only allowed to update their own active workspaces"]}, 403
+        return {"errors": ["User is only authorized to update their own active workspaces"]}, 403
     if form.validate_on_submit():
-        workspace_id = form.data["active_workspace_id"]
-        if workspace_id in [workspace.id for workspace in user.workspaces]:
-            prev_workspace_user = WorkspaceUser.query.get((user.active_workspace.id, user.id)) if user.active_workspace else None
-            if prev_workspace_user:
-                if has_read_messages(user.active_workspace, user):
-                    prev_workspace_user.last_viewed_at = datetime.utcnow()
-                prev_active_channel = prev_workspace_user.active_channel
-                if prev_active_channel:
-                    prev_channel_user = ChannelUser.query.get((prev_active_channel.id, current_user.id))
-                    if prev_channel_user:
-                        prev_channel_user.last_viewed_at = datetime.utcnow()
-            user.active_workspace_id = workspace_id
-            db.session.commit()
-            return user.to_dict_detail()
+        new_active_workspace_id = form.data["active_workspace_id"]
+        current_active_workspace_id = user.active_workspace_id
+        if new_active_workspace_id not in [workspace.id for workspace in user.workspaces] and new_active_workspace_id != 0:
+            return {"errors": "User must join the workspace before setting it as active workspace"}, 403
+        # Update the last viewed time of the active channel of the current active workspace if the current user has an active workspace and the active workspace has an active channel
+        current_workspace_user = next(
+            (workspace_user for workspace_user in user.workspace_associations if workspace_user.workspace_id == current_active_workspace_id), None)
+        if current_workspace_user:
+            current_active_channel = current_workspace_user.active_channel
+            if current_active_channel:
+                current_channel_user = next(
+                    (channel_user for channel_user in current_active_channel.user_associations if channel_user.user_id == id), None)
+                if current_channel_user:
+                    current_channel_user.last_viewed_at = datetime.utcnow()
+        # Update the active workspace of the current user
+        if new_active_workspace_id == 0:
+            user.active_workspace_id = None
         else:
-            return {"errors": "Users are only allowed to set the workspaces that they have joined as active"}
-    return {'errors': validation_errors_to_error_messages(form.errors)}, 401
-
-@user_routes.route('/<int:id>/active_channel', methods=["PUT"])
-@login_required
-def update_active_channel(id):
-    """
-    Update the active channel of current user in the active workspace
-    """
-    form = ActiveChannelForm()
-    form['csrf_token'].data = request.cookies['csrf_token']
-    user = User.query.get(id)
-    if not user:
-        return {"errors": ["User is not found"]}, 404
-    if user != current_user:
-        return {"errors": ["Users are only allowed to update their own active channels"]}, 403
-    if form.validate_on_submit():
-        channel_id = form.data["active_channel_id"]
-        channel = Channel.query.get(channel_id)
-        if current_user not in channel.users:
-            return {"errors": "Users are only allowed to set the channels that they have joined as active"}, 403
-        if channel not in current_user.active_workspace.channels:
-            return {"errors": "Users are only allowed to set the channels that are in the active workspace as active"}, 403
-        workspace_user = WorkspaceUser.query.get((user.active_workspace.id, user.id))
-        if workspace_user:
-            prev_active_channel = workspace_user.active_channel
-            if prev_active_channel:
-                channel_user = ChannelUser.query.get((prev_active_channel.id, current_user.id))
-                if channel_user:
-                    channel_user.last_viewed_at = datetime.utcnow()
-            workspace_user.active_channel = channel
+            user.active_workspace_id = new_active_workspace_id
         db.session.commit()
-        return user.to_dict_detail()
+        return {
+            'user': user.to_dict(),
+            'prevActiveChannel': current_active_channel.to_dict(current_channel_user) if current_workspace_user and current_active_channel and current_channel_user else None
+        }
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401

@@ -2,6 +2,7 @@
   display: grid;
   grid-template-columns: 80px auto 1fr;
   height: calc(100vh - 60px);
+  overflow: hidden;
 }
 
 #chat-room_workspaces-sidebar-container {
@@ -283,7 +284,7 @@
   background-color: #f8f8f8;
   box-sizing: border-box;
   padding: 12px 0px;
-  z-index: 10;
+  z-index: 1002;
 }
 
 #chat-room_workspace-dropdown li:nth-child(1) {
@@ -337,6 +338,7 @@
   padding: 5px 7px;
   border-radius: 5px;
   font-size: 12px;
+  width: 22px;
 }
 
 #chat-room_channel button:hover {
@@ -464,6 +466,7 @@
   padding: 0px 10px 10px 0px;
   width: 100%;
   box-sizing: border-box;
+  position: relative;
   max-height: calc(100vh - 60px);
 }
 
@@ -473,10 +476,71 @@
   width: 100%;
   border-top-right-radius: 15px;
   border-bottom-right-radius: 15px;
-  padding: 15px 0px;
+  padding-top: 15px;
   box-sizing: border-box;
   display: grid;
   grid-template-rows: auto auto 1fr auto;
+  overflow: auto;
+  position: relative;
+  transition: border-radius 0.2s ease-in-out;
+}
+
+#channel-window_background.shrink {
+  border-radius: 0px !important;
+  z-index: 20;
+  border-right: 1px solid rgb(180, 180, 180);
+  transition: none;
+}
+
+#channel-window_thread {
+  width: 40%;
+  height: 100%;
+  position: absolute;
+  top: 0px;
+  background-color: #611f69;
+  padding-bottom: 10px;
+  padding-right: 10px;
+  box-sizing: border-box;
+  transition: width 0.2s ease-in-out;
+}
+
+#channel-window_thread.expand {
+  width: calc(40% + 10px);
+  transition: none;
+}
+
+#channel-window_background::-webkit-scrollbar {
+  background-color: transparent !important;
+  width: 16px !important;
+  position: absolute;
+}
+
+#channel-window_background::-webkit-scrollbar-track {
+  background-color: transparent !important;
+  position: absolute;
+}
+
+#channel-window_background::-webkit-scrollbar-thumb {
+  background-color: #babac0 !important;
+  border-radius: 16px !important;
+  border: 4px solid white !important;
+  position: absolute;
+  margin: 20px 0px !important
+}
+
+#channel-window_background::-webkit-scrollbar-track-piece:end {
+  background: transparent;
+  margin-bottom: 5px;
+}
+
+#channel-window_background::-webkit-scrollbar-track-piece:start {
+  background: transparent;
+  margin-top: 5px;
+}
+
+#channel-window_background::-webkit-scrollbar-button {
+  display: none;
+  position: absolute;
 }
 
 #channel-window_title {
@@ -555,7 +619,7 @@
   background-color: #f8f8f8;
   box-sizing: border-box;
   padding: 12px 0px;
-  z-index: 10;
+  z-index: 1002;
 }
 
 #channel-window_channel-dropdown li {
@@ -578,16 +642,32 @@
   overflow: hidden;
 }
 
+#channel-window_textarea-background {
+  box-sizing: border-box;
+  position: absolute;
+  height: 165px;
+  width: 100%;
+  left: 0px;
+  bottom: 0px;
+  background-color: white;
+  z-index: 3;
+  border-bottom-right-radius: 15px;
+}
+
 #channel-window_textarea {
+  z-index: 4;
   margin: 0px 20px 10px 20px;
   box-sizing: border-box;
   border: 1px solid lightgray;
-  position: relative;
+  position: absolute;
   border-radius: 10px;
   /* padding: 20px 12px 40px 12px; */
   padding-bottom: 30px;
   height: fit-content;
   width: calc(100% - 40px);
+  left: 0px;
+  bottom: 15px;
+  background-color: white;
 }
 
 /* #channel-window_textarea > div {
@@ -647,7 +727,7 @@
 
 #channel-window_textarea-submit {
   background-color: rgb(7, 126, 7);
-  border: none;
+  border: 1px solid rgb(7, 126, 7);
   width: fit-content;
   position: absolute;
   bottom: 0px;
@@ -668,6 +748,7 @@
 
 #channel-window_textarea-submit:disabled {
   background-color: white;
+  border: 1px solid white;
   color: lightgray;
   cursor: default;
 }
@@ -683,7 +764,7 @@
   color: white;
   background-color: #611f69;
   position: relative;
-  left: 10px;
+  left: 0px;
 }
 
 .chat-room_workspace-message-alert {
@@ -699,7 +780,7 @@
   justify-content: center;
 }
 
-.chat-room_workspace-message-alert > div {
+.chat-room_workspace-message-alert>div {
   width: 10px;
   height: 10px;
   border-radius: 20px;
@@ -741,7 +822,7 @@
 
 .ck-editor__editable * {
   word-break: break-all !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   line-height: 140%;
 }
 
@@ -768,11 +849,11 @@
   text-align: left;
 }
 
-.ck-editor__editable ol > li::before {
+.ck-editor__editable ol>li::before {
   content: counter(list0) ". ";
 }
 
-.ck-editor__editable ol > li ol > li::before {
+.ck-editor__editable ol>li ol>li::before {
   content: counter(list0, lower-alpha) ". ";
 }
 
@@ -793,11 +874,11 @@
   text-align: left;
 }
 
-.ck-editor__editable ul > li::before {
+.ck-editor__editable ul>li::before {
   content: "•";
 }
 
-.ck-editor__editable ul > li ul > li::before {
+.ck-editor__editable ul>li ul>li::before {
   content: "○";
 }
 
@@ -839,7 +920,10 @@
 .ck-editor__editable span.mention {
   color: rgb(18, 100, 163);
   background-color: #f2c74466;
-  padding: 2px;
+  padding: 3px;
+  border-radius: 5px;
+  box-sizing: border-box !important;
+  cursor: default;
 }
 
 .ck-editor__editable::-webkit-scrollbar {
@@ -869,7 +953,7 @@
 
 .ck-editor__editable::-webkit-scrollbar-track-piece:start {
   background: transparent;
-  margin-top: 20px;
+  margin-top: 18px;
 }
 
 .ck-focused {
@@ -890,7 +974,7 @@
   cursor: pointer !important;
 }
 
-.ck-button:not(.ck-list__item button, .ck-splitbutton__action, .ck-splitbutton__arrow) {
+.ck-button:not(.ck-list__item button, .ck-splitbutton__action, .ck-splitbutton__arrow, .mention-list-item) {
   border-radius: 5px !important;
   border: none !important;
 }
@@ -905,7 +989,7 @@
   border: none !important;
 }
 
-.ck-on {
+.ck-on:not(.mention-list-item) {
   background-color: rgb(226, 226, 226) !important;
   color: black !important
 }
@@ -956,7 +1040,7 @@
   box-shadow: none !important;
   border-radius: 5px !important;
   border: 1px solid lightgray !important;
-  z-index: 1003 !important;
+  z-index: 1050 !important;
 }
 
 .ck-dropdown__panel::-webkit-scrollbar {
@@ -981,6 +1065,7 @@
 
 .ck-dropdown__panel li {
   border-radius: 0px !important;
+  z-index: 1060 !important;
 }
 
 .ck-splitbutton__action {
@@ -1017,6 +1102,61 @@
   border-radius: 10px !important;
   box-shadow: none !important;
   border: none !important;
+}
+
+.mention-list-item {
+  display: flex;
+  align-items: center;
+  column-gap: 10px;
+  border-radius: 0px !important;
+  cursor: pointer !important;
+  background-color: white !important;
+}
+
+.mention-list-item * {
+  cursor: pointer !important;
+}
+
+.mention-list-item:hover {
+  background-color: rgb(243, 241, 241) !important;
+}
+
+.mention-list-avatar-wrapper {
+  width: 25px !important;
+  height: 25px !important;
+  aspect-ratio: 1 / 1 !important;
+  object-fit: cover !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.mention-list-avatar-wrapper:not(.mention-list-channel-icon) img {
+  width: 100% !important;
+  border-radius: 5px !important;
+}
+
+.mention-list-channel-icon img {
+  width: 70% !important;
+}
+
+.mention-list-username {
+  font-family: "circular_stdbook", sans-serif !important;
+  display: flex !important;
+  align-items: center !important;
+  font-size: 13px !important;
+  font-weight: bold !important;
+}
+
+.mention-list-email {
+  font-family: "circular_stdbook", sans-serif !important;
+  display: flex !important;
+  align-items: center !important;
+  font-size: 13px !important;
+}
+
+.ck-balloon-rotator__content {
+  padding: 10px 0px !important;
 }
 
 #channel-window_textarea-format,
@@ -1081,7 +1221,7 @@
   color: #676767;
 }
 
-.EmojiPickerReact {
+#channel-window_emoji-picker .EmojiPickerReact {
   position: absolute !important;
   bottom: 80px;
   left: -10px;
@@ -1089,6 +1229,7 @@
   --epr-emoji-size: 20px !important;
   font-size: 15px;
   --epr-preview-height: 60px !important;
+  z-index: 1100 !important;
 }
 
 .epr-body::-webkit-scrollbar {
@@ -1112,13 +1253,31 @@
 }
 
 .epr-preview .epr-emoji-native {
-  font-size: 25px !important;
+  font-size: 20px !important;
+}
+
+.epr-category-nav .epr-btn {
+  --epr-category-navigation-button-size: 20px !important
+}
+
+.epr-emoji-category-label {
+  font-family: "circular_stdbook", sans-serif !important;
+  font-size: 14px !important;
+  height: fit-content !important
+}
+
+.epr-preview {
+  --epr-preview-height: 40px !important;
+}
+
+.epr-preview-emoji-label {
+  font-family: "circular_stdbook", sans-serif !important;
 }
 
 #channel-window_instruction {
   font-size: 10.5px;
   position: absolute;
   bottom: -30px;
-  right: 10px;
+  right: 0px;
   color: gray;
 }

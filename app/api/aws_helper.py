@@ -1,5 +1,4 @@
 import boto3
-import botocore
 import os
 import uuid
 
@@ -17,7 +16,7 @@ s3 = boto3.client(
 def get_unique_filename(filename):
     ext = filename.rsplit(".", 1)[1].lower()
     unique_filename = uuid.uuid4().hex
-    return f"{unique_filename}.{ext}"
+    return f"{filename}-{unique_filename}.{ext}"
 
 
 def upload_file_to_s3(file, acl="public-read"):

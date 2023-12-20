@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createInvitation } from "../../store/workspaces";
+import * as sessionActions from "../../store/session";
 import { usePopup } from "../../context/Popup";
 import { useModal } from "../../context/Modal";
 import "./Invitation.css"
@@ -23,18 +23,18 @@ function SentInvitation({ sentInvitations }) {
   )
 }
 
-export function Invitation() {
+export function Invitation({ workspace }) {
   const dispatch = useDispatch();
   const [emails, setEmails] = useState([])
   const [newEmail, setNewEmail] = useState("")
   const [validationErrors, setValidationErrors] = useState([])
   const [focused, setFocuesd] = useState(false)
   const [serverErrors, setServerErrors] = useState({ emails: [], other: [] })
+  const [response, setResponse] = useState({})
+  const sessionUser = useSelector(state => state.session.user)
+  const users = useSelector(state => state.users)
   const { setPopupContent } = usePopup()
   const { closeModal } = useModal()
-  const [response, setResponse] = useState({})
-  const workspace = useSelector((state) => state.workspaces.activeWorkspace)
-  const user = useSelector((state) => state.session.user)
   const inputRef = useRef()
   const divRef = useRef()
   const emailRef = useRef()
@@ -49,16 +49,14 @@ export function Invitation() {
 
   const sendInvitation = async (e) => {
     e.preventDefault();
-
     const data = await Promise.all(
       emails.map(email => {
-        return dispatch(createInvitation(workspace.id, email.toLowerCase()))
+        return dispatch(sessionActions.sendInvitation(workspace.id, email.toLowerCase()))
       })
     )
 
     if (data.filter(res => res).length) {
       const res = {}
-
       data.forEach((resData, i) => {
         res[emails[i]] = resData
       })
@@ -87,23 +85,17 @@ export function Invitation() {
       email = email.toLowerCase()
       if (!validateEmail(email)) {
         errors.push(`${email} is not a valid email`)
-      } else if (Object.values(workspace.users).map(user => user.email).includes(email)) {
+      } else if (Object.values(users[workspace.id]).find(user => user.email === email)) {
         errors.push(`User ${email} is already in the workspace`)
-      } else if (email === user.email) {
+      } else if (email === sessionUser.email) {
         errors.push(`Users are not allowed to invite themselves`)
-      } else if (Object.values(workspace.associatedInvitations)
-        .filter(invitation => invitation.status === "pending")
-        .map(invitation => invitation.recipientEmail)
-        .includes(email)) {
-        errors.push(`User ${email} has already received an invitation. Please wait for his/her response patiently`)
       } else {
         errors.push("No Error")
       }
     }
 
     setValidationErrors(errors)
-
-  }, [emails, user, workspace])
+  }, [emails, sessionUser, workspace])
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -115,14 +107,12 @@ export function Invitation() {
         } else {
           inputRef.current.focus()
         }
-
       }
     }
+
     document.addEventListener("click", handleClick)
 
-    return (() => {
-      document.removeEventListener("click", handleClick)
-    })
+    return (() => document.removeEventListener("click", handleClick))
   }, [emails])
 
   return (
@@ -132,7 +122,7 @@ export function Invitation() {
       <div
         ref={divRef}
         id="invitation_input"
-        className={(focused ? "focused " : "") + (validationErrors.filter(error => error !== "No Error").length || Object.values(serverErrors).flat().length ? "error" : "")}
+        className={`${focused ? "focused" : ""}${validationErrors.filter(error => error !== "No Error").length || Object.values(serverErrors).flat().length ? " error" : ""}`}
       >
         {emails.map(((email, i) => {
           return (

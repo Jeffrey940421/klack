@@ -1,38 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../../store/session";
-import { Redirect } from "react-router-dom";
-import './NoWorkspace.css';
+import * as sessionActions from "../../store/session";
 import { useModal } from "../../context/Modal";
 import { CreateWorkspace } from "../CreateWorkspace";
-import { addInvitation } from "../../store/session";
+import './NoWorkspace.css';
 
-export function NoWorkspace({ isLoaded, socket }) {
+export function NoWorkspace() {
   const dispatch = useDispatch();
   const sessionUser = useSelector((state) => state.session.user);
   const { setModalContent } = useModal()
-
-  useEffect(() => {
-    socket.on("send_invitation", async (data) => {
-      const invitation = data.invitation
-      await dispatch(addInvitation(invitation))
-    })
-
-    return (() => {
-      socket.off("send_invitation");
-    })
-  }, [])
 
   return (
     <div id="no-workspace_container">
       <header id="no-workspace_header">
         <img id="no-workspace_logo" className="logo" src="/klack_logo.svg" alt="logo" />
-        {isLoaded && (
-          <div id="no-workspace_account">
-            <span>Confirmed as <b>{sessionUser.email}</b></span>
-            <a onClick={() => dispatch(logout())}>Change</a>
-          </div>
-        )}
+        <div id="no-workspace_account">
+          <span>Confirmed as <b>{sessionUser.email}</b></span>
+          <a onClick={() => dispatch(sessionActions.logout())}>Change</a>
+        </div>
       </header>
       <div id="no-workspace_body">
         <div id="no-workspace_create">

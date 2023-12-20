@@ -21,11 +21,11 @@
   font-size: 16px;
   font-weight: 100;
   color: gray;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 #message_intro button {
-  width: 120px;
+  width: 150px;
   height: 30px;
   border: 1px solid lightgray;
   background-color: transparent;
@@ -40,15 +40,15 @@
   display: grid;
   grid-template-areas:
     "a b"
-    "a c"
-    "a d";
+    "a c";
   grid-template-columns: auto 1fr;
   grid-template-rows: auto auto;
   column-gap: 10px;
-  row-gap: 5px;
-  padding: 10px 20px 5px 20px;
+  row-gap: 3px;
+  padding: 14px 20px 14px 20px;
   box-sizing: border-box;
   position: relative;
+  scroll-margin-bottom: 160px;
 }
 
 .message_message-body img {
@@ -60,54 +60,54 @@
   grid-area: a;
 }
 
-.message_message-body > div:nth-child(2) {
+.message_message-body>div:nth-child(2) {
   display: flex;
   column-gap: 10px;
   align-items: flex-end;
 }
 
-.message_message-body div span:nth-child(1){
-  font-size: 15px;
+.message_message-body div span:nth-child(1) {
+  font-size: 14px;
   font-weight: bold;
 }
 
-.message_message-body div span:nth-child(2){
+.message_message-body div span:nth-child(2) {
   font-size: 12px;
   color: gray
 }
 
-.message_message-body > span {
-  font-size: 15px;
+.message_message-body>span {
+  font-size: 14px;
   white-space: pre-wrap
 }
 
-.message_system-message > span {
+.message_system-message>span {
   color: gray
 }
 
-.message_message-body > span * {
-  font-size: 15px;
+.message_message-body>span * {
+  font-size: 14px;
   word-break: break-all;
   white-space: pre-wrap !important;
 }
 
 
-.message_message-body > span p {
+.message_message-body>span p {
   margin: 0px !important;
 }
 
-.message_message-body > span ol {
+.message_message-body>span ol {
   display: block;
   margin: 0px !important;
   text-align: left;
   counter-reset: list0;
 }
 
-.message_message-body > span ol li {
+.message_message-body>span ol li {
   margin-left: 20px;
 }
 
-.message_message-body > span ol li::before {
+.message_message-body>span ol li::before {
   counter-increment: list0 1;
   display: inline-block;
   width: 1.3em;
@@ -115,39 +115,50 @@
   text-align: left;
 }
 
-.message_message-body > span ol > li::before {
+.message_message-body>span ol>li::before {
   content: counter(list0) ". ";
 }
-.message_message-body > span ol > li ol > li::before {
+
+.message_message-body>span ol>li ol>li::before {
   content: counter(list0, lower-alpha) ". ";
 }
 
-.message_message-body > span ul {
+.message_message-body>span ul {
   display: block;
   margin: 0px !important;
   text-align: left;
 }
 
-.message_message-body > span ul li {
+.message_message-body>span ul li {
   margin-left: 20px;
 }
 
-.message_message-body > span ul li::before {
+.message_message-body>span ul li::before {
   display: inline-block;
   width: 1.3em;
   margin-left: -1.3em;
   text-align: left;
 }
 
-.message_message-body > span ul > li::before {
+.message_message-body>span ul>li::before {
   content: "•";
 }
 
-.message_message-body > span ul > li ul > li::before {
+.message_message-body>span ul>li ul>li::before {
   content: "○";
 }
 
-.message_message-body > span pre {
+.message_message-body>span p code {
+  font-family: Monaco, Menlo, Consolas !important;
+  font-size: 12px !important;
+  line-height: 150%;
+  border: 1px solid lightgray;
+  border-radius: 3px;
+  background-color: rgba(29, 28, 29, 0.04) !important;
+  padding: 2px 3px !important;
+}
+
+.message_message-body>span pre {
   word-wrap: break-word;
   word-break: break-all !important;
   line-height: 140%;
@@ -166,7 +177,7 @@
   position: relative;
 }
 
-.message_message-body > span pre:after {
+.message_message-body>span pre:after {
   background: #757575;
   color: #fff;
   font-size: 10px;
@@ -181,69 +192,69 @@
   border-bottom-right-radius: 5px !important;
 }
 
-.message_message-body > span pre code {
+.message_message-body>span pre code {
   font-family: Monaco, Menlo, Consolas !important;
   font-size: 12px !important;
   line-height: 150%;
 }
 
-.message_message-body > span pre:has(.language-cs)::after {
+.message_message-body>span pre:has(.language-cs)::after {
   content: "C#";
 }
 
-.message_message-body > span pre:has(.language-plaintext)::after {
+.message_message-body>span pre:has(.language-plaintext)::after {
   content: "Plain Text";
 }
 
-.message_message-body > span pre:has(.language-c)::after {
+.message_message-body>span pre:has(.language-c)::after {
   content: "C";
 }
 
-.message_message-body > span pre:has(.language-cpp)::after {
+.message_message-body>span pre:has(.language-cpp)::after {
   content: "C++";
 }
 
-.message_message-body > span pre:has(.language-css)::after {
+.message_message-body>span pre:has(.language-css)::after {
   content: "CSS";
 }
 
-.message_message-body > span pre:has(.language-diff)::after {
+.message_message-body>span pre:has(.language-diff)::after {
   content: "Diff";
 }
 
-.message_message-body > span pre:has(.language-diff)::after {
+.message_message-body>span pre:has(.language-diff)::after {
   content: "Diff";
 }
 
-.message_message-body > span pre:has(.language-html)::after {
+.message_message-body>span pre:has(.language-html)::after {
   content: "HTML";
 }
 
-.message_message-body > span pre:has(.language-java)::after {
+.message_message-body>span pre:has(.language-java)::after {
   content: "Java";
 }
 
-.message_message-body > span pre:has(.language-javascript)::after {
+.message_message-body>span pre:has(.language-javascript)::after {
   content: "JavaScript";
 }
 
-.message_message-body > span pre:has(.language-php)::after {
+.message_message-body>span pre:has(.language-php)::after {
   content: "PHP";
 }
 
-.message_message-body > span pre:has(.language-python)::after {
+.message_message-body>span pre:has(.language-python)::after {
   content: "Python";
 }
 
-.message_message-body > span pre:has(.language-typescript)::after {
+.message_message-body>span pre:has(.language-typescript)::after {
   content: "TypeScript";
 }
 
-.message_message-body > span pre:has(.language-xml)::after {
+.message_message-body>span pre:has(.language-xml)::after {
   content: "XML";
 }
 
-.message_message-body > span blockquote {
+.message_message-body>span blockquote {
   border-left: 5px solid #ccc;
   margin: 0px;
   overflow: hidden;
@@ -251,25 +262,17 @@
   padding-right: 1.5em;
 }
 
-.message_message-body > span span.mention {
+.message_message-body>span span.mention {
   color: rgb(18, 100, 163);
   background-color: #f2c74466;
-  padding: 2px;
-}
-
-#edit {
-  position: absolute;
-  bottom: 0px;
-  right: 0px;
-  padding: 10px;
-  box-sizing: border-box;
-  display: flex;
-  column-gap: 10px;
-  align-items: center;
+  padding: 3px;
+  border-radius: 5px;
+  box-sizing: border-box !important;
+  cursor: default;
 }
 
 #message_editor {
-  grid-area: d;
+  grid-area: b;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -277,4 +280,306 @@
   border-radius: 10px;
   box-sizing: border-box;
   padding-bottom: 30px;
+  background-color: white;
+  position: relative;
+}
+
+.message_message-body>span~button {
+  position: absolute;
+  top: 0px;
+  right: 20px;
+  padding-top: 9px;
+  box-sizing: border-box;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  font-size: 18px;
+  color: gray;
+}
+
+.message_message-body>span~button:hover {
+  color: gray;
+}
+
+.message_message-body:hover {
+  background-color: rgb(243, 241, 241);
+}
+
+.message_message-body:hover>span~button {
+  display: flex;
+}
+
+.message_dropdown:has(~ .message_dropdown-content:not(.hidden)) {
+  display: flex;
+}
+
+.message_dropdown-content {
+  position: absolute;
+  top: 0px;
+  padding-top: 5px;
+  right: 55px;
+  box-sizing: border-box;
+  display: flex;
+  column-gap: 10px;
+  align-items: center;
+  background-color: transparent;
+  z-index: 2;
+  display: flex;
+}
+
+.message_dropdown-content button {
+  border: none;
+  background-color: transparent;
+  font-size: 16px;
+  color: gray;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 25px;
+  width: 25px;
+  background-color: transparent;
+  border-radius: 5px;
+}
+
+.message_dropdown-content button:hover {
+  background-color: lightgray;
+}
+
+.message_dropdown-button-name {
+  display: none;
+  position: absolute;
+  font-size: 12px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  top: 37px;
+  padding: 5px;
+  width: fit-content;
+  white-space: nowrap;
+  border-radius: 5px;
+}
+
+.message_dropdown-button-name:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border: 4px solid transparent;
+  border-bottom-color: rgba(0, 0, 0, 0.8);
+  border-top: 0;
+  margin-left: -4px;
+  margin-top: -4px;
+}
+
+.message_dropdown-content button:hover .message_dropdown-button-name {
+  display: flex;
+}
+
+#message_buttons {
+  background-color: transparent;
+  width: 100%;
+  height: 35px;
+  position: absolute;
+  z-index: 2 !important;
+  bottom: 10px;
+}
+
+#message_textarea-format,
+#message_textarea-emoji,
+#message_textarea-mention {
+  background-color: transparent;
+  border: none;
+  position: absolute;
+  z-index: 1001 !important;
+  height: 28px;
+  width: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+}
+
+#message_textarea-format {
+  left: 10px;
+  bottom: 0px;
+}
+
+#message_textarea-emoji {
+  font-size: 18px;
+  left: 45px;
+  bottom: 0px;
+  color: #676767;
+}
+
+#message_textarea-mention {
+  font-size: 18px;
+  left: 80px;
+  bottom: 0px;
+  color: #676767;
+}
+
+#message_textarea-format:hover,
+#message_textarea-emoji:hover,
+#message_textarea-mention:hover {
+  background-color: rgb(243, 241, 241);
+  cursor: pointer;
+}
+
+#message_textarea-format img,
+#message_textarea-mention img {
+  height: 20px;
+  filter: invert(38%) sepia(5%) saturate(21%) hue-rotate(323deg) brightness(102%)
+}
+
+#message_textarea-format.show-format::after {
+  background: #676767;
+  border-radius: 9999px;
+  bottom: 4px;
+  content: "";
+  height: 2px;
+  left: 50%;
+  position: absolute;
+  transform: translate(-50%, 2px);
+  transition: opacity 80ms, transform 80ms;
+  width: 75%;
+  color: #676767;
+}
+
+#message_instruction {
+  font-size: 10.5px;
+  position: relative;
+  grid-area: c;
+  color: gray;
+  display: flex;
+  justify-content: flex-end;
+}
+
+#message_instruction b {
+  font-size: 10.5px;
+}
+
+#message_textarea-submit {
+  background-color: rgb(7, 126, 7);
+  border: 1px solid rgb(7, 126, 7);
+  width: 60px;
+  position: absolute;
+  bottom: 0px;
+  right: 12px;
+  padding: 8px;
+  border-radius: 5px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  column-gap: 5px;
+  z-index: 1002 !important;
+}
+
+#message_textarea-submit:hover {
+  background-color: rgb(6, 153, 6);
+}
+
+#message_textarea-submit:disabled {
+  background-color: rgb(238, 236, 236);
+  border: 1px solid rgb(238, 236, 236);
+  color: gray;
+  cursor: default;
+}
+
+#message_textarea-cancel {
+  background-color: white;
+  border: 1px solid lightgray;
+  width: 60px;
+  position: absolute;
+  bottom: 0px;
+  right: 85px;
+  padding: 8px;
+  border-radius: 5px;
+  color: gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  column-gap: 5px;
+  z-index: 1002 !important;
+}
+
+#message_textarea-cancel:hover {
+  background-color: rgb(247, 247, 247);
+}
+
+#message_emoji-picker .EmojiPickerReact {
+  position: absolute !important;
+  left: 20px;
+  border: 1px solid lightgray !important;
+  --epr-emoji-size: 20px !important;
+  font-size: 15px;
+  --epr-preview-height: 60px !important;
+  z-index: 1100 !important;
+}
+
+#scroll_outer:has(#message_emoji-picker:not(.hidden)) {
+  overflow-y: hidden !important;
+  padding-right: 16px !important;
+}
+
+.message_edited {
+  font-size: 12px !important;
+  color: gray;
+  cursor: default;
+}
+
+.message_thread {
+  display: flex;
+  align-items: center;
+  column-gap: 10px;
+  cursor: pointer;
+  width: min(700px, 100%);
+  padding: 5px;
+  box-sizing: border-box;
+  position: relative;
+  left: -6px;
+  top: -3px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  margin-top: 2px;
+}
+
+.message_thread:hover {
+  background-color: white;
+  border: 1px solid lightgray;
+}
+
+.message_thread:hover::after {
+  content: ">";
+  font-family: "circular_stdbook", sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+  position: absolute;
+  right: 10px;
+  color: gray;
+}
+
+.message_thread img {
+  width: 25px;
+  height: 25px;
+  aspect-ratio: 1 / 1;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.message_thread span {
+  font-size: 13px !important;
+  color: #1264a3 !important;
+  font-weight: bold;
+}
+
+.message_thread span:hover {
+  text-decoration: underline;
+}
+
+.message_colored {
+  background-color: #FCF4DA !important;
 }

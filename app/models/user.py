@@ -2,7 +2,6 @@ from .db import db, environment, SCHEMA, add_prefix_for_prod
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from sqlalchemy.sql import func
-from .workspace_users import WorkspaceUser
 from sqlalchemy.ext.associationproxy import association_proxy
 
 
@@ -25,7 +24,7 @@ class User(db.Model, UserMixin):
         db.String(255),
         nullable=False
     )
-    # The last workspace that the user worked on before logging out
+    # Workspace that the user is currently viewing or last viewed during the previous session
     active_workspace_id = db.Column(
         db.Integer,
         db.ForeignKey(add_prefix_for_prod("workspaces.id"))
@@ -36,7 +35,6 @@ class User(db.Model, UserMixin):
         default=func.now()
     )
 
-    # The last workspace that the user worked on before logging out
     active_workspace = db.relationship(
         "Workspace",
         foreign_keys="User.active_workspace_id",
@@ -90,6 +88,18 @@ class User(db.Model, UserMixin):
         back_populates="sender",
         cascade="all, delete-orphan"
     )
+    sent_channel_message_replies = db.relationship(
+        "ChannelMessageReply",
+        foreign_keys="ChannelMessageReply.sender_id",
+        back_populates="sender",
+        cascade="all, delete-orphan"
+    )
+    sent_channel_message_reactions = db.relationship(
+        "ChannelMessageReaction",
+        foreign_keys="ChannelMessageReaction.sender_id",
+        back_populates="sender",
+        cascade="all, delete-orphan"
+    )
 
     @property
     def password(self):
@@ -102,31 +112,9 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password, password)
 
-    def to_dict_summary(self):
+    def to_dict(self):
         return {
             'id': self.id,
             'email': self.email,
-            'activeWorkspace': self.active_workspace.to_dict_summary(),
-        }
-
-    def to_dict_detail(self):
-        workspace_association = WorkspaceUser.query.get((self.active_workspace_id, self.id))
-        return {
-            'id': self.id,
-            'email': self.email,
-            'activeWorkspace': self.active_workspace.to_dict_summary(self.id) if self.active_workspace else None,
-            'activeChannel': workspace_association.active_channel.to_dict_summary(self.id) if workspace_association and workspace_association.active_channel else None,
-            'createdAt': self.created_at.strftime("%a, %d %b %Y %H:%M:%S GMT"),
-            'workspaces': [workspace.to_dict_summary(self.id) for workspace in self.workspaces],
-            'receivedWorkspaceInvitations': [invitation.to_dict() for invitation in self.received_workspace_invitations]
-        }
-
-    def to_dict_workspace(self, workspace_id):
-        workspace_association = WorkspaceUser.query.get((workspace_id, self.id))
-        return {
-            'id': self.id,
-            'email': self.email,
-            'nickname': workspace_association.nickname if workspace_association else None,
-            'profileImageUrl': workspace_association.profile_image_url if workspace_association else None,
-            'role': workspace_association.role if workspace_association else None,
+            'activeWorkspaceId': self.active_workspace_id,
         }

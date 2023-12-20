@@ -54,26 +54,32 @@ class WorkspaceInvitation(db.Model):
       back_populates="associated_invitations"
     )
 
+    recipient_id_index = db.Index(
+      'ix_workspace_invitations_recipient_id',
+      recipient_id
+    )
+    sender_id_index = db.Index(
+      'ix_workspace_invitations_sender_id',
+      sender_id
+    )
+    created_at_index = db.Index(
+      'ix_workspace_invitations_created_at',
+      created_at
+    )
+
     @validates("status")
     def validate_role(self, key, value):
       if value != "pending" and value != "accepted" and value != "ignored":
         raise ValueError("Status must be 'pending', 'accepted', or 'ignored'")
       return value
 
-    def to_dict_summary(self):
-       return {
-          'id': self.id,
-          'recipientId': self.recipient_id,
-          'status': self.status
-       }
-
     def to_dict(self):
       return {
         'id': self.id,
-        'sender': self.sender.to_dict_workspace(self.workspace_id),
-        'recipientId': self.recipient_id,
+        'senderEmail': self.sender.email,
         'recipientEmail': self.recipient.email,
         'workspaceId': self.workspace_id,
         'workspaceName': self.workspace.name,
-        'status': self.status
+        'status': self.status,
+        'createdAt': self.created_at
       }

@@ -71,7 +71,7 @@ def upgrade():
     op.create_table('channels',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
-    sa.Column('description', sa.Text(), nullable=False),
+    sa.Column('description', sa.Text(), nullable=True),
     sa.Column('creator_id', sa.Integer(), nullable=False),
     sa.Column('workspace_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
@@ -85,11 +85,11 @@ def upgrade():
 
     op.create_table('workspace_invitations',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('sender_id', sa.Integer(), nullable=False),
-    sa.Column('recipient_id', sa.Integer(), nullable=False),
+    sa.Column('sender_id', sa.Integer(), nullable=False, index=True),
+    sa.Column('recipient_id', sa.Integer(), nullable=False, index=True),
     sa.Column('workspace_id', sa.Integer(), nullable=False),
     sa.Column('status', sa.String(length=30), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False, index=True),
     sa.ForeignKeyConstraint(['recipient_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['sender_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['workspace_id'], ['workspaces.id'], ),
@@ -105,7 +105,7 @@ def upgrade():
     sa.Column('profile_image_url', sa.String(length=255), nullable=False),
     sa.Column('role', sa.String(length=30), nullable=False),
     sa.Column('active_channel_id', sa.Integer(), nullable=True),
-    sa.Column('last_viewed_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False, index=True),
     sa.ForeignKeyConstraint(['active_channel_id'], ['channels.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['workspace_id'], ['workspaces.id'], ),
@@ -117,10 +117,10 @@ def upgrade():
     op.create_table('channel_messages',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('sender_id', sa.Integer(), nullable=False),
-    sa.Column('channel_id', sa.Integer(), nullable=False),
+    sa.Column('channel_id', sa.Integer(), nullable=False, index=True),
     sa.Column('content', sa.Text(), nullable=False),
     sa.Column('system_message', sa.Boolean(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False, index=True),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['channel_id'], ['channels.id'], ),
     sa.ForeignKeyConstraint(['sender_id'], ['users.id'], ),
@@ -132,7 +132,8 @@ def upgrade():
     op.create_table('channel_users',
     sa.Column('channel_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('last_viewed_at', sa.DateTime(), nullable=False),
+    sa.Column('last_viewed_at', sa.DateTime(), nullable=False, index=True),
+    sa.Column('created_at', sa.DateTime(), nullable=False, index=True),
     sa.ForeignKeyConstraint(['channel_id'], ['channels.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('channel_id', 'user_id')
@@ -140,11 +141,51 @@ def upgrade():
     if environment == "production":
         op.execute(f"ALTER TABLE channel_users SET SCHEMA {SCHEMA};")
 
+    op.create_table('channel_message_replies',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('message_id', sa.Integer(), nullable=False),
+    sa.Column('sender_id', sa.Integer(), nullable=False),
+    sa.Column('content', sa.Text(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['message_id'], ['channel_messages.id'], ),
+    sa.ForeignKeyConstraint(['sender_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    if environment == "production":
+        op.execute(f"ALTER TABLE channel_message_replies SET SCHEMA {SCHEMA};")
+
+    op.create_table('channel_message_attachments',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('message_id', sa.Integer(), nullable=False),
+    sa.Column('url', sa.String(length=255), nullable=False),
+    sa.ForeignKeyConstraint(['message_id'], ['channel_messages.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    if environment == "production":
+        op.execute(f"ALTER TABLE channel_message_attachments SET SCHEMA {SCHEMA};")
+
+    op.create_table('channel_message_reactions',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('sender_id', sa.Integer(), nullable=False),
+    sa.Column('message_id', sa.Integer(), nullable=False),
+    sa.Column('reaction_code', sa.String(length=255), nullable=False),
+    sa.ForeignKeyConstraint(['message_id'], ['channel_messages.id'], ),
+    sa.ForeignKeyConstraint(['sender_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('sender_id', 'message_id', 'reaction_code')
+    )
+    if environment == "production":
+        op.execute(f"ALTER TABLE channel_message_reactions SET SCHEMA {SCHEMA};")
+
     # ### end Alembic commands ###
 
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('channel_message_reactions')
+    op.drop_table('channel_message_attachments')
+    op.drop_table('channel_message_replies')
     op.drop_table('channel_users')
     op.drop_table('channel_messages')
     op.drop_table('workspace_users')

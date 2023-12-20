@@ -1,5 +1,4 @@
-import { useModal } from "../../context/Modal"
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "./ChannelDetails.css"
 
@@ -7,15 +6,23 @@ export function ChannelDetails({ defaultMenu }) {
   const dispatch = useDispatch()
   const [menu, setMenu] = useState(defaultMenu)
   const [keyword, setKeyword] = useState("")
-  const channel = useSelector((state) => state.channels.activeChannel)
-  const channelUsers = Object.values(channel.users)
+  const sessionUser = useSelector((state) => state.session.user);
+  const activeWorkspaceId = sessionUser.activeWorkspaceId;
+  const workspaces = useSelector((state) => state.workspaces.workspaceList);
+  const activeWorkspace = workspaces[activeWorkspaceId];
+  const channels = useSelector((state) => state.channels.channelList);
+  const activeChannelId = activeWorkspace.activeChannelId;
+  const activeChannel = channels[activeChannelId];
+  const workspaceUsers = useSelector((state) => state.users[activeWorkspaceId]);
+  const channelCreator = workspaceUsers[activeChannel.creatorId];
+  const channelUsers = activeChannel.users.map((userId) => workspaceUsers[userId]);
   const foundUsers = channelUsers.filter(user => user.nickname.toLowerCase().includes(keyword.toLowerCase()) || user.email.includes(keyword.toLowerCase()))
 
   return (
     <div id="channel-detail_container">
       <div id="channel-detail_header">
         <i className="fa-solid fa-hashtag" />
-        <h3>{channel.name}</h3>
+        <h3>{activeChannel.name}</h3>
       </div>
       <div id="channel-detail_selection">
         <span
@@ -28,7 +35,7 @@ export function ChannelDetails({ defaultMenu }) {
           className={`${menu === "members" ? "active-selection" : ""}`}
           onClick={() => setMenu("members")}
         >
-          Members {Object.values(channel.users).length}
+          Members {channelUsers.length}
         </span>
       </div>
       {
@@ -36,15 +43,20 @@ export function ChannelDetails({ defaultMenu }) {
         <div id="channel-detail_about">
           <div>
             <h3>Channel Name</h3>
-            <span><i className="fa-solid fa-hashtag" />{channel.name}</span>
+            <span>
+              <i className="fa-solid fa-hashtag" />
+              {activeChannel.name}
+            </span>
           </div>
           <div>
             <h3>Description</h3>
-            <span>{channel.description}</span>
+            <span className={activeChannel.description ? "" : "no-description"}>
+              {activeChannel.description ? activeChannel.description : "No description provided"}
+            </span>
           </div>
           <div>
             <h3>Created by</h3>
-            <span>{channel.creator.nickname || channel.creator.email} on {new Date(channel.createdAt).toLocaleString('en-us', { year: 'numeric', month: 'long', day: '2-digit' })}</span>
+            <span>{channelCreator ? `@${channelCreator?.nickname}` : `${activeChannel.creatorEmail} (not in workspace)`} on {new Date(activeChannel.createdAt).toLocaleString('en-us', { year: 'numeric', month: 'long', day: '2-digit' })}</span>
           </div>
         </div>
       }

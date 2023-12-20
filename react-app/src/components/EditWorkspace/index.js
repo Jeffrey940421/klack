@@ -1,17 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Redirect } from "react-router-dom";
-import "./EditWorkspace.css"
 import AvatarEditor from 'react-avatar-editor'
-import { authenticate } from "../../store/session";
-import { editWorkspace } from "../../store/workspaces";
+import * as workspaceActions from "../../store/workspaces";
 import { useModal } from '../../context/Modal';
 import { usePopup } from "../../context/Popup";
 import { Loader } from "../Loader";
+import "./EditWorkspace.css"
 
 export function EditWorkspace({ workspace }) {
   const dispatch = useDispatch();
-
   const [name, setName] = useState(workspace.name)
   const [workspaceIcon, setWorkspaceIcon] = useState("")
   const [workspaceIconUrl, setWorkspaceIconUrl] = useState(workspace.iconUrl)
@@ -42,7 +39,7 @@ export function EditWorkspace({ workspace }) {
     setPopupContent(<Loader text="Updating Workspace ..." />)
 
     let icon
-
+    // If the user uploaded an image or changed the image scale, create a file from the canvas
     if (workspaceIconRef && (workspaceIcon || workspaceIconScale !== 0)) {
       const iconScaled = workspaceIconRef.current.getImage()
       icon = await new Promise(resolve => iconScaled.toBlob(blob => {
@@ -52,7 +49,7 @@ export function EditWorkspace({ workspace }) {
     }
 
     let iconUrl
-
+    // If the image file is created, upload the image to the server
     if (icon) {
       const iconFormData = new FormData()
       const ext = extensionList[icon.type]
@@ -79,6 +76,7 @@ export function EditWorkspace({ workspace }) {
           prev.icon.push("An error occurred. Please try again.")
           return { ...prev }
         })
+        closePopup()
         return
       }
     }
@@ -88,7 +86,7 @@ export function EditWorkspace({ workspace }) {
       iconUrl
     }
 
-    let data = await dispatch(editWorkspace(workspace.id, updatedWorkspace))
+    let data = await dispatch(workspaceActions.editWorkspace(workspace.id, updatedWorkspace))
     const errors = { name: [], icon: [], other: [] }
     if (data) {
       const nameErrors = data.filter(error => error.startsWith("name"))
@@ -100,7 +98,6 @@ export function EditWorkspace({ workspace }) {
       setServerErrors(errors)
       closePopup()
     } else {
-      await dispatch(authenticate())
       closePopup()
       closeModal()
     }
@@ -108,15 +105,12 @@ export function EditWorkspace({ workspace }) {
 
   useEffect(() => {
     const errors = { name: [] }
-
     if (!name) {
       errors.name.push("Workspace name is required")
     }
-
     if (name.length > 80) {
       errors.name.push("Workspace name must be at most 80 characters long")
     }
-
     setValidationErrors(errors)
   }, [name])
 
@@ -161,12 +155,12 @@ export function EditWorkspace({ workspace }) {
               ))
             }
           </div>
-          <h3>Your workspace Icon <span> (optional)</span></h3>
+          <h3>Your workspace icon <span> (optional)</span></h3>
           <div id="edit-workspace_workspace-icon-upload">
             <div>
               <AvatarEditor
                 ref={workspaceIconRef}
-                image={workspaceIconUrl.startsWith("blob") ? workspaceIconUrl : workspaceIconUrl + "?dummy=" + String(new Date().getTime())}
+                image={workspaceIconUrl}
                 width={110}
                 height={110}
                 border={0}
@@ -191,8 +185,15 @@ export function EditWorkspace({ workspace }) {
               multiple={false}
               name="icon"
               onChange={(e) => {
-                setWorkspaceIcon(e.target.files[0])
-                setWorkspaceIconUrl(URL.createObjectURL(e.target.files[0]))
+                const file = e.target.files[0]
+                const fileName = file.name
+                const ext = fileName.split(".")[1]
+                const validExt = ["png", "jpg", "jpeg", "gif", "webp"]
+                // Accept the file only when the extension is valid
+                if (validExt.includes(ext)) {
+                  setWorkspaceIcon(e.target.files[0])
+                  setWorkspaceIconUrl(URL.createObjectURL(e.target.files[0]))
+                }
               }}
               onClick={(e) => e.target.value = null}
             />

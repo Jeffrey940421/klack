@@ -1,12 +1,14 @@
-from app.models import db, WorkspaceUser, Workspace, Channel, ChannelMessage, environment, SCHEMA
-from sqlalchemy.sql import text
+from app.models import db, WorkspaceUser
 from .users import users
 
-# Adds a demo user, you can add other users here if you want
+# For each user, set the first workspace in the workspace list as active workspace, and the first channel in each workspace as the active channel of the workspace
 def seed_active_workspace():
     for user in users:
         if user.workspaces:
             user.active_workspace = user.workspaces[0]
+            for workspace in user.workspaces:
+                workspace_user = WorkspaceUser.query.get((workspace.id, user.id))
+                workspace_user.active_channel = workspace.channels[0]
     db.session.commit()
 
 

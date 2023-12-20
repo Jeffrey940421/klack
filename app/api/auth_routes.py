@@ -24,7 +24,7 @@ def authenticate():
     Authenticates a user.
     """
     if current_user.is_authenticated:
-        return current_user.to_dict_detail()
+        return current_user.to_dict()
     return {'errors': ['Unauthorized']}
 
 
@@ -38,29 +38,22 @@ def login():
     # form manually to validate_on_submit can be used
     form['csrf_token'].data = request.cookies['csrf_token']
     if form.validate_on_submit():
-        # Add the user to the session, we are logged in!
+        # Add the user to the session
         user = User.query.filter(User.email == form.data['email']).first()
         login_user(user)
-        return user.to_dict_detail()
+        return user.to_dict()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
-@auth_routes.route('/demo_login/1', methods=['POST'])
-def demo_login_1():
+@auth_routes.route('/demo_login/<int:user_id>', methods=['POST'])
+def demo_login(user_id):
     """
-    Log in as demo user 1
+    Log in as demo user
     """
-    user = User.query.get(1)
+    user = User.query.get(user_id)
+    if not user or user_id > 2:
+        return {"errors": ["Demo user is not found"]}, 404
     login_user(user)
-    return user.to_dict_detail()
-
-@auth_routes.route('/demo_login/2', methods=['POST'])
-def demo_login_2():
-    """
-    Log in as demo user 2
-    """
-    user = User.query.get(2)
-    login_user(user)
-    return user.to_dict_detail()
+    return user.to_dict()
 
 @auth_routes.route('/logout')
 def logout():
@@ -85,7 +78,7 @@ def sign_up():
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        return user.to_dict_detail()
+        return user.to_dict()
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
 
 

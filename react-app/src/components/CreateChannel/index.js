@@ -1,37 +1,44 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Redirect } from "react-router-dom";
-import "./CreateChannel.css"
-import { createChannel, editChannel, setChannelLastViewed } from "../../store/channels";
-import { authenticate } from "../../store/session";
+import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import * as channelActions from "../../store/channels";
+import * as workspaceActions from "../../store/workspaces";
+import * as messageActions from "../../store/messages";
 import { useModal } from '../../context/Modal';
 import { usePopup } from "../../context/Popup";
 import { Loader } from "../Loader";
+import "./CreateChannel.css"
 
 export function CreateChannel({ type, channel, workspace }) {
   const dispatch = useDispatch();
   const [name, setName] = useState(type === "edit" ? channel.name : "")
   const [nameEdited, setNameEdited] = useState(type === "edit" ? true : false)
   const [description, setDescription] = useState(type === "edit" ? channel.description : "")
-  const [descriptionEdited, setDescriptionEdited] = useState(type === "edit" ? true : false)
   const [validationErrors, setValidationErrors] = useState({ name: [] })
   const [serverErrors, setServerErrors] = useState({ name: [], other: [] })
   const { closeModal } = useModal();
   const { setPopupContent, closePopup } = usePopup()
-  const activeChannel = useSelector((state) => state.channels.activeChannel)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setPopupContent(<Loader text={type === "edit" ? "Updating Channel ..." : "Creating Channel ..."} />)
-    const new_channel = {
+    let text
+    if (type === "edit") {
+      text = "Updating Channel ..."
+    } else if (type === "create") {
+      text = "Creating Channel ..."
+    }
+    setPopupContent(<Loader text={text} />)
+    const newChannel = {
       name,
       description: description ? description : null
     }
-    let data = type === "edit" ?
-      await dispatch(editChannel(channel.id, new_channel)) :
-      await dispatch(createChannel(workspace.id, new_channel))
+    let data
+    if (type === "edit") {
+      data = await dispatch(channelActions.editChannel(channel.id, newChannel))
+    } else if (type === "create") {
+      data = await dispatch(channelActions.createChannel(workspace.id, newChannel))
+    }
     const errors = { name: [], other: [] }
-    if (data) {
+    if (Array.isArray(data)) {
       const nameErrors = data.filter(error => error.startsWith("name"))
       const otherErrors = data.filter(error => !error.startsWith("name"))
       errors.name = nameErrors.map(error => error.split(" : ")[1])
@@ -39,10 +46,17 @@ export function CreateChannel({ type, channel, workspace }) {
       closePopup()
       setServerErrors(errors)
     } else {
-      if (activeChannel) {
-        await dispatch(setChannelLastViewed(activeChannel.id))
+      if (type === "create") {
+        const message = data.message
+        const workspace = data.workspace
+        await dispatch(workspaceActions.addWorkspace(workspace))
+        await dispatch(messageActions.addMessage(message))
+      } else if (type === "edit") {
+        const messages = data.messages
+        if (messages) {
+          await dispatch(messageActions.addMessages(messages.reverse()))
+        }
       }
-      await dispatch(authenticate())
       closePopup()
       closeModal()
     }
@@ -50,23 +64,20 @@ export function CreateChannel({ type, channel, workspace }) {
 
   useEffect(() => {
     const errors = { name: [] }
-
     if (nameEdited && !name) {
       errors.name.push("Workspace name is required")
     }
-
     if (name && name.length > 80) {
       errors.name.push("Workspace name must be at most 80 characters long")
     }
-
     setValidationErrors(errors)
   }, [name, nameEdited])
 
   return (
     <form id="create-channel_form">
-      <h2>{type === "edit" ? "Edit Channel" : "Create Channel"}</h2>
+      <h2>{(type === "edit" && "Edit Channel") || (type === "create" && "Create Channel")}</h2>
       <div
-        className={`input ${Object.values(validationErrors.name).length || Object.values(serverErrors).flat().length ? "error" : ""}`}
+        className={`input${Object.values(validationErrors.name).length || Object.values(serverErrors).flat().length ? " error" : ""}`}
         id="create-channel_name-input"
       >
         <label htmlFor="name">
@@ -128,15 +139,15 @@ export function CreateChannel({ type, channel, workspace }) {
           value={description}
           onChange={(e) => {
             setDescription(e.target.value)
-            setDescriptionEdited(true)
           }}
         />
-        <p>Let people know what this channel is for.</p>
       </div>
+      <p>Let people know what this channel is for.</p>
       <button
         onClick={handleSubmit}
+        disabled={validationErrors.name.length || !nameEdited}
       >
-        {type === "edit" ? "Update Channel" : "Create Channel"}
+        {(type === "edit" && "Update Channel") || (type === "create" && "Create Channel")}
       </button>
     </form>
   )

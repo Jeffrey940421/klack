@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { signUp } from "../../store/session";
 import { useDispatch, useSelector } from "react-redux";
 import { Redirect } from "react-router-dom";
+import * as sessionActions from "../../store/session";
 import './SignupForm.css';
 
 function SignupFormPage() {
@@ -32,7 +32,7 @@ function SignupFormPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!Object.values(validationErrors).flat().length) {
-      const data = await dispatch(signUp(email.toLowerCase(), password));
+      const data = await dispatch(sessionActions.signUp(email.toLowerCase(), password));
       const errors = { email: [], password: [], other: [] }
       if (data) {
         const emailErrors = data.filter(error => error.startsWith("email"))
@@ -50,45 +50,34 @@ function SignupFormPage() {
 
   useEffect(() => {
     const errors = { email: [], password: [], confirmPassword: [] };
-
     if (emailEdited && !email) {
       errors.email.push("Email is required");
     }
-
     if (email && !validateEmail(email)) {
       errors.email.push("Email is invalid");
     };
-
     if (passwordEdited && !password) {
       errors.password.push("Password is required");
     }
-
     if (password && password.length < 6) {
       errors.password.push("Password must be at least 6 characters long");
     };
-
     if (password && password.length > 16) {
       errors.password.push("Password must be at most 16 characters long");
     };
-
     if (confirmPasswordEdited && !confirmPassword) {
       errors.confirmPassword.push("Confirm password is required")
     }
-
     if (confirmPassword && confirmPassword.length < 6) {
       errors.confirmPassword.push("Confirm password must be at least 6 characters long");
     };
-
     if (confirmPassword && confirmPassword.length > 16) {
       errors.confirmPassword.push("Confirm password must be at most 16 characters long");
     };
-
     if (confirmPassword && password && confirmPassword !== password) {
       errors.confirmPassword.push("Confirm password must match password");
     };
-
     setValidationErrors(errors)
-
   }, [email, emailEdited, password, passwordEdited, confirmPassword, confirmPasswordEdited]);
 
   if (sessionUser) return <Redirect to="/" />;
@@ -101,7 +90,7 @@ function SignupFormPage() {
         <div></div>
       </header>
       <div id="signup_form-body">
-        <h1>Sign up for Slack</h1>
+        <h1>Sign up for Klack</h1>
         <p>We suggest using the <b>email address you use at work.</b></p>
         {
           serverErrors.other.length > 0 && serverErrors.other.map(error => (

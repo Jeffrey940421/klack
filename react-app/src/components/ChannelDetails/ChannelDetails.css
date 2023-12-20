@@ -77,12 +77,12 @@
   border-radius: 10px;
   display: flex;
   flex-direction: column;
-  row-gap: 5px;
   margin-bottom: 20px;
 }
 
 #channel-detail_about div h3 {
   font-size: 15px;
+  margin-bottom: 5px;
 }
 
 #channel-detail_about div span {
@@ -191,4 +191,8 @@
   box-sizing: border-box;
   font-size: 15px;
   width: 100%;
+}
+
+span.no-description {
+  color: gray;
 }

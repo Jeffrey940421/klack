@@ -1,15 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Redirect } from "react-router-dom";
-import "./EditProfile.css"
+import { useDispatch } from "react-redux";
 import AvatarEditor from 'react-avatar-editor'
-import { authenticate } from "../../store/session";
+import * as userActions from "../../store/users";
 import { useModal } from '../../context/Modal';
 import { usePopup } from "../../context/Popup";
 import { Loader } from "../Loader";
-import { editProfile } from "../../store/workspaces";
+import "./EditProfile.css"
 
-export function EditProfile({ profile, workspace }) {
+export function EditProfile({ profile }) {
   const dispatch = useDispatch();
   const [nickname, setNickname] = useState(profile.nickname)
   const [profileImage, setProfileImage] = useState("")
@@ -41,7 +39,7 @@ export function EditProfile({ profile, workspace }) {
     setPopupContent(<Loader text="Updating Profile ..." />)
 
     let image
-
+    // If the user uploaded an image or changed the image scale, create a file from the canvas
     if (profileImageRef && (profileImage || profileImageScale !== 0)) {
       const imageScaled = profileImageRef.current.getImage()
       image = await new Promise(resolve => imageScaled.toBlob(blob => {
@@ -51,7 +49,7 @@ export function EditProfile({ profile, workspace }) {
     }
 
     let imageUrl
-
+    // If the image file is created, upload the image to the server
     if (image) {
       const imageFormData = new FormData()
       const ext = extensionList[image.type]
@@ -78,6 +76,7 @@ export function EditProfile({ profile, workspace }) {
           prev.image.push("An error occurred. Please try again.")
           return { ...prev }
         })
+        closePopup()
         return
       }
     }
@@ -87,7 +86,7 @@ export function EditProfile({ profile, workspace }) {
       imageUrl
     }
 
-    let data = await dispatch(editProfile(profile.id, workspace.id, updatedProfile))
+    let data = await dispatch(userActions.editProfile(profile.userId, profile.workspaceId, updatedProfile))
     const errors = { nickname: [], image: [], other: [] }
     if (data) {
       const nicknameErrors = data.filter(error => error.startsWith("nickname"))
@@ -99,7 +98,6 @@ export function EditProfile({ profile, workspace }) {
       setServerErrors(errors)
       closePopup()
     } else {
-      await dispatch(authenticate())
       closePopup()
       closeModal()
     }
@@ -107,21 +105,17 @@ export function EditProfile({ profile, workspace }) {
 
   useEffect(() => {
     const errors = { nickname: [] }
-
     if (!nickname) {
       errors.nickname.push("Name is required")
     }
-
     if (nickname.length > 80) {
       errors.nickname.push("Name must be at most 80 characters long")
     }
-
     setValidationErrors(errors)
   }, [nickname])
 
   return (
     <div id="edit-profile_container">
-
       <form id="edit-profile_workspace-user-form">
         <div>
           <h2>What’s your name?</h2>
@@ -166,7 +160,8 @@ export function EditProfile({ profile, workspace }) {
             <div>
               <AvatarEditor
                 ref={profileImageRef}
-                image={profileImageUrl.startsWith("blob") ? profileImageUrl : profileImageUrl + "?dummy=" + String(new Date().getTime())}
+                // Create the dummy query string to force the image to reload
+                image={profileImageUrl}
                 width={110}
                 height={110}
                 border={0}
@@ -193,8 +188,15 @@ export function EditProfile({ profile, workspace }) {
               multiple={false}
               name="icon"
               onChange={(e) => {
-                setProfileImage(e.target.files[0])
-                setProfileImageUrl(URL.createObjectURL(e.target.files[0]))
+                const file = e.target.files[0]
+                const fileName = file.name
+                const ext = fileName.split(".")[1]
+                const validExt = ["png", "jpg", "jpeg", "gif", "webp"]
+                // Accept the file only when the extension is valid
+                if (validExt.includes(ext)) {
+                  setProfileImage(e.target.files[0])
+                  setProfileImageUrl(URL.createObjectURL(e.target.files[0]))
+                }
               }}
               onClick={(e) => e.target.value = null}
             />

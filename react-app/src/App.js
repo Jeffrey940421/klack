@@ -3,25 +3,29 @@ import { useDispatch } from "react-redux";
 import { Route, Switch } from "react-router-dom";
 import SignupFormPage from "./components/SignupFormPage";
 import LoginFormPage from "./components/LoginFormPage";
-import { authenticate } from "./store/session";
+import * as sessionActions from "./store/session";
 import { MainPage } from "./components/MainPage";
+import { ThreadProvider } from "./context/ThreadContext";
 
 function App() {
   const dispatch = useDispatch();
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(false);
 
   useEffect(() => {
-    dispatch(authenticate()).then(() => setIsLoaded(true));
+    dispatch(sessionActions.authenticate())
+      .then(() => setIsAuthed(true));
   }, [dispatch]);
 
 
   return (
     <>
-      {isLoaded && (
+      {isAuthed && (
         <>
           <Switch>
             <Route exact path="/">
-              <MainPage isLoaded={isLoaded} />
+              <ThreadProvider>
+                <MainPage />
+              </ThreadProvider>
             </Route>
             <Route exact path="/login">
               <LoginFormPage />

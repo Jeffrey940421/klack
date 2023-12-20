@@ -2,67 +2,116 @@ import { useModal } from "../../context/Modal"
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { useDispatch, useSelector, ReactReduxContext } from "react-redux";
 import { CreateChannel } from "../CreateChannel";
-import { removeChannel, leaveCurrentChannel, updateActiveChannel, updateChannel } from "../../store/channels";
-import { authenticate } from "../../store/session";
 import { ChannelDetails } from "../ChannelDetails";
 import { JoinChannel } from "../JoinChannel";
 import { Message } from "../Message";
-import { addChannelMessage, addMessage, addWorkspaceMessage, createMessage, getAllMessages, getChannelMessages, getWorkspaceMessages } from "../../store/messages";
-import { useRoom } from "../../context/RoomContext";
 import * as channelActions from "../../store/channels"
+import * as workspaceActions from "../../store/workspaces"
+import * as messageActions from "../../store/messages"
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import Editor from 'ckeditor5-custom-build/build/ckeditor';
 import EmojiPicker from 'emoji-picker-react';
-import { Emoji, EmojiStyle } from 'emoji-picker-react';
+import { Thread } from "../Thread";
+import { useSpring, animated } from "react-spring";
+import { useThread } from "../../context/ThreadContext";
 
-export function ChannelWindow({ socket }) {
-  const { setModalContent } = useModal();
-  const [showChannelMenu, setShowChannelMenu] = useState(false)
-  const ulRef = useRef();
+export function ChannelWindow() {
   const dispatch = useDispatch()
-  const user = useSelector((state) => state.session.user)
-  const workspace = useSelector((state) => state.workspaces.activeWorkspace)
-  const [messageLoaded, setMessageLoaded] = useState(false)
+  const { setModalContent } = useModal();
+  const { showThread, setShowThread } = useThread()
+  const { store } = useContext(ReactReduxContext)
+  const sessionUser = useSelector((state) => state.session.user);
+  const activeWorkspaceId = sessionUser.activeWorkspaceId;
+  const workspaces = useSelector((state) => state.workspaces.workspaceList);
+  const activeWorkspace = workspaces[activeWorkspaceId];
+  const channels = useSelector((state) => state.channels.channelList);
+  const activeChannelId = activeWorkspace.activeChannelId;
+  const activeChannel = channels[activeChannelId];
+  const users = useSelector((state) => state.users);
+  const workspaceUsers = users[activeWorkspaceId];
+  const channelUsers = activeChannel.users.map((userId) => workspaceUsers[userId]);
+  const channelCreator = workspaceUsers[activeChannel.creatorId];
+  const channelCreatorId = activeChannel.creatorId;
+  const [showChannelMenu, setShowChannelMenu] = useState(false)
   const [newMessage, setNewMessage] = useState("")
   const [focused, setFocused] = useState(false)
-  const channels = useSelector((state) => state.channels.channels)
-  const submitRef = useRef()
-  const channel = useSelector((state) => state.channels.activeChannel);
-  const allChannels = useSelector((state) => state.channels.allChannels)
-  const [prevRooms, setPrevRooms] = useState([])
-  const { channelRooms, setChannelRooms } = useRoom()
-  const [editorHeight, setEditorHeight] = useState(0);
+  const [editorHeight, setEditorHeight] = useState(108);
   const [editor, setEditor] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showFormat, setShowFormat] = useState(true)
+  const ulRef = useRef();
+  const submitRef = useRef()
   const emojiRef = useRef()
   const emojiButtonRef = useRef()
-  const [showFormat, setShowFormat] = useState(true)
-  const [mention, setMention] = useState("")
-  const { store } = useContext(ReactReduxContext)
+  const backgroundRef = useRef()
 
   const getFeedItems = async (queryText) => {
-    const channelUsers = store.getState().channels.activeChannel.users
-    const items = Object.values(channelUsers)
+    const activeChannelId = store.getState().workspaces.workspaceList[activeWorkspaceId].activeChannelId
+    const channelUserIds = store.getState().channels.channelList[activeChannelId].users
+    const workspaceUsers = store.getState().users[activeWorkspaceId]
+    const channelUsers = channelUserIds.map(id => workspaceUsers[id])
+    channelUsers.unshift({
+      nickname: "channel",
+      userId: "channel",
+      profileImageUrl: "/bullhorn-solid.svg",
+      email: "Notify everyone in this channel",
+    })
+    const items = channelUsers
       .filter(userInfo => {
         return userInfo.nickname.toLowerCase().includes(queryText.toLowerCase())
-            || userInfo.email.toLowerCase().includes(queryText.toLowerCase())
+          || userInfo.email.toLowerCase().includes(queryText.toLowerCase())
       })
       .map(user => {
         return {
           id: `@${user.nickname}`,
-          userId: user.id,
+          userId: user.userId,
           name: user.nickname,
-          profileImageUrl: user.profileImageUrl
+          profileImageUrl: user.profileImageUrl,
+          email: user.email
         }
       })
-    if (!queryText) {
-      items.unshift({
-        id: "@channel",
-        userId: "channel",
-        name: "Notify everyone in this channel",
-      })
-    }
     return items
+  }
+
+  const extractContent = (str) => {
+    const span = document.createElement('span');
+    span.innerHTML = str;
+    return span.textContent || span.innerText;
+  };
+
+  const customItemRenderer = (item) => {
+    const itemElement = document.createElement('span');
+    itemElement.classList.add('mention-list-item');
+    itemElement.id = `mention-list-item-${item.userId}`;
+
+    const avatarElement = document.createElement('img');
+    avatarElement.classList.add('mention-list-avatar');
+    avatarElement.src = item.profileImageUrl;
+    avatarElement.alt = item.name;
+
+    const avatarWrapper = document.createElement('span');
+    avatarWrapper.classList.add('mention-list-avatar-wrapper');
+    avatarWrapper.appendChild(avatarElement);
+    itemElement.appendChild(avatarWrapper);
+    if (item.userId === "channel") {
+      avatarWrapper.classList.add('mention-list-channel-icon');
+    }
+
+    const usernameElement = document.createElement('span');
+    usernameElement.classList.add('mention-list-username');
+    usernameElement.textContent = item.userId === "channel" ?
+      "@channel" :
+      item.userId === sessionUser.id ?
+        `${item.name} (you)` :
+        item.name;
+    itemElement.appendChild(usernameElement);
+
+    const emailElement = document.createElement('span');
+    emailElement.classList.add('mention-list-email');
+    emailElement.textContent = item.email;
+    itemElement.appendChild(emailElement);
+
+    return itemElement;
   }
 
   const openChannelMenu = () => {
@@ -71,19 +120,36 @@ export function ChannelWindow({ socket }) {
 
   const deleteChannel = async () => {
     setShowChannelMenu(false)
-    await dispatch(removeChannel(channel.id))
-    await dispatch(authenticate())
+    const data = await dispatch(channelActions.removeChannel(activeChannel))
+    if (!Array.isArray(data)) {
+      const workspace = data.workspace
+      await dispatch(workspaceActions.addWorkspace(workspace))
+      await dispatch(messageActions.deleteChannelMessages(activeChannelId))
+    }
   }
 
   const leaveChannel = async () => {
     setShowChannelMenu(false)
-    await dispatch(leaveCurrentChannel(channel.id))
-    await dispatch(authenticate())
+    const data = await dispatch(channelActions.leaveChannel(activeChannel))
+    if (!Array.isArray(data)) {
+      const workspace = data.workspace
+      await dispatch(workspaceActions.addWorkspace(workspace))
+      await dispatch(messageActions.deleteChannelMessages(activeChannelId))
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    const data = await dispatch(messageActions.createMessage(activeChannelId, newMessage))
+    if (!Array.isArray(data)) {
+      const channel = data.channel
+      await dispatch(channelActions.addChannel(channel))
+      setNewMessage("")
+      // e.target.parentNode.dataset.replicatedValue = ""
+    }
   }
 
   const handleEnter = async (e, data, editor) => {
     const keyCode = data.which || data.keyCode;
-
     if (keyCode === 13 && data.ctrlKey) {
       data.preventDefault()
       submitRef && submitRef.current.click()
@@ -101,17 +167,15 @@ export function ChannelWindow({ socket }) {
     // };
   }
 
-  const handleSubmit = async (e) => {
-    await dispatch(createMessage(channel.id, newMessage))
-    setNewMessage("")
-    e.target.parentNode.dataset.replicatedValue = ""
-  }
-
   useEffect(() => {
-    document.addEventListener("click", (e) => {
+    const closeEmojiPicker = (e) => {
       if (emojiRef.current && emojiButtonRef.current && !emojiRef.current.contains(e.target) && !emojiButtonRef.current.contains(e.target)) {
         setShowEmojiPicker(false)
       }
+    }
+    document.addEventListener("click", closeEmojiPicker)
+    return (() => {
+      document.removeEventListener("click", closeEmojiPicker)
     })
   }, [])
 
@@ -131,86 +195,59 @@ export function ChannelWindow({ socket }) {
   }, [showChannelMenu]);
 
   useEffect(() => {
-    if (channel) {
-      dispatch(getChannelMessages(channel.id))
-        .then(() => dispatch(getWorkspaceMessages(workspace.id)))
-        .then(() => dispatch(getAllMessages()))
-        .then(() => setMessageLoaded(true))
+    backgroundRef.current.style.height = `${editorHeight - 108 + 165}px`;
+  }, [editorHeight])
+
+  const backgroundProps = useSpring({
+    width: showThread ? "60%" : "100%",
+    config: {
+      duration: 200
     }
-  }, [dispatch, channel, workspace])
+  })
 
-  useEffect(() => {
-    const rooms = allChannels.map(channelId => `channel${channelId}`)
-    socket.emit("join_room", { rooms: rooms })
-    setChannelRooms(rooms)
-
-    return (() => {
-      socket.emit("leave_room", { rooms: channelRooms })
-    })
-  }, [allChannels])
-
-  useEffect(() => {
-    socket.on("send_message", async (data) => {
-      const message = JSON.parse(data.message)
-      if (message.channelId === channel.id) {
-        await dispatch(addChannelMessage(message))
-      }
-      if (message.workspaceId === workspace.id) {
-        await dispatch(addWorkspaceMessage(message))
-      }
-      await dispatch(addMessage(message))
-    })
-
-    return (() => {
-      socket.off("send_message")
-    })
-  }, [channel, workspace])
-
-  useEffect(() => {
-    socket.on("edit_channel", async (data) => {
-      const updatedChannel = JSON.parse(data.channel)
-      if (updatedChannel.id === channel.id) {
-        await dispatch(updateActiveChannel(updatedChannel))
-      }
-      await dispatch(updateChannel(updatedChannel))
-    })
-    socket.on("delete_channel", async (data) => {
-      const activeChannel = JSON.parse(data.channel)
-      const id = data.id
-      await dispatch(channelActions.deleteChannel(id, activeChannel))
-    })
-
-    return (() => {
-      socket.off("edit_channel")
-      socket.off("delete_channel")
-    })
-  }, [channel])
+  const ThreadProps = useSpring({
+    right: showThread ? "0%" : "-40%",
+    config: {
+      duration: 200
+    }
+  })
 
   return (
     <div id="channel-window_container">
-      <div id="channel-window_background">
+      <animated.div
+        id="channel-window_background"
+        className={showThread ? "shrink" : ""}
+        style={backgroundProps}
+      >
         <div id="channel-window_header">
           <div
             id="channel-window_title"
             onClick={openChannelMenu}
           >
             <i className="fa-solid fa-hashtag" />
-            <h3>{channel?.name}</h3>
+            <h3>{activeChannel?.name}</h3>
             <i className="fa-solid fa-angle-down" />
           </div>
           <div
             id="channel-window_members"
-            onClick={() => setModalContent(<ChannelDetails channel={channel} defaultMenu="members" />)}
+            onClick={() => setModalContent(<ChannelDetails channel={activeChannel} defaultMenu="members" />)}
           >
-            <img src={channel?.creator.profileImageUrl ? channel?.creator.profileImageUrl : Object.values(channel?.users)[0].profileImageUrl} alt="member" />
-            <span>{channel?.users && Object.values(channel.users)?.length}</span>
+            <img
+              src={channelCreator ? channelCreator?.profileImageUrl : channelUsers[channelUsers.length - 1]?.profileImageUrl}
+              alt="member"
+            />
+            <span>{activeChannel?.users.length}</span>
           </div>
-          <ul id="channel-window_channel-dropdown" className={showChannelMenu ? "" : "hidden"} ref={ulRef}>
+          <ul
+            id="channel-window_channel-dropdown"
+            className={showChannelMenu ? "" : "hidden"}
+            ref={ulRef}
+          >
             {
-              (user?.id === channel?.creator.id || user?.id === workspace?.owner.id) &&
+              (sessionUser.id === channelCreatorId || workspaceUsers[sessionUser.id].role === "admin") &&
               <li
                 onClick={() => {
-                  setModalContent(<CreateChannel type="edit" channel={channel} workspace={workspace} />)
+                  setModalContent(<CreateChannel type="edit" channel={activeChannel} workspace={activeWorkspace} />)
                   setShowChannelMenu(false)
                 }}
               >
@@ -218,10 +255,10 @@ export function ChannelWindow({ socket }) {
               </li>
             }
             {
-              channel?.name !== "general" &&
+              activeChannel?.name !== "general" &&
               <li
                 onClick={() => {
-                  setModalContent(<JoinChannel channel={channel} workspace={workspace} />)
+                  setModalContent(<JoinChannel />)
                   setShowChannelMenu(false)
                 }}
               >
@@ -230,49 +267,45 @@ export function ChannelWindow({ socket }) {
             }
             <li
               onClick={() => {
-                setModalContent(<ChannelDetails channel={channel} defaultMenu="about" />)
+                setModalContent(<ChannelDetails channel={activeChannel} defaultMenu="about" />)
                 setShowChannelMenu(false)
               }}
             >
               Channel Details
             </li>
             {
-              channel?.name !== "general" ?
-                (user?.id === channel?.creator.id || user?.id === workspace?.owner.id) ?
-                  <>
-                    <hr></hr>
-                    {
-                      user?.id === workspace?.owner.id &&
-                      <li
-                        id="channel-window_leave-channel"
-                        onClick={leaveChannel}
-                      >
-                        Leave Channel
-                      </li>
-                    }
-                    <li
-                      id="channel-window_delete-channel"
-                      onClick={deleteChannel}
-                    >
-                      Delete Channel
-                    </li>
-                  </> :
-                  <>
-                    <hr></hr>
+              // General channel cannot be left or deleted
+              activeChannel?.name !== "general" ?
+                <>
+                  <hr></hr>
+                  {
+                    // Non channel creator can leave the channel
+                    sessionUser.id !== channelCreatorId &&
                     <li
                       id="channel-window_leave-channel"
                       onClick={leaveChannel}
                     >
                       Leave Channel
                     </li>
-                  </> :
+                  }
+                  {
+                    // Channel creator or workspace admin can delete the channel
+                    (sessionUser.id === channelCreatorId || workspaceUsers[sessionUser.id].role === "admin") &&
+                    <li
+                      id="channel-window_delete-channel"
+                      onClick={deleteChannel}
+                    >
+                      Delete Channel
+                    </li>
+                  }
+                </> :
                 null
             }
           </ul>
         </div>
         <hr></hr>
         <div id="channel-window_body">
-          {messageLoaded && <Message channel={channel} editorHeight={editorHeight} />}
+          <Message channel={activeChannel} editorHeight={editorHeight} />
         </div>
         <div id="channel-window_textarea" className={focused ? "focused" : ""}>
           {/* Replaced with CKEditor */}
@@ -301,25 +334,45 @@ export function ChannelWindow({ socket }) {
             editor={Editor}
             data={newMessage}
             config={{
-              placeholder: `Message #${channel?.name}`,
+              placeholder: `Message #${activeChannel?.name}`,
               mention: {
                 dropdownLimit: 6,
                 feeds: [
                   {
                     marker: '@',
-                    feed: getFeedItems
+                    feed: getFeedItems,
+                    itemRenderer: customItemRenderer
                   }
-                ]
+                ],
               },
             }}
             onReady={(editor) => {
               setEditor(editor)
+              const button = document.querySelector(`#channel-window_textarea .ck-splitbutton__arrow`)
+              if (button) {
+                button.addEventListener("mousedown", () => {
+                  const toolbar = document.querySelector(`#channel-window_textarea .ck-toolbar`)
+                  const dropdown = document.querySelector(`#channel-window_textarea .ck-dropdown__panel`)
+                  const distanceToTop = toolbar.getBoundingClientRect().top - 70;
+                  const distanceToBottom = window.innerHeight - toolbar.getBoundingClientRect().bottom - 40;
+                  const dropdownHeight = Math.min(Math.max(distanceToBottom, distanceToTop), 200)
+                  dropdown.style.maxHeight = `${dropdownHeight}px`
+                  if (distanceToTop < dropdownHeight && distanceToBottom > distanceToTop) {
+                    dropdown.style.top = "100%"
+                    dropdown.style.bottom = "auto"
+                  } else {
+                    dropdown.style.top = "auto"
+                    dropdown.style.bottom = "100%"
+                  }
+                })
+              }
+
               editor.editing.view.document.on('keydown', (e, data) => handleEnter(e, data, editor))
-              editor.model.document.on('change', () => {
-                const newHeight = editor.ui.view.element.offsetHeight;
-                if (editorHeight !== newHeight) {
+              editor.model.document.on('change', async () => {
+                setTimeout(() => {
+                  const newHeight = editor.ui.view.element.offsetHeight;
                   setEditorHeight(newHeight);
-                }
+                }, 0)
               });
             }}
             onChange={(e, editor) => {
@@ -344,17 +397,32 @@ export function ChannelWindow({ socket }) {
             </button>
             <button
               id="channel-window_textarea-emoji"
-              onClick={() => setShowEmojiPicker((prev) => !prev)}
+              onClick={async (e) => {
+                e.stopPropagation()
+                setShowEmojiPicker((prev) => !prev)
+              }}
               ref={emojiButtonRef}
             >
-              {showEmojiPicker ? <i className="fa-solid fa-face-grin-tongue-squint" style={{ color: "#f2d202" }} /> : <i className="fa-regular fa-face-smile" />}
+              {
+                showEmojiPicker ?
+                  <i
+                    className="fa-solid fa-face-grin-tongue-squint"
+                    style={{ color: "#f2d202" }} /> :
+                  <i className="fa-regular fa-face-smile" />
+              }
             </button>
             <button
               id="channel-window_textarea-mention"
               onClick={async () => {
                 editor.model.change(writer => {
                   const insertPosition = editor.model.document.selection.getFirstPosition();
-                  writer.insertText("@", insertPosition);
+                  const data = editor.getData();
+                  const content = extractContent(data);
+                  if (!data || content.endsWith(" ")) {
+                    writer.insertText("@", insertPosition);
+                  } else {
+                    writer.insertText(" @", insertPosition);
+                  }
                   editor.editing.view.focus();
                   const latestSelection = editor.model.document.selection.getFirstPosition();
                   writer.setSelection(latestSelection);
@@ -380,6 +448,8 @@ export function ChannelWindow({ socket }) {
             <div id="channel-window_emoji-picker" ref={emojiRef}>
               <EmojiPicker
                 emojiStyle="native"
+                autoFocusSearch={false}
+                height={Math.min(emojiButtonRef.current.getBoundingClientRect().top - 110, 400)}
                 onEmojiClick={(emojiObject) => {
                   editor.model.change(writer => {
                     const insertPosition = editor.model.document.selection.getFirstPosition();
@@ -390,11 +460,24 @@ export function ChannelWindow({ socket }) {
                   });
                   setShowEmojiPicker(false)
                 }}
+                searchDisabled={true}
               />
             </div>
           }
         </div>
-      </div>
+        <div
+          id="channel-window_textarea-background"
+          ref={backgroundRef}
+        >
+        </div>
+      </animated.div>
+      <animated.div
+        id="channel-window_thread"
+        style={ThreadProps}
+        className={showThread ? "expand" : ""}
+      >
+        <Thread />
+      </animated.div>
     </div>
   )
 }

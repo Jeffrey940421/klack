@@ -24,6 +24,11 @@ class ChannelUser(db.Model):
         nullable=False,
         default=func.now()
     )
+    created_at = db.Column(
+      db.DateTime,
+      nullable=False,
+      default=func.now()
+    )
 
     channel = db.relationship(
         "Channel",
@@ -34,4 +39,13 @@ class ChannelUser(db.Model):
         "User",
         foreign_keys="ChannelUser.user_id",
         back_populates="channel_associations"
+    )
+
+    last_viewed_at_index = db.Index(
+        'ix_channel_users_last_viewed_at',
+        last_viewed_at
+    )
+    created_at_index = db.Index(
+        'ix_channel_users_created_at',
+        created_at
     )

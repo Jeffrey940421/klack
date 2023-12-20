@@ -37,7 +37,7 @@
 
 #invitation_input input {
   border: none;
-  padding: 5px 0px;
+  padding: 7px 0px;
   height: 21px;
   font-size: 14px;
 }
@@ -119,7 +119,8 @@
 #sent-invitations {
   background-color: white;
   width: 600px;
-  padding: 20px;
+  padding: 30px;
+  box-sizing: border-box;
   border-radius: 10px;
   min-height: 100px;
   display: flex;
@@ -127,6 +128,10 @@
   flex-direction: column;
   position: relative;
   height: fit-content;
+}
+
+#sent-invitations h2 {
+  margin-bottom: 10px;
 }
 
 #sent-invitations > span > span {
@@ -140,6 +145,7 @@
   right: 20px;
   top: 20px;
   font-weight: bold;
+  padding: 0px;
 }
 
 .invitation_email-edit {

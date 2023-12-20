@@ -1,24 +1,31 @@
-import { useModal } from "../../context/Modal"
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { addToChannel } from "../../store/channels";
+import * as channelActions from "../../store/channels";
 import "./JoinChannel.css"
 
 export function JoinChannel() {
   const dispatch = useDispatch()
-  const workspace = useSelector((state) => state.workspaces.activeWorkspace)
-  const channel = useSelector((state) => state.channels.activeChannel)
   const [keyword, setKeywork] = useState("")
   const [showResult, setShowResult] = useState(false)
-  const workspaceUsers = Object.values(workspace.users)
-  const channelUsers = Object.values(channel.users)
-  const channelUserIds = channelUsers.map(user => user.id)
+  const sessionUser = useSelector(state => state.session.user)
+  const activeWorkspaceId = sessionUser.activeWorkspaceId
+  const activeWorkspace = useSelector(state => state.workspaces.workspaceList[activeWorkspaceId])
+  const activeChannelId = activeWorkspace.activeChannelId
+  const channels = useSelector(state => state.channels.channelList)
+  const activeChannel = channels[activeChannelId]
+  const users = useSelector(state => state.users)
+  const workspaceUsers = Object.values(users[activeWorkspaceId])
+  const channelUserIds = activeChannel.users
+  const availableUsers = workspaceUsers.filter(user => {
+    return !channelUserIds.includes(user.userId)
+      && (user.nickname.toLowerCase().includes(keyword.toLowerCase())
+        || user.email.includes(keyword.toLowerCase()))
+  })
   const divRef = useRef();
   const inputRef = useRef();
-  const availableUsers = workspaceUsers.filter(user => !channelUserIds.includes(user.id) && (user.nickname.toLowerCase().includes(keyword.toLowerCase()) || user.email.includes(keyword.toLowerCase())))
 
-  const addPeople = async (e, user) => {
-    await dispatch(addToChannel(channel.id, user.id))
+  const addChannelUser = async (e, user) => {
+    await dispatch(channelActions.addChannelUser(activeChannelId, user.userId))
   }
 
   useEffect(() => {
@@ -39,7 +46,7 @@ export function JoinChannel() {
     <div id="join-channel_container">
       <div id="join-channel_header">
         <h3>Add people</h3>
-        <span># {channel.name}</span>
+        <span># {activeChannel.name}</span>
       </div>
       <div className="input">
         <label>
@@ -59,8 +66,11 @@ export function JoinChannel() {
           onFocus={() => setShowResult(true)}
         />
       </div>
-
-      <div id="join-channel_search-result" className={keyword && showResult ? "" : "hidden"} ref={divRef}>
+      <div
+        id="join-channel_search-result"
+        className={keyword && showResult ? "" : "hidden"}
+        ref={divRef}
+      >
         {availableUsers.map((user, i) => {
           return (
             <div key={user.id} className="join-channel_user">
@@ -69,7 +79,7 @@ export function JoinChannel() {
                 <span>{user.nickname} ({user.email})</span>
               </div>
               <button
-                onClick={(e) => addPeople(e, user)}
+                onClick={(e) => addChannelUser(e, user)}
               >
                 Add
               </button>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { login, demo } from "../../store/session";
 import { useDispatch, useSelector } from "react-redux";
 import { Redirect } from "react-router-dom";
+import * as sessionActions from "../../store/session";
 import './LoginForm.css';
 
 function LoginFormPage() {
@@ -28,7 +28,7 @@ function LoginFormPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!Object.values(validationErrors).flat().length) {
-      const data = await dispatch(login(email.toLowerCase(), password));
+      const data = await dispatch(sessionActions.login(email.toLowerCase(), password));
       const errors = { email: [], password: [], other: [] }
       if (data) {
         const emailErrors = data.filter(error => error.startsWith("email"))
@@ -44,9 +44,9 @@ function LoginFormPage() {
     }
   };
 
-  const handleDemo = async (e, id) => {
+  const handleDemoLogin = async (e, id) => {
     e.preventDefault()
-    const data = await dispatch(demo(id));
+    const data = await dispatch(sessionActions.demoLogin(id));
     const errors = { email: [], password: [], other: [] }
     if (data) {
       const emailErrors = data.filter(error => error.startsWith("email"))
@@ -63,29 +63,22 @@ function LoginFormPage() {
 
   useEffect(() => {
     const errors = { email: [], password: [] };
-
     if (emailEdited && !email) {
       errors.email.push("Email is required");
     }
-
     if (email && !validateEmail(email)) {
       errors.email.push("Email is invalid");
     };
-
     if (passwordEdited && !password) {
       errors.password.push("Password is required");
     }
-
     if (password && password.length < 6) {
       errors.password.push("Password must be at least 6 characters long");
     };
-
     if (password && password.length > 16) {
       errors.password.push("Password must be at most 16 characters long");
     };
-
     setValidationErrors(errors)
-
   }, [email, emailEdited, password, passwordEdited]);
 
   if (sessionUser) return <Redirect to="/" />;
@@ -102,7 +95,7 @@ function LoginFormPage() {
         </div>
       </header>
       <div id="login_form-body">
-        <h1>Log in to Slack</h1>
+        <h1>Log in to Klack</h1>
         <p>We suggest using the <b>email address you use at work.</b></p>
         {
           serverErrors.other.length > 0 && serverErrors.other.map(error => (
@@ -191,10 +184,10 @@ function LoginFormPage() {
           >
             Log In
           </button>
-          <button id="login_form-demo_button_1" onClick={(e) => handleDemo(e, 1)}>
+          <button id="login_form-demo_button_1" onClick={(e) => handleDemoLogin(e, 1)}>
             Demo User 1
           </button>
-          <button id="login_form-demo_button_2" onClick={(e) => handleDemo(e, 2)}>
+          <button id="login_form-demo_button_2" onClick={(e) => handleDemoLogin(e, 2)}>
             Demo User 2
           </button>
         </form>

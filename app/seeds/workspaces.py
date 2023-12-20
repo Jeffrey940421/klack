@@ -1,7 +1,7 @@
 from app.models import db, Workspace, WorkspaceUser, Channel, ChannelMessage, ChannelUser, environment, SCHEMA
 from sqlalchemy.sql import text
 from faker import Faker
-from random import randint, choice
+from random import choice
 from .users import users
 
 faker = Faker()
@@ -56,7 +56,7 @@ def fake_workspaces(workspace_num):
     ))
     channel = Channel(
       name = "general",
-      description = "This is the one channel that will always include everyone. It’s a great spot for announcements and team-wide conversations.",
+      description = "This is the one channel that will always include everyone. It's a great spot for announcements and team-wide conversations.",
       creator = owner,
       workspace = workspace
     )
@@ -87,7 +87,7 @@ channel_messages = result["channel_messages"]
 channel_users = result["channel_users"]
 
 
-# Adds a demo user, you can add other users here if you want
+# Choose random demo users to create workspaces, join workspaces, create general a channel for each workspace, join general channels, and send a message in each general channel
 def seed_workspaces():
     _ = [db.session.add(workspace) for workspace in workspaces]
     _ = [db.session.add(workspace_user) for workspace_user in workspace_users]

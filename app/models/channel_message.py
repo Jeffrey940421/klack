@@ -52,15 +52,48 @@ class ChannelMessage(db.Model):
       foreign_keys="ChannelMessage.channel_id",
       back_populates="messages",
     )
+    replies = db.relationship(
+      "ChannelMessageReply",
+      foreign_keys="ChannelMessageReply.message_id",
+      back_populates="message",
+      cascade="all, delete-orphan"
+    )
+    attachments = db.relationship(
+      "ChannelMessageAttachment",
+      foreign_keys="ChannelMessageAttachment.message_id",
+      back_populates="message",
+      cascade="all, delete-orphan"
+    )
+    reactions = db.relationship(
+      "ChannelMessageReaction",
+      foreign_keys="ChannelMessageReaction.message_id",
+      back_populates="message",
+      cascade="all, delete-orphan"
+    )
 
-    def to_dict_summary(self):
+    channel_id_index = db.Index(
+      'ix_channel_messages_channel_id',
+      channel_id
+    )
+    created_at_index = db.Index(
+      'ix_channel_messages_created_at',
+      created_at
+    )
+
+
+    def to_dict(self):
        return {
           'id': self.id,
-          'sender': self.sender.to_dict_workspace(self.channel.workspace_id),
+          'senderId': self.sender_id,
+          'senderEmail': self.sender.email,
           'channelId': self.channel_id,
           'workspaceId': self.channel.workspace_id,
           'content': self.content,
           'systemMessage': self.system_message,
+          'replies': {
+             reply.id: reply.to_dict() for reply in self.replies
+          } if not self.system_message else {},
+          'attachments': [attachment.url for attachment in self.attachments] if not self.system_message else [],
           'createdAt': self.created_at.strftime("%a, %d %b %Y %H:%M:%S GMT"),
           'updatedAt': self.updated_at.strftime("%a, %d %b %Y %H:%M:%S GMT")
        }

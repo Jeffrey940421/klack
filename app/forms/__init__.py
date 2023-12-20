@@ -3,7 +3,8 @@ from .signup_form import SignUpForm
 from .workspace_form import WorkspaceForm
 from .workspace_user_form import WorkspaceUserForm
 from .active_workspace_form import ActiveWorkspaceForm
-from .new_invitation_form import NewInvitationForm
+from .workspace_invitation_form import WorkspaceInvitationForm
 from .channel_form import ChannelForm
 from .active_channel_form import ActiveChannelForm
 from .channel_message_form import ChannelMessageForm
+from .reply_form import ReplyForm

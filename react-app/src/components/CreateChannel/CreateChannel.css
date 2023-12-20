@@ -17,6 +17,7 @@
 
 #create-channel_name-input input {
   padding-left: 25px !important;
+  padding-right: 40px !important;
 }
 
 #create-channel_name-length-limit {
@@ -41,4 +42,51 @@
   border: none;
   color: white;
   border-radius: 5px;
+}
+
+#create-channel_form button:disabled {
+  background-color: lightgray;
+  cursor: default;
+}
+
+#create-channel_description-input {
+  border-radius: 8px;
+  border: 1px solid rgba(29, 28, 29, .3);
+}
+
+#create-channel_description-input:has( textarea:focus) {
+  outline: 3px solid #bbe1f1;
+  border: 1px solid #377cb1;
+}
+
+#create-channel_description-input textarea {
+  resize: none;
+  border: none;
+  padding: 0px 10px;
+  margin-top: 30px;
+  margin-bottom: 7px;
+  height: 113px;
+}
+
+#create-channel_description-input textarea:focus {
+  outline: none;
+}
+
+#create-channel_description-input textarea::-webkit-scrollbar {
+  background-color: transparent;
+  width: 16px;
+}
+
+#create-channel_description-input textarea::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+#create-channel_description-input textarea::-webkit-scrollbar-thumb {
+  background-color: #babac0;
+  border-radius: 16px;
+  border: 4px solid #f8f8f8;
+}
+
+#create-channel_description-input textarea::-webkit-scrollbar-button {
+  display: none;
 }

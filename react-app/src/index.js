@@ -2,14 +2,12 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
-
 import { ModalProvider, Modal } from "./context/Modal";
 import { Popup, PopupProvider } from './context/Popup';
-import { RoomProvider } from "./context/RoomContext";
+import { SocketProvider } from "./context/SocketContext";
 import configureStore from "./store";
 import * as sessionActions from "./store/session";
 import App from "./App";
-
 import "./index.css";
 
 const store = configureStore();
@@ -26,7 +24,7 @@ function Root() {
 	return (
 		<ModalProvider>
 			<PopupProvider>
-				<RoomProvider>
+				<SocketProvider>
 					<Provider store={store}>
 						<BrowserRouter>
 							<App />
@@ -34,7 +32,7 @@ function Root() {
 							<Popup />
 						</BrowserRouter>
 					</Provider>
-				</RoomProvider>
+				</SocketProvider>
 			</PopupProvider>
 		</ModalProvider>
 	);

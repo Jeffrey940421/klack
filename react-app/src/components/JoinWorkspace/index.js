@@ -1,26 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Redirect } from "react-router-dom";
-import "./JoinWorkspace.css"
 import AvatarEditor from 'react-avatar-editor'
-import { authenticate } from "../../store/session";
+import * as sessionActions from "../../store/session";
+import * as workspaceActions from "../../store/workspaces";
+import * as userActions from "../../store/users";
+import * as channelActions from "../../store/channels";
+import * as messageActions from "../../store/messages";
 import { useModal } from '../../context/Modal';
 import { usePopup } from "../../context/Popup";
 import { Loader } from "../Loader";
-import { joinWorkspace, setWorkspaceLastViewed } from "../../store/workspaces";
-import { processInvitation } from "../../store/session";
+import "./JoinWorkspace.css"
 
-export function JoinWorkspace({invitation}) {
+export function JoinWorkspace({ invitation }) {
   const dispatch = useDispatch();
   const randomElement = (arr) => {
     const random = Math.floor(Math.random() * arr.length);
     return arr[random];
   }
-  const workspaceIcons = [
-    "/images/workspace_icons/workspace_icon_1.webp",
-    "/images/workspace_icons/workspace_icon_2.webp",
-    "/images/workspace_icons/workspace_icon_3.webp"
-  ]
   const profileImages = [
     "/images/profile_images/profile_images_1.png",
     "/images/profile_images/profile_images_2.png",
@@ -41,7 +37,7 @@ export function JoinWorkspace({invitation}) {
   const imageUploadRef = useRef()
   const { closeModal } = useModal();
   const { setPopupContent, closePopup } = usePopup();
-  const activeWorkspace = useSelector((state) => state.workspaces.activeWorkspace)
+  const sessionUser = useSelector(state => state.session.user)
 
   const extensionList = {
     "image/apng": "apng",
@@ -62,7 +58,7 @@ export function JoinWorkspace({invitation}) {
     setPopupContent(<Loader text="Joining Workspace ..." />)
 
     let image
-
+    // If the user uploaded an image or changed the image scale, create a file from the canvas
     if (profileImageRef && (profileImage || profileImageScale !== 0)) {
       const imageScaled = profileImageRef.current.getImage()
       image = await new Promise(resolve => imageScaled.toBlob(blob => {
@@ -72,7 +68,7 @@ export function JoinWorkspace({invitation}) {
     }
 
     let imageUrl
-
+    // If the image file is created, upload the image to the server
     if (image) {
       const imageFormData = new FormData()
       const ext = extensionList[image.type]
@@ -92,12 +88,14 @@ export function JoinWorkspace({invitation}) {
             return { ...prev }
           })
         }
+        closePopup()
         return
       } else {
         setServerErrors((prev) => {
           prev.image.push("An error occurred. Please try again.")
           return { ...prev }
         })
+        closePopup()
         return
       }
     }
@@ -107,9 +105,9 @@ export function JoinWorkspace({invitation}) {
       imageUrl: imageUrl ? imageUrl : profileImageUrl
     }
 
-    let data = await dispatch(joinWorkspace(invitation.workspaceId, profile))
+    let data = await dispatch(workspaceActions.joinWorkspace(invitation.workspaceId, profile))
     const errors = { nickname: [], image: [], other: [] }
-    if (data) {
+    if (Array.isArray(data)) {
       const nicknameErrors = data.filter(error => error.startsWith("nickname"))
       const imageErrors = data.filter(error => error.startsWith("profile"))
       const otherErrors = data.filter(error => !error.startsWith("nickname") && !error.startsWith("profile"))
@@ -119,11 +117,19 @@ export function JoinWorkspace({invitation}) {
       setServerErrors(errors)
       closePopup()
     } else {
-      if (activeWorkspace) {
-        await dispatch(setWorkspaceLastViewed(activeWorkspace.id))
+      const newSessionUser = { ...sessionUser, activeWorkspaceId: invitation.workspaceId }
+      const workspaceUsers = data.workspaceUsers
+      const channel = data.channel
+      const messages = data.messages
+      const prevActiveChannel = data.prevActiveChannel
+      await dispatch(userActions.addUsers(workspaceUsers))
+      await dispatch(channelActions.addChannel(channel))
+      await dispatch(messageActions.addMessages(messages))
+      await dispatch(sessionActions.setUser(newSessionUser))
+      if (prevActiveChannel) {
+        await dispatch(channelActions.addChannel(prevActiveChannel))
       }
-      await dispatch(authenticate())
-      await dispatch(processInvitation(invitation.id, "accept"))
+      await dispatch(sessionActions.processInvitation(invitation.id, "accept"))
       closePopup()
       closeModal()
     }
@@ -132,21 +138,17 @@ export function JoinWorkspace({invitation}) {
 
   useEffect(() => {
     const errors = { nickname: [] }
-
     if (nicknameEdited && !nickname) {
       errors.nickname.push("Name is required")
     }
-
     if (nicknameEdited && nickname.length > 80) {
       errors.nickname.push("Name must be at most 80 characters long")
     }
-
     setValidationErrors(errors)
   }, [nickname])
 
   return (
     <div id="join-workspace_container">
-
       <form id="join-workspace_workspace-user-form">
         <div>
           <h2>What’s your name?</h2>
@@ -192,7 +194,8 @@ export function JoinWorkspace({invitation}) {
             <div>
               <AvatarEditor
                 ref={profileImageRef}
-                image={profileImageUrl.startsWith("blob") ? profileImageUrl : profileImageUrl + "?dummy=" + String(new Date().getTime())}
+                // Create the dummy query string to force the image to reload
+                image={profileImageUrl}
                 width={110}
                 height={110}
                 border={0}
@@ -219,8 +222,15 @@ export function JoinWorkspace({invitation}) {
               multiple={false}
               name="icon"
               onChange={(e) => {
-                setProfileImage(e.target.files[0])
-                setProfileImageUrl(URL.createObjectURL(e.target.files[0]))
+                const file = e.target.files[0]
+                const fileName = file.name
+                const ext = fileName.split(".")[1]
+                const validExt = ["png", "jpg", "jpeg", "gif", "webp"]
+                // Accept the file only when the extension is valid
+                if (validExt.includes(ext)) {
+                  setProfileImage(e.target.files[0])
+                  setProfileImageUrl(URL.createObjectURL(e.target.files[0]))
+                }
               }}
               onClick={(e) => e.target.value = null}
             />

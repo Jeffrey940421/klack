@@ -1,12 +1,10 @@
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
-from wtforms.validators import DataRequired, Length, Optional, URL, ValidationError
-from app.models import Workspace
+from wtforms.validators import ValidationError
 
-def workspace_exists(form, field):
-  workspace = Workspace.query.get(field.data)
-  if not workspace:
-    raise ValidationError('Workspace is not found')
+def input_valid(form, field):
+  if field.data != 0 and not field.data:
+    raise ValidationError('This field is required')
 
 class ActiveWorkspaceForm(FlaskForm):
-  active_workspace_id = IntegerField('active workspace id', validators=[DataRequired(), workspace_exists])
+  active_workspace_id = IntegerField('active workspace id', validators=[input_valid])

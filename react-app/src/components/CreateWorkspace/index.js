@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Redirect } from "react-router-dom";
 import "./CreateWorkspace.css"
 import AvatarEditor from 'react-avatar-editor'
-import { createWorkspace, setWorkspaceLastViewed } from "../../store/workspaces";
-import { authenticate } from "../../store/session";
+import * as sessionActions from "../../store/session";
+import * as workspaceActions from "../../store/workspaces";
+import * as userActions from "../../store/users";
+import * as channelActions from "../../store/channels";
+import * as messageActions from "../../store/messages";
 import { useModal } from '../../context/Modal';
 import { usePopup } from "../../context/Popup";
 import { Loader } from "../Loader";
@@ -42,13 +44,13 @@ export function CreateWorkspace() {
   const [profileImageScale, setProfileImageScale] = useState(0)
   const [validationErrors, setValidationErrors] = useState({ name: [], nickname: [] })
   const [serverErrors, setServerErrors] = useState({ name: [], icon: [], nickname: [], image: [], other: [] })
+  const sessionUser = useSelector(state => state.session.user);
   const workspaceIconRef = useRef()
   const iconUploadRef = useRef()
   const profileImageRef = useRef()
   const imageUploadRef = useRef()
   const { closeModal } = useModal();
   const { setPopupContent, closePopup } = usePopup();
-  const activeWorkspace = useSelector((state) => state.workspaces.activeWorkspace)
 
   const extensionList = {
     "image/apng": "apng",
@@ -70,7 +72,7 @@ export function CreateWorkspace() {
 
     let icon
     let image
-
+    // If the user uploaded an image or changed the image scale, create a file from the canvas
     if (workspaceIconRef && (workspaceIcon || workspaceIconScale !== 0)) {
       const iconScaled = workspaceIconRef.current.getImage()
       icon = await new Promise(resolve => iconScaled.toBlob(blob => {
@@ -78,7 +80,6 @@ export function CreateWorkspace() {
         resolve(file)
       }))
     }
-
     if (profileImageRef && (profileImage || profileImageScale !== 0)) {
       const imageScaled = profileImageRef.current.getImage()
       image = await new Promise(resolve => imageScaled.toBlob(blob => {
@@ -89,7 +90,7 @@ export function CreateWorkspace() {
 
     let iconUrl
     let imageUrl
-
+    // If the image file is created, upload the image to the server
     if (icon) {
       const iconFormData = new FormData()
       const ext = extensionList[icon.type]
@@ -120,7 +121,6 @@ export function CreateWorkspace() {
         return
       }
     }
-
     if (image) {
       const imageFormData = new FormData()
       const ext = extensionList[image.type]
@@ -159,9 +159,9 @@ export function CreateWorkspace() {
       imageUrl: imageUrl ? imageUrl : profileImageUrl
     }
 
-    let data = await dispatch(createWorkspace(workspace))
+    let data = await dispatch(workspaceActions.createWorkspace(workspace))
     const errors = { name: [], icon: [], nickname: [], image: [], other: [] }
-    if (data) {
+    if (Array.isArray(data)) {
       const nameErrors = data.filter(error => error.startsWith("name"))
       const iconErrors = data.filter(error => error.startsWith("icon"))
       const nicknameErrors = data.filter(error => error.startsWith("nickname"))
@@ -175,10 +175,19 @@ export function CreateWorkspace() {
       setServerErrors(errors)
       closePopup()
     } else {
-      if (activeWorkspace) {
-        await dispatch(setWorkspaceLastViewed(activeWorkspace.id))
+      const newSessionUser = { ...sessionUser, activeWorkspaceId: data.workspace.id }
+      const workspaceUser = data.workspaceUser
+      const channel = data.channel
+      const message = data.message
+      const prevActiveChannel = data.prevActiveChannel
+      await dispatch(userActions.addUser(workspaceUser))
+      await dispatch(channelActions.addChannel(channel))
+      await dispatch(workspaceActions.addWorkspace(data.workspace))
+      await dispatch(messageActions.addMessage(message))
+      await dispatch(sessionActions.setUser(newSessionUser))
+      if (prevActiveChannel) {
+        await dispatch(channelActions.addChannel(prevActiveChannel))
       }
-      await dispatch(authenticate())
       closePopup()
       closeModal()
     }
@@ -186,23 +195,18 @@ export function CreateWorkspace() {
 
   useEffect(() => {
     const errors = { name: [], nickname: [] }
-
     if (nameEdited && !name) {
       errors.name.push("Workspace name is required")
     }
-
     if (name && name.length > 80) {
       errors.name.push("Workspace name must be at most 80 characters long")
     }
-
     if (nicknameEdited && !nickname) {
       errors.nickname.push("Name is required")
     }
-
     if (nickname && nickname.length > 80) {
       errors.nickname.push("Name must be at most 80 characters long")
     }
-
     setValidationErrors(errors)
   }, [name, nameEdited, nickname, nicknameEdited])
 
@@ -211,8 +215,10 @@ export function CreateWorkspace() {
       <span id="create-workspace_step">
         Step {step} of 2
       </span>
-
-      <form id="create-workspace_workspace-form" className={step === 1 ? "" : "hidden"}>
+      <form
+        id="create-workspace_workspace-form"
+        className={step === 1 ? "" : "hidden"}
+      >
         <div>
           <h2>What's the name of your company or team?</h2>
           <p>This will be the name of your Klack workspace — choose something that your team will recognize.</p>
@@ -252,12 +258,12 @@ export function CreateWorkspace() {
               ))
             }
           </div>
-          <h3>Your workspace Icon <span> (optional)</span></h3>
+          <h3>Your workspace icon <span> (optional)</span></h3>
           <div id="create-workspace_workspace-icon-upload">
             <div>
               <AvatarEditor
                 ref={workspaceIconRef}
-                image={workspaceIconUrl.startsWith("blob") ? workspaceIconUrl : workspaceIconUrl + "?dummy=" + String(new Date().getTime())}
+                image={workspaceIconUrl}
                 width={110}
                 height={110}
                 border={0}
@@ -282,8 +288,15 @@ export function CreateWorkspace() {
               multiple={false}
               name="icon"
               onChange={(e) => {
-                setWorkspaceIcon(e.target.files[0])
-                setWorkspaceIconUrl(URL.createObjectURL(e.target.files[0]))
+                const file = e.target.files[0]
+                const fileName = file.name
+                const ext = fileName.split(".")[1]
+                const validExt = ["png", "jpg", "jpeg", "gif", "webp"]
+                // Accept the file only when the extension is valid
+                if (validExt.includes(ext)) {
+                  setWorkspaceIcon(e.target.files[0])
+                  setWorkspaceIconUrl(URL.createObjectURL(e.target.files[0]))
+                }
               }}
               onClick={(e) => e.target.value = null}
             />
@@ -319,9 +332,6 @@ export function CreateWorkspace() {
           Next
         </button>
       </form>
-
-
-
       <form id="create-workspace_workspace-user-form" className={step === 2 ? "" : "hidden"}>
         <div>
           <h2>What’s your name?</h2>
@@ -367,7 +377,7 @@ export function CreateWorkspace() {
             <div>
               <AvatarEditor
                 ref={profileImageRef}
-                image={profileImageUrl.startsWith("blob") ? profileImageUrl : profileImageUrl + "?dummy=" + String(new Date().getTime())}
+                image={profileImageUrl}
                 width={110}
                 height={110}
                 border={0}
@@ -394,8 +404,15 @@ export function CreateWorkspace() {
               multiple={false}
               name="icon"
               onChange={(e) => {
-                setProfileImage(e.target.files[0])
-                setProfileImageUrl(URL.createObjectURL(e.target.files[0]))
+                const file = e.target.files[0]
+                const fileName = file.name
+                const ext = fileName.split(".")[1]
+                const validExt = ["png", "jpg", "jpeg", "gif", "webp"]
+                // Accept the file only when the extension is valid
+                if (validExt.includes(ext)) {
+                  setProfileImage(e.target.files[0])
+                  setProfileImageUrl(URL.createObjectURL(e.target.files[0]))
+                }
               }}
               onClick={(e) => e.target.value = null}
             />
