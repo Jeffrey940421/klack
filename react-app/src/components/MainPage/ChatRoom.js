@@ -72,6 +72,7 @@ export function ChatRoom() {
     await dispatch(channelActions.deleteWorkspaceChannels(workspaceId))
     await dispatch(messageActions.deleteWorkspaceMessages(workspaceId))
     await dispatch(userActions.deleteWorkspaceUsers(workspaceId))
+    closePopup()
   }
 
   const leaveWorkspace = async () => {
@@ -82,6 +83,7 @@ export function ChatRoom() {
     await dispatch(channelActions.deleteWorkspaceChannels(activeWorkspaceId))
     await dispatch(messageActions.deleteWorkspaceMessages(activeWorkspaceId))
     await dispatch(userActions.deleteWorkspaceUsers(activeWorkspaceId))
+    closePopup()
   }
 
   const getWorkspaceUnreadMessages = (workspaceId) => {
