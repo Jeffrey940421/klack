@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useThread } from "../../context/ThreadContext";
+import { usePopup } from "../../context/Popup";
+import { Loader } from "../Loader";
 import * as workspaceActions from "../../store/workspaces"
 import * as sessionActions from "../../store/session"
 import * as channelActions from "../../store/channels"
@@ -34,6 +36,7 @@ export function ChatRoom() {
   const [channelExpanded, setChannelExpanded] = useState(true)
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
   const { showThread, setShowThread } = useThread();
+  const { setPopupContent, closePopup } = usePopup()
 
   const switchWorkspace = async (workspaceId) => {
     if (workspaceId !== activeWorkspaceId && workspaceId in workspaces) {
@@ -62,6 +65,7 @@ export function ChatRoom() {
   }
 
   const deleteWorkspace = async (workspaceId) => {
+    setPopupContent(<Loader text="Deleting Workspace ..." />)
     setShowWorkspaceMenu(false)
     const user = await dispatch(workspaceActions.removeWorkspace(workspaceId))
     await dispatch(sessionActions.setUser(user))
@@ -71,6 +75,7 @@ export function ChatRoom() {
   }
 
   const leaveWorkspace = async () => {
+    setPopupContent(<Loader text="Leaving Workspace ..." />)
     setShowWorkspaceMenu(false)
     const user = await dispatch(workspaceActions.leaveWorkspace(activeWorkspaceId))
     await dispatch(sessionActions.setUser(user))
