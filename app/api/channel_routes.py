@@ -148,8 +148,15 @@ def edit_channel(id):
             channel.description=form.data["description"]
         messages = None
         if len(message_values):
-            messages = db.session.scalars(insert(ChannelMessage).returning(ChannelMessage), message_values).all()
+            messageIds = db.session.scalars(insert(ChannelMessage).returning(ChannelMessage.id), message_values).all()
             db.session.commit()
+            messages = ChannelMessage.query.options(
+                joinedload(ChannelMessage.attachments),
+                joinedload(ChannelMessage.sender),
+                joinedload(ChannelMessage.channel),
+                joinedload(ChannelMessage.replies)
+                .joinedload(ChannelMessageReply.sender)
+            ).filter(ChannelMessage.id.in_(messageIds)).all()
             for message in messages:
                 socketio.emit("send_message", {
                     "senderId": current_user.id,

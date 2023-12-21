@@ -429,8 +429,7 @@ def leave_workspace(id):
             "system_message": True
         } for channel in channels if channel not in channels_to_delete
     ]
-    messages = db.session.scalars(insert(ChannelMessage).returning(ChannelMessage), message_values)
-    print("------------------------------", messages.all())
+    messageIds = db.session.scalars(insert(ChannelMessage).returning(ChannelMessage.id), message_values).all()
     # Remove the user from all the channels that the user has joined in the workspace
     db.session.execute(delete(ChannelUser).where(
         ChannelUser.channel_id.in_(channel_ids), ChannelUser.user_id == current_user.id))
@@ -448,7 +447,14 @@ def leave_workspace(id):
     user.active_workspace_id = user.workspaces[0].id if len(user.workspaces) else None
     db.session.commit()
     # Emit the updated user profile and system messages to all the users in the workspace
-    for message in messages.all():
+    messages = ChannelMessage.query.options(
+        joinedload(ChannelMessage.attachments),
+        joinedload(ChannelMessage.sender),
+        joinedload(ChannelMessage.channel),
+        joinedload(ChannelMessage.replies)
+        .joinedload(ChannelMessageReply.sender)
+    ).filter(ChannelMessage.id.in_(messageIds)).all()
+    for message in messages:
         socketio.emit("send_message", {
             "senderId": current_user.id,
             "message": json.dumps(message.to_dict(), default=str),
