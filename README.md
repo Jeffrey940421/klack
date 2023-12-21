@@ -1,48 +1,37 @@
-# Flask React Project
+# Klack
 
-This is the starter for the Flask React project.
+## Description
+Klack project attempts to build a full stack clone of the Slack application, including database, file storage, RESTful API, web framework, and UI design.
 
-## Getting started
-1. Clone this repository (only this branch)
+## Features
+* Credential authentication
+* Server error handling
+* Client form validation
+* Image croping and uploading with AWS
+* Realtime messaging and state synchronization with Socket.IO
+* New invitation and message notifications
+* Rich text editor featuring formatting, mention, and emoji picker with CKEditor5
+* Chat box featuring auto focus and infinite scrolling
+* Workspace, channel, invitation, message, and reply creation, updating, and deletion
 
-2. Install dependencies
+## Tools
+* React
+* Redux
+* Flask
+* SqlAlchemy
+* Alembic
+* Sqlite3
+* PostgreSQL
+* CSS
+* HTML
+* CKEditor5
+* emoji-picker-react
+* html-react-parser
+* react-avatar-editor
+* react-spring
+* Socket.IO
 
-      ```bash
-      pipenv install -r requirements.txt
-      ```
-
-3. Create a **.env** file based on the example with proper settings for your
-   development environment
-
-4. Make sure the SQLite3 database connection URL is in the **.env** file
-
-5. This starter organizes all tables inside the `flask_schema` schema, defined
-   by the `SCHEMA` environment variable.  Replace the value for
-   `SCHEMA` with a unique name, **making sure you use the snake_case
-   convention**.
-
-6. Get into your pipenv, migrate your database, seed your database, and run your Flask app
-
-   ```bash
-   pipenv shell
-   ```
-
-   ```bash
-   flask db upgrade
-   ```
-
-   ```bash
-   flask seed all
-   ```
-
-   ```bash
-   flask run
-   ```
-
-7. To run the React App in development, checkout the [README](./react-app/README.md) inside the `react-app` directory.
-
-
-## Deployment through Render.com
+## Project Showcasing
 
 First, refer to your Render.com deployment articles for more detailed
 instructions about getting started with [Render.com], creating a production

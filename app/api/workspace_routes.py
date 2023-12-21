@@ -430,6 +430,7 @@ def leave_workspace(id):
         } for channel in channels if channel not in channels_to_delete
     ]
     messages = db.session.scalars(insert(ChannelMessage).returning(ChannelMessage), message_values)
+    print("------------------------------", messages.all())
     # Remove the user from all the channels that the user has joined in the workspace
     db.session.execute(delete(ChannelUser).where(
         ChannelUser.channel_id.in_(channel_ids), ChannelUser.user_id == current_user.id))
