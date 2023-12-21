@@ -13,7 +13,7 @@ Klack project attempts to build a full stack clone of the Slack application, inc
 * Realtime messaging and state synchronization with Socket.IO
 * New invitation and message notifications
 * Rich text editor featuring formatting, mention, and emoji picker with CKEditor5
-* Chat box featuring auto focus and infinite scrolling
+* Chat box featuring auto focusing and infinite scrolling
 * Workspace, channel, invitation, message, and reply creation, updating, and deletion
 
 ## Tools
@@ -35,61 +35,33 @@ Klack project attempts to build a full stack clone of the Slack application, inc
 
 ## Project Showcasing
 1. Create Workspace
-![create-workspace]
-
-[create-workspace]: ./images/create-workspace.gif
+![create-workspace](./images/create-workspace.gif)
 2. Edit Workspace
-![edit-workspace]
-
-[edit-workspace]: ./images/edit-workspace.gif
+![edit-workspace](./images/edit-workspace.gif)
 3. Leave Workspace
-![leave-workspace]
-
-[leave-workspace]: ./images/leave-workspace.gif
+![leave-workspace](./images/leave-workspace.gif)
 4. Delete Workspace
-![delete-workspace]
-
-[delete-workspace]: ./images/delete-workspace.gif
+![delete-workspace](./images/delete-workspace.gif)
 5. Send and Accept Invitation
-![send-invitation]
-
-[send-invitation]: ./images/send-invitation.gif
+![send-invitation](./images/send-invitation.gif)
 6. Add Coworkers to Channel
-![add-to-channel]
-
-[add-to-channel]: ./images/add-to-channel.gif
+![add-to-channel](./images/add-to-channel.gif)
 7. Create Channel
-![create-channel]
-
-[create-channel]: ./images/create-channel.gif
+![create-channel](./images/create-channel.gif)
 8. Edit Channel
-![edit-channel]
-
-[edit-channel]: ./images/edit-channel.gif
+![edit-channel](./images/edit-channel.gif)
 9. Leave Channel
-![leave-channel]
-
-[leave-channel]: ./images/leave-channel.gif
+![leave-channel](./images/leave-channel.gif)
 10. Delete Channel
-![delete-channel]
-
-[delete-channel]: ./images/delete-channel.gif
+![delete-channel](./images/delete-channel.gif)
 11. Channel Details
-![channel-detail]
-
-[channel-detail]: ./images/channel-detail.gif
+![channel-detail](./images/channel-detail.gif)
 12. Edit Profile
-![edit-profile]
-
-[edit-profile]: ./images/edit-profile.gif
+![edit-profile](./images/edit-profile.gif)
 13. Send, Edit, and Delete Channel Message
-![message]
-
-[message]: ./images/message.gif
+![message](./images/message.gif)
 14. Send, Edit, and Delete Message Reply
-![reply]
-
-[reply]: ./images/reply.gif
+![reply](./images/reply.gif)
 
 ## Setup
 1. Clone project
