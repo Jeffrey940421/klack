@@ -307,7 +307,11 @@ export function ChannelWindow() {
         <div id="channel-window_body">
           <Message channel={activeChannel} editorHeight={editorHeight} />
         </div>
-        <div id="channel-window_textarea" className={focused ? "focused" : ""}>
+        <div
+          id="channel-window_textarea"
+          className={focused ? "focused" : ""}
+          key={activeChannel?.name}
+        >
           {/* Replaced with CKEditor */}
           {/* <div>
             <textarea
@@ -374,6 +378,7 @@ export function ChannelWindow() {
                   setEditorHeight(newHeight);
                 }, 0)
               });
+              setEditorHeight(108)
             }}
             onChange={(e, editor) => {
               setNewMessage(editor.getData())
