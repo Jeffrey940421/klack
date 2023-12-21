@@ -33,6 +33,8 @@ Klack project attempts to build a full stack clone of the Slack application, inc
 
 ## Project Showcasing
 
+
+
 First, refer to your Render.com deployment articles for more detailed
 instructions about getting started with [Render.com], creating a production
 database, and deployment debugging tips.
