@@ -33,10 +33,12 @@ export function ChatRoom() {
   const messages = useSelector((state) => state.messages.messageList);
   const { setModalContent } = useModal();
   const ulRef = useRef();
+  const infoRef = useRef();
   const [channelExpanded, setChannelExpanded] = useState(true)
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   const { showThread, setShowThread } = useThread();
-  const { setPopupContent, closePopup } = usePopup()
+  const { setPopupContent, closePopup } = usePopup();
 
   const switchWorkspace = async (workspaceId) => {
     if (workspaceId !== activeWorkspaceId && workspaceId in workspaces) {
@@ -125,47 +127,107 @@ export function ChatRoom() {
     return () => document.removeEventListener("click", closeWorkspaceMenu);
   }, [showWorkspaceMenu]);
 
+  useEffect(() => {
+    if (!showInfo) return;
+
+    const closeInfo = (e) => {
+      if (infoRef.current && !infoRef.current.contains(e.target)) {
+        setShowInfo(false);
+      }
+    };
+
+    document.addEventListener("click", closeInfo);
+
+    return () => document.removeEventListener("click", closeInfo);
+  }, [showInfo]);
+
   return (
     <div id="chat-room_container">
       <div id="chat-room_workspaces-sidebar-container">
         <div id="chat-room_workspaces-sidebar">
-          {
-            workspaceIds
-              .map(id => workspaces[id])
-              .map(workspace => {
-                return (
-                  <div key={workspace.id}>
-                    <button
-                      className={`chat-room_workspace${workspace.id === activeWorkspaceId ? " active" : ""}`}
-                      onClick={() => switchWorkspace(workspace.id)}
-                    >
-                      <img src={workspace.iconUrl} />
-                      {
-                        getWorkspaceUnreadMessages(workspace.id).length > 0 &&
-                        <div className="chat-room_workspace-message-alert">
-                          <div></div>
-                        </div>
-                      }
-                    </button>
-                    <span className="chat-room_workspace-name">
-                      <span>
-                        {workspace.name}
+          <div id="chat-room_workspaces">
+            {
+              workspaceIds
+                .map(id => workspaces[id])
+                .map(workspace => {
+                  return (
+                    <div key={workspace.id}>
+                      <button
+                        className={`chat-room_workspace${workspace.id === activeWorkspaceId ? " active" : ""}`}
+                        onClick={() => switchWorkspace(workspace.id)}
+                      >
+                        <img src={workspace.iconUrl} />
+                        {
+                          getWorkspaceUnreadMessages(workspace.id).length > 0 &&
+                          <div className="chat-room_workspace-message-alert">
+                            <div></div>
+                          </div>
+                        }
+                      </button>
+                      <span className="chat-room_workspace-name">
+                        <span>
+                          {workspace.name}
+                        </span>
                       </span>
-                    </span>
-                  </div>
-                )
-              })
-          }
-          <div>
+                    </div>
+                  )
+                })
+            }
+            <div>
+              <button
+                id="chat-room_create-workspace"
+                onClick={() => setModalContent(<CreateWorkspace />)}
+              >
+                <i className="fa-solid fa-plus" />
+              </button>
+              <span id="chat-room_create-workspace-label">
+                Create workspaces
+              </span>
+            </div>
+          </div>
+          <div
+            id="chat-room_about-me"
+            className={showInfo ? "showInfo" : ""}
+          >
+            <span>Meet<br></br>Developer</span>
             <button
-              id="chat-room_create-workspace"
-              onClick={() => setModalContent(<CreateWorkspace />)}
+              onClick={() => setShowInfo((prev) => !prev)}
             >
-              <i className="fa-solid fa-plus" />
+              <img src="/avatar.jpg" />
             </button>
-            <span id="chat-room_create-workspace-label">
-              Create workspaces
-            </span>
+            <div
+              id="chat-room_personal-info"
+              className={showInfo ? "" : "hidden"}
+              ref={infoRef}
+            >
+              <span>Jeffrey Zhang</span>
+              <div id="chat-room_contact">
+                <a
+                  className='github'
+                  href="https://github.com/Jeffrey940421"
+                >
+                  <i className="fa-brands fa-github" />
+                </a>
+                <a
+                  className='linkedin'
+                  href="https://www.linkedin.com/in/jeffrey-zhang-usc/"
+                >
+                  <i className="fa-brands fa-linkedin" />
+                </a>
+                <a
+                  className='email'
+                  href='mailto: jeffrey940421@gmail.com'
+                >
+                  <i className="fa-solid fa-envelope" />
+                </a>
+                <a
+                  className='portfolio'
+                  href='https://portfolio.jeffreyzhang.codes/'
+                >
+                  <i className="fa-solid fa-laptop-code" />
+                </a>
+              </div>
+            </div>
           </div>
         </div>
         <div id="chat-room_workspaces-sidebar-spacer"></div>
@@ -258,7 +320,7 @@ export function ChatRoom() {
             <li
               onClick={() => {
                 setShowWorkspaceMenu(false)
-                setModalContent(<Invitation workspace={activeWorkspace}/>)
+                setModalContent(<Invitation workspace={activeWorkspace} />)
               }}
             >
               <span>Invite People to Join Workspace</span>

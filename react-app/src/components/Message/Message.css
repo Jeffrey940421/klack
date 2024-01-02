@@ -66,7 +66,7 @@
   align-items: flex-end;
 }
 
-.message_message-body div span:nth-child(1) {
+.message_message-body div > span:nth-child(1) {
   font-size: 14px;
   font-weight: bold;
 }
@@ -515,7 +515,7 @@
   left: 20px;
   border: 1px solid lightgray !important;
   --epr-emoji-size: 20px !important;
-  font-size: 15px;
+  font-size: 15px !important;
   --epr-preview-height: 60px !important;
   z-index: 1100 !important;
 }
@@ -541,10 +541,10 @@
   box-sizing: border-box;
   position: relative;
   left: -6px;
-  top: -3px;
+  top: -2px;
   border-radius: 5px;
   border: 1px solid transparent;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .message_thread:hover {
@@ -582,4 +582,194 @@
 
 .message_colored {
   background-color: #FCF4DA !important;
+}
+
+#message_attachment-preview {
+  position: relative;
+  display: flex;
+  gap: 10px 15px;
+  flex-wrap: wrap;
+  padding-top: 5px;
+}
+
+.message_image-attachment,
+.message_video-attachment,
+.message_file-attachment {
+  position: relative;
+  padding: 10px;
+  width: min(300px, 100%);
+  border: 1px solid lightgray;
+  background-color: white;
+  border-radius: 10px;
+  display: grid;
+  grid-template-areas:
+    "a b"
+    "a c";
+  flex-wrap: nowrap;
+  column-gap: 10px;
+  justify-content: flex-start;
+  align-items: center;
+  height: 67px;
+  box-sizing: border-box;
+}
+
+.message_image-attachment img,
+.message_video-attachment video,
+.message_file-background {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-area: a;
+}
+
+.message_file-background {
+  background-color: rgb(31, 174, 218);
+  color: white;
+}
+
+.message_image-attachment img,
+.message_video-attachment video {
+  object-fit: cover;
+}
+
+#message_attachment-preview .message_attachment-name {
+  font-size: 13px !important;
+  font-weight: bold;
+  color: black !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  max-width: 200px;
+}
+
+#message_attachment-preview .message_attachment-type {
+  font-size: 13px !important;
+  color: gray;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  max-width: 200px;
+}
+
+.message_image-attachment {
+  cursor: zoom-in;
+}
+
+.message_video-attachment {
+  cursor: pointer;
+}
+
+.message_file-attachment {
+  cursor: pointer;
+}
+
+#message_image-modal,
+#message_video-modal {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+}
+
+#message_image-modal img,
+#message_video-modal video {
+  height: 70vh;
+  width: auto;
+}
+
+.message_attachment-play {
+  position: absolute;
+  top: 25px;
+  left: 25px;
+  color: white !important;
+}
+
+.message-attachment-buttons {
+  position: absolute;
+  right: 10px;
+}
+
+.message-attachment-buttons button {
+  border: none;
+  background-color: transparent;
+  color: rgb(187, 185, 185);
+  padding: 5px;
+  border-radius: 5px;
+  display: none;
+}
+
+.message-attachment-buttons button:hover {
+  background-color: rgb(226, 226, 226);
+  color: black;
+}
+
+.message_image-attachment:hover .message-attachment-buttons button,
+.message_video-attachment:hover .message-attachment-buttons button,
+.message_file-attachment:hover .message-attachment-buttons button {
+  display: block;
+}
+
+.message_message-body:has( #message_attachment-preview) .message_thread {
+  margin-top: 5px;
+}
+
+.message_reaction-picker {
+  position: absolute;
+  height: fit-content;
+  background-color: white;
+  z-index: 10;
+  right: 55px;
+}
+
+.message_message-body div.message_reaction-picker .EmojiPickerReact {
+  border: 1px solid lightgray !important;
+  --epr-emoji-size: 20px !important;
+  font-size: 15px !important;
+}
+
+#scroll_outer:has(.message_reaction-picker:not(.hidden)) {
+  overflow-y: hidden !important;
+  padding-right: 16px !important;
+}
+
+.message_reactions {
+  display: flex;
+  align-items: center;
+  column-gap: 5px;
+  padding-top: 5px;
+  flex-wrap: wrap;
+  row-gap: 5px;
+}
+
+.message_reaction-set {
+  background-color: rgba(211, 211, 211, 0.3);
+  width: fit-content;
+  box-sizing: border-box;
+  padding: 2px 6px;
+  border-radius: 30px;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.message_reaction-set.message_reaction-sent {
+  background-color: #9ed4e95b;
+  border: 1px solid #81bacf;
+}
+
+.message_reaction {
+  width: 16px !important;
+  font-size: 14px !important;
+}
+
+.message_reaction-count {
+  padding-right: 4px;
+  padding-left: 5px;
+  font-size: 12px !important;
+  color: gray !important;
 }

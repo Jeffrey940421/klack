@@ -10,10 +10,12 @@ import { CKEditor } from '@ckeditor/ckeditor5-react';
 import Editor from 'ckeditor5-custom-build/build/ckeditor';
 import EmojiPicker from 'emoji-picker-react';
 import { useThread } from "../../context/ThreadContext";
+import mime from "./mime.json";
+import { saveAs } from 'file-saver'
 import "./Message.css"
 
 
-export function Message({ channel, editorHeight }) {
+export function Message({ channel, editorHeight, setEditorHeight, editorObj }) {
   const dispatch = useDispatch()
   const { store } = useContext(ReactReduxContext)
   const { setModalContent } = useModal()
@@ -27,6 +29,7 @@ export function Message({ channel, editorHeight }) {
   const workspaceUsers = users[channel.workspaceId]
   const channelCreator = workspaceUsers[channel.creatorId]
   const [showEditor, setShowEditor] = useState(false)
+  const [showReaction, setShowReaction] = useState(false)
   const [editorId, setEditorId] = useState(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const [dropdownId, setDropdownId] = useState(null)
@@ -42,6 +45,18 @@ export function Message({ channel, editorHeight }) {
   const submitRef = useRef(null)
   const ulRef = useRef({})
   const buttonRef = useRef({})
+  const reactionRef = useRef({})
+  const reactionButtonRef = useRef({})
+
+  const downloadFile = async (e, url, fileName) => {
+    e.stopPropagation()
+    const response = await fetch(`${url}?${new Date()}`, {
+      mode: 'cors',
+      credentials: 'same-origin'
+    })
+    const blob = await response.blob()
+    saveAs(blob, fileName)
+  }
 
   const extractContent = (str) => {
     const span = document.createElement('span');
@@ -122,7 +137,7 @@ export function Message({ channel, editorHeight }) {
 
   const handleSubmit = async (e, id) => {
     e.preventDefault()
-    const data = await dispatch(messagesActions.editMessage(id, updatedMessage))
+    const data = await dispatch(messagesActions.editMessage(id, updatedMessage || "<p></p>"))
     if (!data) {
       setShowEditor(false)
       setEditorId(null)
@@ -137,6 +152,7 @@ export function Message({ channel, editorHeight }) {
         && buttonRef.current[dropdownId]
         && !ulRef.current[dropdownId].contains(e.target)
         && !buttonRef.current[dropdownId].contains(e.target)
+        && !showReaction
       ) {
         setShowDropdown(false)
         setDropdownId(null)
@@ -147,7 +163,7 @@ export function Message({ channel, editorHeight }) {
     return (() => {
       document.removeEventListener("click", closeDropdown)
     })
-  }, [dropdownId, ulRef, buttonRef, messages])
+  }, [dropdownId, ulRef, buttonRef, messages, showReaction])
 
   useEffect(() => {
     const closeEmojiPicker = (e) => {
@@ -160,6 +176,7 @@ export function Message({ channel, editorHeight }) {
         setShowEmojiPicker(false)
       }
     }
+
     document.addEventListener("click", closeEmojiPicker)
     return (() => {
       document.removeEventListener("click", closeEmojiPicker)
@@ -170,10 +187,32 @@ export function Message({ channel, editorHeight }) {
     setEditorReady(false)
   }, [editorId])
 
+  useEffect(() => {
+    const closeReaction = (e) => {
+      if (
+        reactionRef.current[dropdownId]
+        && reactionButtonRef.current[dropdownId]
+        && !reactionRef.current[dropdownId].contains(e.target)
+        && !reactionButtonRef.current[dropdownId].contains(e.target)
+      ) {
+        setShowReaction(false)
+      }
+    }
+
+    document.addEventListener("click", closeReaction)
+    return (() => {
+      document.removeEventListener("click", closeReaction)
+    })
+  }, [reactionRef, dropdownId, messages])
+
+  useEffect(() => {
+    setEditorReady(false)
+  }, [editorId])
+
   return (
     <>
       <div id="message_container">
-        <ScrollContainer editorHeight={editorHeight} editorId={editorId} showEditor={showEditor}>
+        <ScrollContainer editorHeight={editorHeight} setEditorHeight={setEditorHeight} editorObj={editorObj} editorId={editorId} showEditor={showEditor} >
           {
             channelMessages.length === channel.messageNum &&
             <div
@@ -294,7 +333,7 @@ export function Message({ channel, editorHeight }) {
                                 setShowEmojiPicker((prev) => !prev)
                                 // Adjust the height and position of the emoji picker based on the distance between the toolbar
                                 // and the window boundary
-                                const picker = document.querySelector(`#message_${message.id} .EmojiPickerReact`)
+                                const picker = document.querySelector(`#message_${message.id} #message_emoji-picker .EmojiPickerReact`)
                                 const distanceToBottom = window.innerHeight - emojiButtonRef.current[message.id].getBoundingClientRect().bottom - 50
                                 const distanceToTop = emojiButtonRef.current[message.id].getBoundingClientRect().top - 180
                                 const pickerHeight = Math.min(Math.max(distanceToBottom, distanceToTop), 400)
@@ -348,7 +387,7 @@ export function Message({ channel, editorHeight }) {
                             <button
                               id="message_textarea-submit"
                               ref={submitRef}
-                              disabled={!updatedMessage}
+                              disabled={!updatedMessage && message.attachments.length === 0}
                               onClick={(e) => handleSubmit(e, message.id)}
                             >
                               Save
@@ -384,10 +423,166 @@ export function Message({ channel, editorHeight }) {
                         </span>
                       </> :
                       <span>
-                        {parse(message.content)}
+                        {
+                          message.content !== "<p></p>" &&
+                          parse(message.content)
+                        }
                         <span className="message_edited">
                           {message.createdAt !== message.updatedAt && "(edited)"}
                         </span>
+                        {
+                          message.attachments.length > 0 &&
+                          <div id="message_attachment-preview">
+                            {
+                              message.attachments.map((url, i) => {
+                                const urlSegements = url.split("/")
+                                const fileName = urlSegements[urlSegements.length - 1]
+                                const originalFileName = fileName.split("-", 1)
+                                const fileNameSegements = fileName.split(".")
+                                const fileExtension = fileNameSegements[fileNameSegements.length - 1]
+                                const fullType = mime[fileExtension]
+                                const type = fullType ? fullType.split("/")[0] : "other"
+                                if (type === "image") {
+                                  return (
+                                    <div
+                                      className="message_image-attachment"
+                                      key={i}
+                                      onClick={() => {
+                                        setModalContent(
+                                          <div id="message_image-modal">
+                                            <img src={url} alt="attachment" />
+                                          </div>
+                                        )
+                                      }}
+                                    >
+                                      <img
+                                        src={url}
+                                        alt="attachment"
+                                      />
+                                      <span className="message_attachment-name">{originalFileName}</span>
+                                      <span className="message_attachment-type">{type[0].toUpperCase() + type.slice(1).toLowerCase()}</span>
+                                      <span className="message-attachment-buttons">
+                                        <button
+                                          onClick={(e) => downloadFile(e, url, originalFileName)}
+                                        >
+                                          <i class="fa-solid fa-cloud-arrow-down" />
+                                        </button>
+                                      </span>
+                                    </div>
+                                  )
+                                } else if (type === "video") {
+                                  return (
+                                    <div
+                                      className="message_video-attachment"
+                                      key={i}
+                                      onClick={() => {
+                                        setModalContent(
+                                          <div id="message_video-modal">
+                                            <video src={url} controls />
+                                          </div>
+                                        )
+                                      }}
+                                    >
+                                      <video
+                                        src={url}
+                                        alt="attachment"
+                                      />
+                                      <span
+                                        className="message_attachment-play"
+                                        onClick={() => {
+                                          setModalContent(
+                                            <div id="message_video-modal">
+                                              <video src={url} controls />
+                                            </div>
+                                          )
+                                        }}
+                                      >
+                                        <i className="fa-solid fa-play" />
+                                      </span>
+                                      <span className="message_attachment-name">{originalFileName}</span>
+                                      <span className="message_attachment-type">{type[0].toUpperCase() + type.slice(1).toLowerCase()}</span>
+                                      <span className="message-attachment-buttons">
+                                        <button
+                                          onClick={(e) => downloadFile(e, url, originalFileName)}
+                                        >
+                                          <i class="fa-solid fa-cloud-arrow-down" />
+                                        </button>
+                                      </span>
+                                    </div>
+                                  )
+                                } else {
+                                  return (
+                                    <div
+                                      className="message_file-attachment"
+                                      key={i}
+                                      onClick={(e) => downloadFile(e, url, originalFileName)}
+                                    >
+                                      <div className="message_file-background">
+                                        <i className="fa-solid fa-file" />
+                                      </div>
+                                      <span className="message_attachment-name">{originalFileName}</span>
+                                      <span className="message_attachment-type">{type[0].toUpperCase() + type.slice(1).toLowerCase()}</span>
+                                      <span className="message-attachment-buttons">
+                                        <button
+                                          onClick={(e) => downloadFile(e, url, originalFileName)}
+                                        >
+                                          <i class="fa-solid fa-cloud-arrow-down" />
+                                        </button>
+                                      </span>
+                                    </div>
+                                  )
+                                }
+                              })
+                            }
+                          </div>
+                        }
+                        {
+                          Object.keys(message.reactions).length > 0 &&
+                          <div className="message_reactions">
+                            {
+                              Object.keys(message.reactions).map((reactionCode, i) => {
+                                const reactionSkins = Object.keys(message.reactions[reactionCode])
+                                const userReactions = Object.values(message.reactions[reactionCode]).flat().find((reaction => reaction.senderId === sessionUser.id))
+                                return (
+                                  <div
+                                    className={`message_reaction-set${userReactions ? " message_reaction-sent" : ""}`}
+                                    key={i}
+                                    onClick={async (e) => {
+                                      e.stopPropagation()
+                                      if (!userReactions) {
+                                        const reaction = { reactionCode, reactionSkin: "neutral" }
+                                        await dispatch(messagesActions.createReaction(message.id, reaction))
+                                      } else {
+                                        await dispatch(messagesActions.removeReaction(userReactions.id, message.id, reactionCode, userReactions.reactionSkin))
+                                      }
+                                    }}
+                                  >
+                                    {
+                                      reactionSkins.map((reactionSkin, j) => {
+                                        const reactionCodeSegements = reactionCode.split("-")
+                                        if (reactionSkin !== "neutral") {
+                                          reactionCodeSegements.splice(1, 0, reactionSkin)
+                                        }
+                                        const emoji = `&#x${reactionCodeSegements.join(";&#x")}`
+                                        return (
+                                          <span
+                                            className="message_reaction"
+                                            key={`${i}-${j}`}
+                                          >
+                                            {parse(emoji)}
+                                          </span>
+                                        )
+                                      })
+                                    }
+                                    <span className="message_reaction-count">
+                                      {Object.values(message.reactions[reactionCode]).flat().length}
+                                    </span>
+                                  </div>
+                                )
+                              })
+                            }
+                          </div>
+                        }
                       </span>
                   }
                   {
@@ -422,6 +617,7 @@ export function Message({ channel, editorHeight }) {
                       setShowDropdown((prev) => !prev)
                       setDropdownId(message.id)
                       setShowEmojiPicker(false)
+                      setShowReaction(false)
                     }}
                     ref={el => buttonRef.current[message.id] = el}
                   >
@@ -441,7 +637,6 @@ export function Message({ channel, editorHeight }) {
                         <li>
                           <button
                             onClick={async (e) => {
-                              e.stopPropagation()
                               setShowEditor(true)
                               setEditorId(message.id)
                               setShowDropdown(false)
@@ -463,7 +658,6 @@ export function Message({ channel, editorHeight }) {
                         <li>
                           <button
                             onClick={async (e) => {
-                              e.stopPropagation()
                               const data = await dispatch(messagesActions.removeMessage(message.id))
                               if (!Array.isArray(data)) {
                                 const channel = data.channel
@@ -496,7 +690,23 @@ export function Message({ channel, editorHeight }) {
                       </button>
                     </li>
                     <li>
-                      <button>
+                      <button
+                        onClick={() => {
+                          const pickerParent = document.querySelector(`#message_${message.id} .message_reaction-picker`)
+                          const picker = document.querySelector(`#message_${message.id} .message_reaction-picker .EmojiPickerReact`)
+                          const distanceToBottom = window.innerHeight - reactionButtonRef.current[message.id].getBoundingClientRect().bottom - 50
+                          const distanceToTop = reactionButtonRef.current[message.id].getBoundingClientRect().top - 150
+                          const pickerHeight = Math.min(Math.max(distanceToBottom, distanceToTop), 400)
+                          picker.style.height = `${pickerHeight}px`
+                          if (distanceToTop >= pickerHeight && distanceToTop > distanceToBottom) {
+                            pickerParent.style.top = `-${pickerHeight + 10}px`
+                          } else {
+                            pickerParent.style.top = "35px"
+                          }
+                          setShowReaction(prev => !prev)
+                        }}
+                        ref={el => reactionButtonRef.current[message.id] = el}
+                      >
                         <i className="fa-solid fa-face-smile" />
                         <span className="message_dropdown-button-name">
                           Add Reactions
@@ -504,6 +714,37 @@ export function Message({ channel, editorHeight }) {
                       </button>
                     </li>
                   </ul>
+                  {
+                    dropdownId === message.id &&
+                    <div
+                      ref={el => reactionRef.current[message.id] = el}
+                      className={`message_reaction-picker${showReaction ? "" : " hidden"}`}
+                    >
+                      <EmojiPicker
+                        emojiStyle="native"
+                        autoFocusSearch={false}
+                        onEmojiClick={async (emojiObject) => {
+                          const fullReactionCode = emojiObject.unified
+                          const reactionCode = emojiObject.unifiedWithoutSkinTone
+                          const reactionSkin = fullReactionCode.split("-").find((code) => !reactionCode.split("-").includes(code)) || "neutral"
+                          if (message.reactions[reactionCode]) {
+                            const reaction = Object.values(message.reactions[reactionCode]).flat().find((reaction) => reaction.senderId === sessionUser.id)
+                            if (reaction) {
+                              await dispatch(messagesActions.removeReaction(reaction.id, message.id, reactionCode, reaction.reactionSkin))
+                            } else {
+                              const reaction = { reactionCode, reactionSkin }
+                              await dispatch(messagesActions.createReaction(message.id, reaction))
+                            }
+                          } else {
+                            const reaction = { reactionCode, reactionSkin }
+                            await dispatch(messagesActions.createReaction(message.id, reaction))
+                          }
+                          setShowReaction(false)
+                        }}
+                        searchDisabled={true}
+                      />
+                    </div>
+                  }
                 </div>
               )
             })

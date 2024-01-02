@@ -6,6 +6,8 @@ const DELETE_CHANNEL_MESSAGES = "messages/DELETE_CHANNEL_MESSAGES"
 const DELETE_WORKSPACE_MESSAGES = "messages/DELETE_WORKSPACE_MESSAGES"
 const ADD_REPLY = "messages/ADD_REPLY"
 const DELETE_REPLY = "messages/DELETE_REPLY"
+const ADD_REACTION = "messages/ADD_REACTION"
+const DELETE_REACTION = "messages/DELETE_REACTION"
 
 const loadMessages = (messages) => ({
   type: LOAD_MESSAGES,
@@ -42,9 +44,19 @@ export const addReply = (reply) => ({
   payload: reply
 })
 
-export const deleteReply = ({replyId, messageId}) => ({
+export const deleteReply = ({ replyId, messageId }) => ({
   type: DELETE_REPLY,
-  payload: {replyId, messageId}
+  payload: { replyId, messageId }
+})
+
+export const addReaction = (reaction) => ({
+  type: ADD_REACTION,
+  payload: reaction
+})
+
+export const deleteReaction = ({ reactionId, reactionCode, reactionSkin, messageId }) => ({
+  type: DELETE_REACTION,
+  payload: { reactionId, reactionCode, reactionSkin, messageId }
 })
 
 const initialState = { messageList: {}, organizedMessages: {} };
@@ -81,15 +93,10 @@ export const getChannelMessages = (id, startPage, pageNum) => async (dispatch) =
   }
 }
 
-export const createMessage = (id, content) => async (dispatch) => {
+export const createMessage = (id, formData) => async (dispatch) => {
   const response = await fetch(`api/channels/${id}/messages/new`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      content
-    })
+    body: formData
   });
   if (response.ok) {
     const data = await response.json();
@@ -225,6 +232,53 @@ export const removeReply = (id) => async (dispatch) => {
   }
 }
 
+export const createReaction = (id, reaction) => async (dispatch) => {
+  const response = await fetch(`api/messages/${id}/reactions/new`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      "reaction_code": reaction.reactionCode,
+      "reaction_skin": reaction.reactionSkin
+    })
+  });
+  if (response.ok) {
+    const data = await response.json();
+    console.log(data)
+    await dispatch(addReaction(data.reaction));
+    return null;
+  } else if (response.status < 500) {
+    const data = await response.json();
+    if (data.errors) {
+      return data.errors
+    }
+  } else {
+    return ["An error occurred. Please try again."];
+  }
+}
+
+export const removeReaction = (id) => async (dispatch) => {
+  const response = await fetch(`api/reactions/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (response.ok) {
+    const data = await response.json();
+    await dispatch(deleteReaction(data));
+    return null;
+  } else if (response.status < 500) {
+    const data = await response.json();
+    if (data.errors) {
+      return data.errors
+    }
+  } else {
+    return ["An error occurred. Please try again."];
+  }
+}
+
 function normalize(state) {
   const newState = {}
   state.forEach(record => {
@@ -248,11 +302,15 @@ export default function reducer(state = initialState, action) {
     }
     case ADD_MESSAGES: {
       const organizedMessages = { ...state.organizedMessages }
-      for (let i = action.payload.length - 1; i >= 0; i -= 1) {
-        const message = action.payload[i]
+      for (let message of action.payload) {
         if (message.channelId in organizedMessages) {
-          if (!organizedMessages[message.channelId].includes(message.id)) {
-            organizedMessages[message.channelId].unshift(message.id)
+          const channelMessageIds = organizedMessages[message.channelId]
+          if (!channelMessageIds.includes(message.id)) {
+            if (message.id > channelMessageIds[0]) {
+              organizedMessages[message.channelId].unshift(message.id)
+            } else {
+              organizedMessages[message.channelId].push(message.id)
+            }
           }
         } else {
           organizedMessages[message.channelId] = [message.id]
@@ -323,6 +381,43 @@ export default function reducer(state = initialState, action) {
       const messageList = { ...state.messageList }
       const message = messageList[action.payload.messageId]
       delete message.replies[action.payload.replyId]
+      return { ...state, messageList };
+    }
+    case ADD_REACTION: {
+      const messageList = { ...state.messageList }
+      const message = messageList[action.payload.messageId]
+      message.reactions = {
+        ...message.reactions,
+        [action.payload.reactionCode]:
+          message.reactions[action.payload.reactionCode] ?
+            {
+              ...message.reactions[action.payload.reactionCode],
+              [action.payload.reactionSkin]:
+                message.reactions[action.payload.reactionCode][action.payload.reactionSkin] ?
+                  [
+                    ...message.reactions[action.payload.reactionCode][action.payload.reactionSkin],
+                    action.payload
+                  ] :
+                  [action.payload]
+            } :
+            {
+              [action.payload.reactionSkin]: [action.payload]
+            }
+      }
+      return { ...state, messageList };
+    }
+    case DELETE_REACTION: {
+      const messageList = { ...state.messageList }
+      const message = messageList[action.payload.messageId]
+      const reactions = message.reactions[action.payload.reactionCode][action.payload.reactionSkin]
+      const index = reactions.findIndex(reaction => reaction.id === action.payload.reactionId)
+      reactions.splice(index, 1)
+      if (reactions.length === 0) {
+        delete message.reactions[action.payload.reactionCode][action.payload.reactionSkin]
+        if (Object.keys(message.reactions[action.payload.reactionCode]).length === 0) {
+          delete message.reactions[action.payload.reactionCode]
+        }
+      }
       return { ...state, messageList };
     }
     default:

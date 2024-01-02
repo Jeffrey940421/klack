@@ -4,7 +4,7 @@ import * as messageActions from "../../store/messages";
 import "./ScrollContainer.css"
 import { useSelector, useDispatch } from "react-redux";
 
-export function ScrollContainer({ children, editorHeight, editorId, showEditor }) {
+export function ScrollContainer({ children, editorHeight, setEditorHeight, editorObj, editorId, showEditor }) {
   const dispatch = useDispatch();
   const outerDiv = useRef(null);
   const innerDiv = useRef(null);
@@ -50,6 +50,9 @@ export function ScrollContainer({ children, editorHeight, editorId, showEditor }
           && lastMessageId > prevLastMessageId))
     ) {
       await setTimeout(() => {
+        const attachmentArea = document.querySelector("#channel-window_attachment-preview")
+        const attachmentAreaHeight = attachmentArea ? attachmentArea.offsetHeight : 0
+        if (editorObj) setEditorHeight(editorObj.ui.view.element.offsetHeight + attachmentAreaHeight)
         bottomRef.current.scrollIntoView({
           behavior: activeChannelId === prevId ? "smooth" : "auto"
         })
@@ -67,6 +70,7 @@ export function ScrollContainer({ children, editorHeight, editorId, showEditor }
     setPrevId(activeChannelId)
     setPrevLastMessageId(lastMessageId)
     setScrollMessage(false)
+
   }
 
   const scrollToMessage = async (messageId) => {
@@ -98,6 +102,9 @@ export function ScrollContainer({ children, editorHeight, editorId, showEditor }
     setPrevOuterDivHeight(outerDivHeight);
     setPrevOuterDivScrollTop(outerDivScrollTop);
     setPrevInnerDivHeight(innerDivHeight);
+    const attachmentArea = document.querySelector("#channel-window_attachment-preview")
+    const attachmentAreaHeight = attachmentArea ? attachmentArea.offsetHeight : 0
+    if (editorObj) setEditorHeight(editorObj.ui.view.element.offsetHeight + attachmentAreaHeight)
   }
 
   const handleScroll = async () => {
@@ -176,7 +183,7 @@ export function ScrollContainer({ children, editorHeight, editorId, showEditor }
       window.removeEventListener("resize", scroll)
       document.querySelector("#scroll_outer")?.removeEventListener("scroll", handleScroll)
     })
-  }, [prevInnerDivHeight, prevOuterDivHeight, prevOuterDivScrollTop, channelMessages, activeChannel])
+  }, [prevInnerDivHeight, prevOuterDivHeight, prevOuterDivScrollTop, channelMessages, activeChannel, editorObj])
 
   useEffect(() => {
     scrollAfterDelay()
@@ -192,8 +199,15 @@ export function ScrollContainer({ children, editorHeight, editorId, showEditor }
   useEffect(() => {
     if (showThread) {
       scrollAfterDelay(250)
+    } else {
+      setTimeout(() => {
+        const attachmentArea = document.querySelector("#channel-window_attachment-preview")
+        const attachmentAreaHeight = attachmentArea ? attachmentArea.offsetHeight : 0
+        if (editorObj) setEditorHeight(editorObj.ui.view.element.offsetHeight + attachmentAreaHeight)
+      }, 250)
     }
-  }, [showThread])
+
+  }, [showThread, editorObj])
 
   useEffect(() => {
     if (showEditor) {

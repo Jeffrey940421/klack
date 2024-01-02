@@ -54,7 +54,7 @@ export function CreateChannel({ type, channel, workspace }) {
       } else if (type === "edit") {
         const messages = data.messages
         if (messages) {
-          await dispatch(messageActions.addMessages(messages.reverse()))
+          await dispatch(messageActions.addMessages(messages))
         }
       }
       closePopup()

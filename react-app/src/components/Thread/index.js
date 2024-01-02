@@ -6,6 +6,9 @@ import parse from "html-react-parser";
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import Editor from 'ckeditor5-custom-build/build/ckeditor';
 import EmojiPicker from 'emoji-picker-react';
+import mime from "../Message/mime.json";
+import { saveAs } from 'file-saver'
+import { useModal } from "../../context/Modal"
 import * as messageActions from "../../store/messages"
 import "./Thread.css"
 
@@ -13,6 +16,7 @@ export function Thread() {
   const dispatch = useDispatch()
   const { store } = useContext(ReactReduxContext)
   const { showThread, setShowThread, messageId } = useThread()
+  const { setModalContent } = useModal()
   const sessionUser = useSelector(state => state.session.user)
   const activeWorkspaceId = sessionUser.activeWorkspaceId
   const workspaces = useSelector(state => state.workspaces.workspaceList)
@@ -34,6 +38,16 @@ export function Thread() {
   const emojiRef = useRef(null)
   const submitRef = useRef(null)
   const bottomRef = useRef(null)
+
+  const downloadFile = async (e, url, fileName) => {
+    e.stopPropagation()
+    const response = await fetch(`${url}?${new Date()}`, {
+      mode: 'cors',
+      credentials: 'same-origin'
+    })
+    const blob = await response.blob()
+    saveAs(blob, fileName)
+  }
 
   const getFeedItems = async (queryText) => {
     const activeChannelId = store.getState().workspaces.workspaceList[activeWorkspaceId].activeChannelId
@@ -193,6 +207,112 @@ export function Thread() {
             <span className="message_edited">
               {message.createdAt !== message.updatedAt && "(edited)"}
             </span>
+            {
+              message.attachments.length > 0 &&
+              <div id="message_attachment-preview">
+                {
+                  message.attachments.map((url, i) => {
+                    const urlSegements = url.split("/")
+                    const fileName = urlSegements[urlSegements.length - 1]
+                    const originalFileName = fileName.split("-", 1)
+                    const fileNameSegements = fileName.split(".")
+                    const fileExtension = fileNameSegements[fileNameSegements.length - 1]
+                    const fullType = mime[fileExtension]
+                    const type = fullType ? fullType.split("/")[0] : "other"
+                    if (type === "image") {
+                      return (
+                        <div
+                          className="message_image-attachment"
+                          key={i}
+                          onClick={() => {
+                            setModalContent(
+                              <div id="message_image-modal">
+                                <img src={url} alt="attachment" />
+                              </div>
+                            )
+                          }}
+                        >
+                          <img
+                            src={url}
+                            alt="attachment"
+                          />
+                          <span className="message_attachment-name">{originalFileName}</span>
+                          <span className="message_attachment-type">{type[0].toUpperCase() + type.slice(1).toLowerCase()}</span>
+                          <span className="message-attachment-buttons">
+                            <button
+                              onClick={(e) => downloadFile(e, url, originalFileName)}
+                            >
+                              <i class="fa-solid fa-cloud-arrow-down" />
+                            </button>
+                          </span>
+                        </div>
+                      )
+                    } else if (type === "video") {
+                      return (
+                        <div
+                          className="message_video-attachment"
+                          key={i}
+                          onClick={() => {
+                            setModalContent(
+                              <div id="message_video-modal">
+                                <video src={url} controls />
+                              </div>
+                            )
+                          }}
+                        >
+                          <video
+                            src={url}
+                            alt="attachment"
+                          />
+                          <span
+                            className="message_attachment-play"
+                            onClick={() => {
+                              setModalContent(
+                                <div id="message_video-modal">
+                                  <video src={url} controls />
+                                </div>
+                              )
+                            }}
+                          >
+                            <i className="fa-solid fa-play" />
+                          </span>
+                          <span className="message_attachment-name">{originalFileName}</span>
+                          <span className="message_attachment-type">{type[0].toUpperCase() + type.slice(1).toLowerCase()}</span>
+                          <span className="message-attachment-buttons">
+                            <button
+                              onClick={(e) => downloadFile(e, url, originalFileName)}
+                            >
+                              <i class="fa-solid fa-cloud-arrow-down" />
+                            </button>
+                          </span>
+                        </div>
+                      )
+                    } else {
+                      return (
+                        <div
+                          className="message_file-attachment"
+                          key={i}
+                          onClick={(e) => downloadFile(e, url, originalFileName)}
+                        >
+                          <div className="message_file-background">
+                            <i className="fa-solid fa-file" />
+                          </div>
+                          <span className="message_attachment-name">{originalFileName}</span>
+                          <span className="message_attachment-type">{type[0].toUpperCase() + type.slice(1).toLowerCase()}</span>
+                          <span className="message-attachment-buttons">
+                            <button
+                              onClick={(e) => downloadFile(e, url, originalFileName)}
+                            >
+                              <i class="fa-solid fa-cloud-arrow-down" />
+                            </button>
+                          </span>
+                        </div>
+                      )
+                    }
+                  })
+                }
+              </div>
+            }
           </span>
         </div>
         {

@@ -424,7 +424,7 @@ export function Reply() {
                     >
                       <i className="fa-solid fa-pen-to-square" />
                       <span className="reply_dropdown-button-name">
-                        Edit Message
+                        Edit Reply
                       </span>
                     </button>
                   </li>
@@ -441,7 +441,7 @@ export function Reply() {
                     >
                       <i className="fa-solid fa-trash-can" />
                       <span className="reply_dropdown-button-name">
-                        Delete Message
+                        Delete Reply
                       </span>
                     </button>
                   </li>

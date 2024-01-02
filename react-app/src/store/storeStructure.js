@@ -37,7 +37,6 @@ store = {
         ownerId: integer,
         createdAt: datetime,
         joinedAt: datetime,
-        lastViewedAt: datetime,
         activeChannelId: integer
       }
     },
@@ -63,7 +62,7 @@ store = {
       [workspaceId]: [channelId]
     }
   },
-  channelMessages: {
+  messages: {
     messageList: {
       [messageId]: {
         id: integer,
@@ -74,46 +73,23 @@ store = {
         content: string,
         systemMessage: boolean,
         attachments: [attachmentUrl],
+        replies: {
+          [replyId]: {
+            id: integer,
+            messageId: integer,
+            senderId: integer,
+            senderEmail: string,
+            content: string,
+            createdAt: datetime,
+            updatedAt: datetime
+          }
+        },
         createdAt: datetime,
         updatedAt: datetime
       }
     },
     organizedMessages: {
       [channelId]: [messageId]
-    }
-  },
-  replies: {
-    replyList: {
-      [replyId]: {
-        id: integer,
-        messageId: integer,
-        senderId: integer,
-        senderEmail: string,
-        channelId: integer,
-        workspaceId: integer,
-        content: string,
-        createdAt: datetime,
-        updatedAt: datetime
-      }
-    },
-    organizedReplies: {
-      [messageId]: [replyId]
-    }
-  },
-  reactions: {
-    reactionList: {
-      [reactionId]: {
-        id: integer,
-        messageId: integer,
-        senderId: integer,
-        senderEmail: string,
-        channelId: integer,
-        workspaceId: integer,
-        reactionCode: string
-      }
-    },
-    organizedReactions: {
-      [messageId]: [reactionId]
     }
   },
   users: {

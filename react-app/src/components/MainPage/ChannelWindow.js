@@ -1,4 +1,5 @@
 import { useModal } from "../../context/Modal"
+import { usePopup } from "../../context/Popup";
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { useDispatch, useSelector, ReactReduxContext } from "react-redux";
 import { CreateChannel } from "../CreateChannel";
@@ -12,12 +13,14 @@ import { CKEditor } from '@ckeditor/ckeditor5-react';
 import Editor from 'ckeditor5-custom-build/build/ckeditor';
 import EmojiPicker from 'emoji-picker-react';
 import { Thread } from "../Thread";
-import { useSpring, animated } from "react-spring";
+import { useSpring, animated, a } from "react-spring";
 import { useThread } from "../../context/ThreadContext";
+import { Loader } from "../Loader";
 
 export function ChannelWindow() {
   const dispatch = useDispatch()
   const { setModalContent } = useModal();
+  const { setPopupContent, closePopup } = usePopup();
   const { showThread, setShowThread } = useThread()
   const { store } = useContext(ReactReduxContext)
   const sessionUser = useSelector((state) => state.session.user);
@@ -39,11 +42,35 @@ export function ChannelWindow() {
   const [editor, setEditor] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showFormat, setShowFormat] = useState(true)
+  const [attachments, setAttachments] = useState([])
   const ulRef = useRef();
   const submitRef = useRef()
   const emojiRef = useRef()
   const emojiButtonRef = useRef()
   const backgroundRef = useRef()
+  const attachmentRef = useRef()
+  const fileToUrlMap = useRef({})
+
+  const getFileUrl = (attachment) => {
+    const key = attachment.lastModified + attachment.name + attachment.type + attachment.size;
+    if (fileToUrlMap.current[key]) {
+      return fileToUrlMap.current[key];
+    } else {
+      const url = URL.createObjectURL(attachment);
+      fileToUrlMap.current[key] = url;
+      return url;
+    }
+  };
+
+  const removeAttachment = (e, i) => {
+    e.stopPropagation()
+    const newAttachments = [...attachments]
+    newAttachments.splice(i, 1)
+    const dataTransfer = new DataTransfer();
+    newAttachments.forEach(attachment => dataTransfer.items.add(attachment));
+    attachmentRef.current.files = dataTransfer.files;
+    setAttachments(newAttachments)
+  }
 
   const getFeedItems = async (queryText) => {
     const activeChannelId = store.getState().workspaces.workspaceList[activeWorkspaceId].activeChannelId
@@ -139,13 +166,23 @@ export function ChannelWindow() {
   }
 
   const handleSubmit = async (e) => {
-    const data = await dispatch(messageActions.createMessage(activeChannelId, newMessage))
+    const formData = new FormData();
+    if (attachments.length > 0) {
+      attachments.forEach(attachment => formData.append("attachments", attachment))
+    }
+    formData.append("content", newMessage || "<p></p>")
+    if (attachments.length > 0) {
+      setPopupContent(<Loader text="Uploading Attachments ..."/>)
+    }
+    const data = await dispatch(messageActions.createMessage(activeChannelId, formData))
     if (!Array.isArray(data)) {
       const channel = data.channel
       await dispatch(channelActions.addChannel(channel))
       setNewMessage("")
+      setAttachments([])
       // e.target.parentNode.dataset.replicatedValue = ""
     }
+    closePopup()
   }
 
   const handleEnter = async (e, data, editor) => {
@@ -195,6 +232,16 @@ export function ChannelWindow() {
   }, [showChannelMenu]);
 
   useEffect(() => {
+    const attachmentArea = document.querySelector("#channel-window_attachment-preview")
+    const attachmentAreaHeight = attachmentArea ? attachmentArea.offsetHeight : 0;
+    if (editor) {
+      const editorAreaHeight = editor.ui.view.element.offsetHeight;
+      setEditorHeight(editorAreaHeight + attachmentAreaHeight);
+    }
+  }, [attachments])
+
+  useEffect(() => {
+    console.log(editorHeight)
     backgroundRef.current.style.height = `${editorHeight - 108 + 165}px`;
   }, [editorHeight])
 
@@ -305,7 +352,7 @@ export function ChannelWindow() {
         </div>
         <hr></hr>
         <div id="channel-window_body">
-          <Message channel={activeChannel} editorHeight={editorHeight} />
+          <Message channel={activeChannel} editorHeight={editorHeight} setEditorHeight={setEditorHeight} editorObj={editor} />
         </div>
         <div
           id="channel-window_textarea"
@@ -374,8 +421,10 @@ export function ChannelWindow() {
               editor.editing.view.document.on('keydown', (e, data) => handleEnter(e, data, editor))
               editor.model.document.on('change', async () => {
                 setTimeout(() => {
-                  const newHeight = editor.ui.view.element.offsetHeight;
-                  setEditorHeight(newHeight);
+                  const editorAreaHeight = editor.ui.view.element.offsetHeight;
+                  const attachmentArea = document.querySelector("#channel-window_attachment-preview")
+                  const attachmentAreaHeight = attachmentArea ? attachmentArea.offsetHeight : 0;
+                  setEditorHeight(editorAreaHeight + attachmentAreaHeight);
                 }, 0)
               });
               setEditorHeight(108)
@@ -388,6 +437,85 @@ export function ChannelWindow() {
             }}
             onBlur={() => setFocused(false)}
           />
+          {attachments.length > 0 &&
+            <div id="channel-window_attachment-preview">
+              {attachments.map((attachment, i) => {
+                const type = attachment.type.split("/")[0]
+                if (type === "image") {
+                  return (
+                    <div className="channel-window_image-attachment" key={i}>
+                      <img
+                        src={getFileUrl(attachment)}
+                        alt="attachment"
+                        onClick={() => {
+                          setModalContent(
+                            <div id="channel-window_image-modal">
+                              <img src={getFileUrl(attachment)} alt="attachment" />
+                            </div>
+                          )
+                        }}
+                      />
+                      <button
+                        className="channel-window_attachment-remove"
+                        onClick={(e) => removeAttachment(e, i)}
+                      >
+                        <i className="fa-solid fa-x" />
+                      </button>
+                    </div>
+                  )
+                } else if (type === "video") {
+                  return (
+                    <div className="channel-window_video-attachment" key={i}>
+                      <video
+                        src={getFileUrl(attachment)}
+                        alt="attachment"
+                        onClick={() => {
+                          setModalContent(
+                            <div id="channel-window_video-modal">
+                              <video src={getFileUrl(attachment)} controls />
+                            </div>
+                          )
+                        }}
+                      />
+                      <button
+                        className="channel-window_attachment-remove"
+                        onClick={(e) => removeAttachment(e, i)}
+                      >
+                        <i className="fa-solid fa-x" />
+                      </button>
+                      <span
+                        className="channel-window_attachment-play"
+                        onClick={() => {
+                          setModalContent(
+                            <div id="channel-window_video-modal">
+                              <video src={URL.createObjectURL(attachment)} controls />
+                            </div>
+                          )
+                        }}
+                      >
+                        <i className="fa-solid fa-play" />
+                      </span>
+                    </div>
+                  )
+                } else {
+                  return (
+                    <div className="channel-window_file-attachment" key={i}>
+                      <div className="channel-window_file-background">
+                        <i className="fa-solid fa-file" />
+                      </div>
+                      <span>{attachment.name}</span>
+                      <button
+                        className="channel-window_attachment-remove"
+                        onClick={(e) => removeAttachment(e, i)}
+                      >
+                        <i className="fa-solid fa-x" />
+                      </button>
+                    </div>
+                  )
+                }
+              })}
+            </div>
+          }
           <div id="channel-window_buttons">
             <button
               id="channel-window_textarea-format"
@@ -403,7 +531,6 @@ export function ChannelWindow() {
             <button
               id="channel-window_textarea-emoji"
               onClick={async (e) => {
-                e.stopPropagation()
                 setShowEmojiPicker((prev) => !prev)
               }}
               ref={emojiButtonRef}
@@ -434,15 +561,34 @@ export function ChannelWindow() {
                 })
               }}
             >
-              <img src="/mention.svg" alt="format" />
+              <img src="/mention.svg" alt="mention" />
             </button>
+            <button
+              id="channel-window_textarea-attachment"
+              onClick={() => attachmentRef.current.click()}
+            >
+              <img src="/attachment.svg" alt="attachment" />
+            </button>
+            <input
+              type="file"
+              multiple={true}
+              ref={attachmentRef}
+              className="hidden"
+              onChange={(e) => {
+                const dataTransfer = new DataTransfer();
+                attachments.forEach(attachment => dataTransfer.items.add(attachment));
+                Array.from(e.target.files).forEach(attachment => dataTransfer.items.add(attachment));
+                e.target.files = dataTransfer.files;
+                setAttachments(Array.from(e.target.files));
+              }}
+            />
             <span id="channel-window_instruction">
               <b>Ctrl + Enter</b> to send message
             </span>
             <button
               id="channel-window_textarea-submit"
               ref={submitRef}
-              disabled={!newMessage}
+              disabled={!newMessage && !attachments.length}
               onClick={handleSubmit}
             >
               <i className="fa-solid fa-paper-plane" /> Send
@@ -479,7 +625,7 @@ export function ChannelWindow() {
       <animated.div
         id="channel-window_thread"
         style={ThreadProps}
-        className={showThread ? "expand" : ""}
+        className={showThread ? "expand" : "hidden"}
       >
         <Thread />
       </animated.div>

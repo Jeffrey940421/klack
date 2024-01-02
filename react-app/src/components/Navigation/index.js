@@ -140,6 +140,24 @@ function Navigation() {
 					}))
 				}
 			})
+
+			socketConnection.on("add_reaction", async (data) => {
+				if (data.senderId !== sessionUser.id) {
+					const reaction = JSON.parse(data.reaction)
+					await dispatch(messageActions.addReaction(reaction))
+				}
+			})
+
+			socketConnection.on("delete_reaction", async (data) => {
+				if (data.senderId !== sessionUser.id) {
+					await dispatch(messageActions.deleteReaction({
+						reactionId: data.reactionId,
+						messageId: data.messageId,
+						reactionCode: data.reactionCode,
+						reactionSkin: data.reactionSkin
+					}))
+				}
+			})
 		}
 
 		return (() => {
@@ -153,6 +171,8 @@ function Navigation() {
 			socketConnection.off("send_reply");
 			socketConnection.off("edit_reply");
 			socketConnection.off("delete_reply");
+			socketConnection.off("add_reaction");
+			socketConnection.off("delete_reaction");
 		})
 	}, [socketConnection])
 
