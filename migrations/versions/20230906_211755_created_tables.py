@@ -170,6 +170,7 @@ def upgrade():
     sa.Column('sender_id', sa.Integer(), nullable=False),
     sa.Column('message_id', sa.Integer(), nullable=False),
     sa.Column('reaction_code', sa.String(length=255), nullable=False),
+    sa.Column('reaction_skin', sa.String(length=255), nullable=False),
     sa.ForeignKeyConstraint(['message_id'], ['channel_messages.id'], ),
     sa.ForeignKeyConstraint(['sender_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),

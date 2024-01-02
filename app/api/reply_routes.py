@@ -35,11 +35,11 @@ def current_messages(id):
         .joinedload(Channel.active_users)
     ).filter(ChannelMessageReply.id == id).first()
     if not reply:
-        return {'errors': 'Reply not found'}, 404
+        return {'errors': 'Reply is not found'}, 404
     if reply.sender_id != current_user.id:
-        return {'errors': 'User is only authorized to edit the reply sent by themselves'}, 401
+        return {'errors': 'User is only authorized to edit the reply sent by themselves'}, 403
     if current_user.active_workspace_id != reply.message.channel.workspace_id or current_user.id not in [workspace_user.user_id for workspace_user in reply.message.channel.active_users]:
-        return {"errors": "User must set the channel as active channel and the workspace as active workspace before editing reply"}, 401
+        return {"errors": "User must set the channel as active channel and the workspace as active workspace before editing reply"}, 403
     if form.validate_on_submit():
         reply.content = form.data['content']
         db.session.commit()
@@ -62,18 +62,18 @@ def delete_reply(id):
         .joinedload(Channel.active_users)
     ).filter(ChannelMessageReply.id == id).first()
     if not reply:
-        return {'errors': 'Reply not found'}, 404
+        return {'errors': 'Reply is not found'}, 404
     message = reply.message
-    messageId = message.id
+    message_id = message.id
     if reply.sender_id != current_user.id:
-        return {'errors': 'User is only authorized to delete the reply sent by themselves'}, 401
+        return {'errors': 'User is only authorized to delete the reply sent by themselves'}, 403
     if current_user.active_workspace_id != message.channel.workspace_id or current_user.id not in [workspace_user.user_id for workspace_user in message.channel.active_users]:
         return {"errors": "User must set the channel as active channel and the workspace as active workspace before deleting reply"}, 401
     db.session.delete(reply)
     db.session.commit()
     socketio.emit('delete_reply', {
         "senderId": current_user.id,
-        "messageId": messageId,
+        "messageId": message_id,
         "replyId": id,
     }, room=f"channel{message.channel_id}")
-    return {'replyId': id, 'messageId': messageId}
+    return {'replyId': id, 'messageId': message_id}

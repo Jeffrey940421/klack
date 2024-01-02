@@ -27,6 +27,10 @@ class ChannelMessageReaction(db.Model):
       db.String(255),
       nullable=False
     )
+    reaction_skin = db.Column(
+      db.String(255),
+      nullable=False
+    )
 
     sender = db.relationship(
       "User",
@@ -48,4 +52,5 @@ class ChannelMessageReaction(db.Model):
           'channelId': self.message.channel_id,
           'workspaceId': self.message.channel.workspace_id,
           'reactionCode': self.reaction_code,
+          'reactionSkin': self.reaction_skin,
        }

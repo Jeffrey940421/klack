@@ -8,3 +8,4 @@ from .channel_form import ChannelForm
 from .active_channel_form import ActiveChannelForm
 from .channel_message_form import ChannelMessageForm
 from .reply_form import ReplyForm
+from .reaction_form import ReactionForm

@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from sqlalchemy.orm import joinedload
 from sqlalchemy import delete, insert
-from app.models import Workspace, Channel, ChannelMessageReply, WorkspaceUser, WorkspaceInvitation, ChannelUser, User, ChannelMessage, db
+from app.models import Workspace, Channel, ChannelMessageReply, WorkspaceUser, WorkspaceInvitation, ChannelUser, User, ChannelMessage, ChannelMessageReaction, db
 from flask_login import current_user, login_required
 from app.forms import WorkspaceForm, WorkspaceUserForm, WorkspaceInvitationForm, ChannelForm, ActiveChannelForm
 from random import choice
@@ -47,10 +47,10 @@ def workspace(id):
     workspace = Workspace.query.options(
         joinedload(Workspace.user_associations)
     ).filter(Workspace.id == id).first()
-    user_association = next(
-        (user_association for user_association in workspace.user_associations if user_association.user_id == current_user.id), None)
     if not workspace:
         return {"errors": ["Workspace is not found"]}, 404
+    user_association = next(
+        (user_association for user_association in workspace.user_associations if user_association.user_id == current_user.id), None)
     return workspace.to_dict(user_association)
 
 
@@ -379,7 +379,9 @@ def join_workspace(id):
             joinedload(ChannelMessage.sender),
             joinedload(ChannelMessage.channel),
             joinedload(ChannelMessage.replies)
-            .joinedload(ChannelMessageReply.sender)
+            .joinedload(ChannelMessageReply.sender),
+            joinedload(ChannelMessage.reactions)
+            .joinedload(ChannelMessageReaction.sender)
         ).filter(ChannelMessage.channel_id == channel_id).order_by(ChannelMessage.created_at.desc(), ChannelMessage.id.desc()).limit(size).all()
         return {
             'workspace': workspace.to_dict(workspace_user),
@@ -429,7 +431,7 @@ def leave_workspace(id):
             "system_message": True
         } for channel in channels if channel not in channels_to_delete
     ]
-    messageIds = db.session.scalars(insert(ChannelMessage).returning(ChannelMessage.id), message_values).all()
+    message_ids = db.session.scalars(insert(ChannelMessage).returning(ChannelMessage.id), message_values).all()
     # Remove the user from all the channels that the user has joined in the workspace
     db.session.execute(delete(ChannelUser).where(
         ChannelUser.channel_id.in_(channel_ids), ChannelUser.user_id == current_user.id))
@@ -448,12 +450,9 @@ def leave_workspace(id):
     db.session.commit()
     # Emit the updated user profile and system messages to all the users in the workspace
     messages = ChannelMessage.query.options(
-        joinedload(ChannelMessage.attachments),
         joinedload(ChannelMessage.sender),
-        joinedload(ChannelMessage.channel),
-        joinedload(ChannelMessage.replies)
-        .joinedload(ChannelMessageReply.sender)
-    ).filter(ChannelMessage.id.in_(messageIds)).all()
+        joinedload(ChannelMessage.channel)
+    ).filter(ChannelMessage.id.in_(message_ids)).all()
     for message in messages:
         socketio.emit("send_message", {
             "senderId": current_user.id,

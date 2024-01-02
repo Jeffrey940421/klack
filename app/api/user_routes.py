@@ -23,7 +23,7 @@ def validation_errors_to_error_messages(validation_errors):
 @login_required
 def users():
     """
-    Query for all the users that are in the same workspaces as the current user and return workspaces' profiles
+    Query for all the users that are in the same workspaces as the current user and return users' profiles
     """
     user = User.query.options(
         joinedload(User.workspace_associations)

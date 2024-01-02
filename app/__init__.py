@@ -16,6 +16,7 @@ from .api.image_routes import image_routes
 from .api.channel_routes import channel_routes
 from .api.message_routes import message_routes
 from .api.reply_routes import reply_routes
+from .api.reaction_routes import reaction_routes
 from .seeds import seed_commands
 from .config import Config
 from .socket import socketio
@@ -44,6 +45,7 @@ app.register_blueprint(image_routes, url_prefix='/api/images')
 app.register_blueprint(channel_routes, url_prefix='/api/channels')
 app.register_blueprint(message_routes, url_prefix='/api/messages')
 app.register_blueprint(reply_routes, url_prefix='/api/replies')
+app.register_blueprint(reaction_routes, url_prefix='/api/reactions')
 db.init_app(app)
 Migrate(app, db)
 socketio.init_app(app, async_mode='gevent')

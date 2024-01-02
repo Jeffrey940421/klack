@@ -30,7 +30,7 @@ def invitations_received():
     ).filter(
         WorkspaceInvitation.recipient_id == current_user.id
     ).order_by(
-        WorkspaceInvitation.created_at.desc()
+        WorkspaceInvitation.created_at.asc()
     ).all()
     return {'receivedInvitations': [received_invitation.to_dict() for received_invitation in received_invitations]}
 
@@ -47,7 +47,7 @@ def invitations_sent():
     ).filter(
         WorkspaceInvitation.sender_id == current_user.id
     ).order_by(
-        WorkspaceInvitation.created_at.desc()
+        WorkspaceInvitation.created_at.asc()
     ).all()
     return {'sentInvitations': [sent_invitation.to_dict() for sent_invitation in sent_invitations]}
 

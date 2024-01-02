@@ -1,9 +1,9 @@
 from flask import Blueprint, request
 from sqlalchemy.orm import joinedload
 from sqlalchemy import func
-from app.models import Channel, ChannelMessageReply, ChannelUser, ChannelMessage, db
+from app.models import Channel, ChannelMessageReply, ChannelUser, ChannelMessage, ChannelMessageReaction, db
 from flask_login import current_user, login_required
-from app.forms import ChannelMessageForm, ReplyForm
+from app.forms import ChannelMessageForm, ReplyForm, ReactionForm
 from app.socket import socketio
 import json
 
@@ -54,10 +54,13 @@ def current_messages():
         joinedload(ChannelMessage.attachments),
         joinedload(ChannelMessage.channel),
         joinedload(ChannelMessage.replies)
-        .joinedload(ChannelMessageReply.sender)
+        .joinedload(ChannelMessageReply.sender),
+        joinedload(ChannelMessage.reactions)
+        .joinedload(ChannelMessageReaction.sender)
     ).filter(ChannelMessage.id.in_(message_ids)).order_by(
         ChannelMessage.channel_id, ChannelMessage.created_at.desc(), ChannelMessage.id.desc()).all()
     return {"messages": [message.to_dict() for message in messages]}
+
 
 @message_routes.route('/<int:id>', methods=['PUT'])
 @login_required
@@ -70,11 +73,15 @@ def edit_message(id):
     message = ChannelMessage.query.options(
         joinedload(ChannelMessage.sender),
         joinedload(ChannelMessage.attachments),
+        joinedload(ChannelMessage.replies)
+        .joinedload(ChannelMessageReply.sender),
+        joinedload(ChannelMessage.reactions)
+        .joinedload(ChannelMessageReaction.sender),
         joinedload(ChannelMessage.channel)
         .joinedload(Channel.active_users)
     ).filter(ChannelMessage.id == id).first()
     if not message:
-        return {'errors': ['Message not found']}, 404
+        return {'errors': ['Message is not found']}, 404
     if message.sender_id != current_user.id:
         return {'errors': ['User is only authorized to edit the messages sent by themselves']}, 403
     if current_user.active_workspace_id != message.channel.workspace_id or current_user.id not in [workspace_user.user_id for workspace_user in message.channel.active_users]:
@@ -88,6 +95,7 @@ def edit_message(id):
         }, room=f"channel{message.channel_id}")
         return {'message': message.to_dict()}
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401
+
 
 @message_routes.route('/<int:id>', methods=['DELETE'])
 @login_required
@@ -109,7 +117,7 @@ def delete_message(id):
     channel_user = next(
         (channel_user for channel_user in channel.user_associations if channel_user.user_id == current_user.id), None)
     if not message:
-        return {'errors': ['Message not found']}, 404
+        return {'errors': ['Message is not found']}, 404
     if message.sender_id != current_user.id:
         return {'errors': ['User is only authorized to delete the messages sent by themselves']}, 403
     if current_user.active_workspace_id != channel.workspace_id or current_user.id not in [workspace_user.user_id for workspace_user in channel.active_users]:
@@ -126,6 +134,7 @@ def delete_message(id):
         'channel': channel.to_dict(channel_user),
     }
 
+
 @message_routes.route('/<int:id>/replies/new', methods=['POST'])
 @login_required
 def create_reply(id):
@@ -139,10 +148,9 @@ def create_reply(id):
         .joinedload(Channel.active_users)
     ).filter(ChannelMessage.id == id).first()
     if not message:
-        return {'errors': ['Message not found']}, 404
+        return {'errors': ['Message is not found']}, 404
     if current_user.active_workspace_id != message.channel.workspace_id or current_user.id not in [workspace_user.user_id for workspace_user in message.channel.active_users]:
         return {"errors": ["User must set the channel as active channel and the workspace as active workspace before replying to message"]}, 403
-    print(form.data)
     if form.validate_on_submit():
         reply = ChannelMessageReply(
             sender_id=current_user.id,
@@ -156,4 +164,44 @@ def create_reply(id):
             "reply": json.dumps(reply.to_dict(), default=str),
         }, room=f"channel{message.channel_id}")
         return {'reply': reply.to_dict()}
+    return {'errors': validation_errors_to_error_messages(form.errors)}, 401
+
+
+@message_routes.route('/<int:id>/reactions/new', methods=['POST'])
+@login_required
+def add_reaction(id):
+    """
+    Add a reaction to a message and return the reaction's information
+    """
+    form = ReactionForm()
+    form['csrf_token'].data = request.cookies['csrf_token']
+    message = ChannelMessage.query.options(
+        joinedload(ChannelMessage.channel)
+        .joinedload(Channel.active_users),
+        joinedload(ChannelMessage.reactions)
+    ).filter(ChannelMessage.id == id).first()
+    if not message:
+        return {'errors': ['Message is not found']}, 404
+    if current_user.active_workspace_id != message.channel.workspace_id or current_user.id not in [workspace_user.user_id for workspace_user in message.channel.active_users]:
+        return {"errors": ["User must set the channel as active channel and the workspace as active workspace before adding reaction to message"]}, 403
+    if form.validate_on_submit():
+        duplicate_reaction = next(
+            (reaction for reaction in message.reactions if reaction.sender_id == current_user.id
+             and reaction.message_id == id
+             and reaction.reaction_code == form.data['reaction_code']), None)
+        if duplicate_reaction:
+            return {'errors': ['User has already added this reaction to the message']}, 403
+        reaction = ChannelMessageReaction(
+            sender_id=current_user.id,
+            message_id=message.id,
+            reaction_code=form.data['reaction_code'],
+            reaction_skin=form.data['reaction_skin']
+        )
+        db.session.add(reaction)
+        db.session.commit()
+        socketio.emit('add_reaction', {
+            "senderId": current_user.id,
+            "reaction": json.dumps(reaction.to_dict(), default=str),
+        }, room=f"channel{message.channel_id}")
+        return {'reaction': reaction.to_dict()}
     return {'errors': validation_errors_to_error_messages(form.errors)}, 401

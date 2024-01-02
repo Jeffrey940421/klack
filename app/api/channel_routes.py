@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from sqlalchemy.orm import joinedload
 from sqlalchemy import insert
-from app.models import Workspace, Channel, WorkspaceUser, ChannelUser, ChannelMessage, ChannelMessageReply, ChannelMessageAttachment, db
+from app.models import Workspace, Channel, WorkspaceUser, ChannelUser, ChannelMessage, ChannelMessageReply, ChannelMessageAttachment, ChannelMessageReaction, db
 from flask_login import current_user, login_required
 from app.forms import  ChannelForm, ChannelMessageForm
 from app.socket import socketio
@@ -78,7 +78,9 @@ def channel_messages(id):
         joinedload(ChannelMessage.sender),
         joinedload(ChannelMessage.channel),
         joinedload(ChannelMessage.replies)
-        .joinedload(ChannelMessageReply.sender)
+        .joinedload(ChannelMessageReply.sender),
+        joinedload(ChannelMessage.reactions)
+        .joinedload(ChannelMessageReaction.sender)
     ).filter(ChannelMessage.channel_id == id).order_by(ChannelMessage.created_at.desc(), ChannelMessage.id.desc()).limit(size).offset((page - 1) * size).all()
     return {
         'messages': [message.to_dict() for message in messages],
@@ -148,15 +150,12 @@ def edit_channel(id):
             channel.description=form.data["description"]
         messages = None
         if len(message_values):
-            messageIds = db.session.scalars(insert(ChannelMessage).returning(ChannelMessage.id), message_values).all()
+            message_ids = db.session.scalars(insert(ChannelMessage).returning(ChannelMessage.id), message_values).all()
             db.session.commit()
             messages = ChannelMessage.query.options(
-                joinedload(ChannelMessage.attachments),
                 joinedload(ChannelMessage.sender),
-                joinedload(ChannelMessage.channel),
-                joinedload(ChannelMessage.replies)
-                .joinedload(ChannelMessageReply.sender)
-            ).filter(ChannelMessage.id.in_(messageIds)).all()
+                joinedload(ChannelMessage.channel)
+            ).filter(ChannelMessage.id.in_(message_ids)).all()
             for message in messages:
                 socketio.emit("send_message", {
                     "senderId": current_user.id,
@@ -241,7 +240,9 @@ def add_to_channel(channel_id, user_id):
         joinedload(ChannelMessage.sender),
         joinedload(ChannelMessage.channel),
         joinedload(ChannelMessage.replies)
-        .joinedload(ChannelMessageReply.sender)
+        .joinedload(ChannelMessageReply.sender),
+        joinedload(ChannelMessage.reactions)
+        .joinedload(ChannelMessageReaction.sender)
     ).filter(ChannelMessage.channel_id == channel_id).order_by(ChannelMessage.created_at.desc(), ChannelMessage.id.desc()).limit(size).all()
     socketio.emit("join_channel", {
         "channel": json.dumps(channel.to_dict(target_channel_user), default=str),
@@ -414,8 +415,8 @@ def create_channel(id):
             joinedload(ChannelMessage.attachments),
             joinedload(ChannelMessage.sender),
             joinedload(ChannelMessage.channel),
-            joinedload(ChannelMessage.replies)
-            .joinedload(ChannelMessageReply.sender)
+            joinedload(ChannelMessage.replies),
+            joinedload(ChannelMessage.reactions)
         ).filter(ChannelMessage.id == message_id).first()
         socketio.emit("send_message", {
             "senderId": current_user.id,
