@@ -773,3 +773,40 @@
   font-size: 12px !important;
   color: gray !important;
 }
+
+#message_divider {
+  display: flex;
+  align-items: center;
+}
+
+#message_divider hr {
+  padding: 0px;
+  margin-left: 20px;
+  margin-top: 0px;
+  background-color: #611f69 !important;
+}
+
+#message_divider span {
+  margin-right: 20px;
+  font-size: 12px;
+  background-color: #611f69;
+  color: white;
+  border-radius: 5px;
+  padding: 2px 5px;
+  position: relative;
+}
+
+#message_divider span:after {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 50%;
+	width: 0;
+	height: 0;
+	border: 10.4px solid transparent;
+	border-right-color: #611f69;
+	border-left: 0;
+	margin-top: -10.4px;
+	margin-left: -7.5px;
+  border-radius: 3px;
+}

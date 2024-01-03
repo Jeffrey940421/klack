@@ -522,6 +522,12 @@ export function ChannelWindow() {
               onClick={() => {
                 const toolbar = editor.ui.view.toolbar.element;
                 toolbar.style.display = toolbar.style.display === 'none' ? 'flex' : 'none';
+                setTimeout(() => {
+                  const editorAreaHeight = editor.ui.view.element.offsetHeight;
+                  const attachmentArea = document.querySelector("#channel-window_attachment-preview")
+                  const attachmentAreaHeight = attachmentArea ? attachmentArea.offsetHeight : 0;
+                  setEditorHeight(editorAreaHeight + attachmentAreaHeight);
+                }, 0)
                 setShowFormat((prev) => !prev)
               }}
               className={showFormat ? 'show-format' : 'hide-format'}
